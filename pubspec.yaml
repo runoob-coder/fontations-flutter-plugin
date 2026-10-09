@@ -1,0 +1,54 @@
+name: fontations
+description: "Flutter bindings for the fontations font stack (read-fonts / skrifa), powered by flutter_rust_bridge."
+version: 0.0.1
+homepage: https://github.com/runoob-coder/fontations-flutter-plugin
+repository: https://github.com/runoob-coder/fontations-flutter-plugin
+
+environment:
+  sdk: ^3.13.5
+  flutter: '>=3.35.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Only used by `lib/fontations_web.dart`, which Flutter requires from every
+  # plugin that declares the web platform.
+  flutter_web_plugins:
+    sdk: flutter
+  flutter_rust_bridge: 2.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
+
+# For information on the generic Dart part of this file, see
+# the following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # This section identifies this Flutter project as a plugin project.
+  #
+  # The native Rust library is built by `cargokit` (https://github.com/irondash/cargokit),
+  # which is wired into each platform build (Gradle / CocoaPods / CMake).
+  #
+  # The web is the exception: there is no native library to link, the crate is
+  # compiled to WebAssembly by `scripts/build_web.sh` and the app serves the
+  # resulting `pkg/` folder next to its own `web/` assets.
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      ios:
+        ffiPlugin: true
+      linux:
+        ffiPlugin: true
+      macos:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true
+      web:
+        pluginClass: FontationsWebPlugin
+        fileName: fontations_web.dart

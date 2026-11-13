@@ -20,8 +20,6 @@ English | [简体中文](https://github.com/runoob-coder/fontations-flutter-plug
 
 ## 🚀 Getting started
 
-Inside `main()`:
-
 ```dart
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:fontations/fontations.dart';

@@ -121,6 +121,85 @@ void main() {
     }
   });
 
+  group('the glyph editor board on small screens', () {
+    const phone = Size(390, 844);
+    const landscape = Size(844, 390);
+    const desktop = Size(1440, 900);
+
+    double boardSide(WidgetTester tester) =>
+        tester.getSize(find.byKey(const Key('glyph-board'))).width;
+
+    testWidgets('the board fills the phone width instead of being squeezed', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, phone);
+      await tester.pumpWidget(localizedApp(const GlyphEditorPage()));
+      await tester.pumpAndSettle();
+
+      // 390 - 2 * 16 padding = 358. The old 1:4 flex split left only ~150.
+      expect(boardSide(tester), greaterThan(300));
+      expect(boardSide(tester), lessThanOrEqualTo(phone.width - 32 + 0.01));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a short landscape window keeps a usable board', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, landscape);
+      await tester.pumpWidget(localizedApp(const GlyphEditorPage()));
+      await tester.pumpAndSettle();
+
+      expect(boardSide(tester), greaterThan(250));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('focus mode hides the controls and can be left', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, phone);
+      await tester.pumpWidget(localizedApp(const GlyphEditorPage()));
+      await tester.pumpAndSettle();
+      expect(find.text('笔画粗细'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.fullscreen));
+      await tester.pumpAndSettle();
+      expect(find.text('笔画粗细'), findsNothing);
+      expect(find.byKey(const Key('glyph-board')), findsOneWidget);
+      expect(find.byIcon(Icons.undo), findsOneWidget);
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.fullscreen_exit));
+      await tester.pumpAndSettle();
+      expect(find.text('笔画粗细'), findsOneWidget);
+    });
+
+    testWidgets('drawing keeps working when the board is resized', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, phone);
+      await tester.pumpWidget(localizedApp(const GlyphEditorPage()));
+      await tester.pumpAndSettle();
+
+      final board = find.byKey(const Key('glyph-board'));
+      final phoneSide = boardSide(tester);
+      await tester.drag(board, const Offset(60, 40));
+      await tester.pumpAndSettle();
+
+      // Strokes are size-independent, so the board can grow freely.
+      setLogicalSize(tester, desktop);
+      await tester.pumpAndSettle();
+      expect(boardSide(tester), greaterThan(phoneSide));
+
+      await tester.drag(board, const Offset(-40, 20));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets('the glyph browser reads cmap and one glyph', (tester) async {
     addTearDown(tester.view.reset);
     setLogicalSize(tester, const Size(1440, 900));

@@ -350,5 +350,7 @@
   "editorDragSlider": "Drag the slider to interpolate",
   "editorVariantsPreview": "Character variant preview",
   "editorVariantsPreviewNote": "Enable ss01–ss20 with FontFeature; if nothing changes, the platform's text engine does not support the feature.",
-  "editorExport": "Export .ttf"
+  "editorExport": "Export .ttf",
+  "editorFocusMode": "Focus mode (hide controls)",
+  "editorExitFocus": "Exit focus mode"
 }

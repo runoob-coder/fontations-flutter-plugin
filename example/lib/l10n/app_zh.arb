@@ -185,5 +185,7 @@
   "editorDragSlider": "拖动滑块查看插值",
   "editorVariantsPreview": "字符变体预览",
   "editorVariantsPreviewNote": "用 FontFeature 打开 ss01–ss20；若渲染无变化，说明当前平台的排版引擎不支持该特性。",
-  "editorExport": "导出 .ttf"
+  "editorExport": "导出 .ttf",
+  "editorFocusMode": "专注绘制（隐藏控件）",
+  "editorExitFocus": "退出专注绘制"
 }

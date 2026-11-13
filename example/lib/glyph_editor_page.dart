@@ -16,6 +16,9 @@ const int _unitsPerEm = 1000;
 const double _ascender = 800.0;
 const double _descender = -200.0;
 
+/// Fixed coordinate space for strokes, independent of the board's size.
+const double _boardReference = 320.0;
+
 /// The single axis exposed by this demo. 「一」 can be drawn several times and
 /// each drawing becomes a master somewhere along it.
 const String _axisTag = 'wght';
@@ -100,12 +103,12 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
   bool _busy = false;
   int _familyCounter = 0;
 
+  /// Hides the control panel so the board can use the whole page.
+  bool _focusMode = false;
+
   /// Dragging the interpolation slider must not let a slow outline overwrite
   /// the position the user has since moved to.
   int _previewToken = 0;
-
-  /// Board edge length in pixels; kept in sync by the layout.
-  double _boardSize = 320.0;
 
   String get _char {
     final text = _charController.text;
@@ -139,14 +142,13 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
 
   // --- drawing ------------------------------------------------------------
 
-  void _onPanStart(DragStartDetails details) {
-    setState(() => _current = <Offset>[details.localPosition]);
+  void _onPanStart(Offset point) {
+    setState(() => _current = <Offset>[point]);
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
+  void _onPanUpdate(Offset point) {
     final current = _current;
     if (current == null) return;
-    final point = details.localPosition;
     if ((point - current.last).distance < 2.5) return;
     setState(() => current.add(point));
   }
@@ -420,12 +422,12 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
     }
   }
 
-  /// Converts board-space strokes into font-unit contours (y flipped).
+  /// Converts reference-space strokes into font-unit contours (y flipped).
   List<GlyphContour> _toContours(
     List<List<Offset>> strokes,
     double strokeWidth,
   ) {
-    final scale = _unitsPerEm / _boardSize;
+    const scale = _unitsPerEm / _boardReference;
     final half = strokeWidth * scale / 2;
     final contours = <GlyphContour>[];
     for (final stroke in strokes) {
@@ -460,22 +462,35 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.editorTitle),
-        actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
+        actions: [
+          const GitHubButton(),
+          const ThemeMenu(),
+          const LanguageMenu(),
+          IconButton(
+            icon: Icon(_focusMode ? Icons.fullscreen_exit : Icons.fullscreen),
+            tooltip: _focusMode ? l.editorExitFocus : l.editorFocusMode,
+            onPressed: () => setState(() => _focusMode = !_focusMode),
+          ),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= wideBreakpoint;
+          // Short landscape windows also work side by side.
+          final wide =
+              constraints.maxWidth >= wideBreakpoint ||
+              constraints.maxWidth > constraints.maxHeight * 1.3;
 
-          // Keep this `Expanded` separate to avoid competing ParentDataWidgets.
+          // Each layout supplies its own `Expanded`.
           final boardContent = Center(
             child: LayoutBuilder(
               builder: (context, box) {
                 final size = math.min(box.maxWidth, box.maxHeight);
-                _boardSize = size;
                 return SizedBox(
+                  key: const Key('glyph-board'),
                   width: size,
                   height: size,
                   child: _Board(
+                    size: size,
                     strokes: _strokes,
                     current: _current,
                     strokeWidth: _strokeWidth,
@@ -487,89 +502,138 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
               },
             ),
           );
-          final board = Expanded(flex: 5, child: boardContent);
 
-          // Cap the panel width for wide screens and phones.
           const maxControlWidth = 560.0;
-          final controls = Expanded(
-            flex: 4,
-            child: LayoutBuilder(
-              builder: (context, box) => Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: box.maxWidth > maxControlWidth
-                      ? maxControlWidth
-                      : box.maxWidth,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: _Controls(
-                      charController: _charController,
-                      familyController: _familyController,
-                      strokeWidth: _strokeWidth,
-                      onStrokeWidthChanged: (v) =>
-                          setState(() => _strokeWidth = v),
-                      masterValue: _masterValue,
-                      onMasterValueChanged: (v) =>
-                          setState(() => _masterValue = v),
-                      onUndo: _undo,
-                      onClear: _clear,
-                      onSave: _saveShape,
-                      selectedSet: _selectedSet,
-                      onSelectedSetChanged: (tag) =>
-                          setState(() => _selectedSet = tag),
-                      onSaveVariant: _saveVariant,
-                      variants: _glyphs[_char]?.variants ?? const [],
-                      onDeleteVariant: (tag) => setState(
-                        () => _glyphs[_char] =
-                            (_glyphs[_char] ?? const _GlyphEntry()).copyWith(
-                              variants: (_glyphs[_char]?.variants ?? const [])
-                                  .where((v) => v.tag != tag)
-                                  .toList(),
-                            ),
-                      ),
-                      onBuild: _busy ? null : _buildFont,
-                      glyphChars: _glyphs.keys.toList(),
-                      activeChar: _char,
-                      masters: _glyphs[_char]?.masters ?? const [],
-                      hasDefault:
-                          (_glyphs[_char]?.strokes ?? const []).isNotEmpty,
-                      onDeleteChar: (char) =>
-                          setState(() => _glyphs.remove(char)),
-                      busy: _busy,
-                      error: _error,
-                      result: _builtInfo == null || _fontBytes == null
-                          ? null
-                          : _Result(
-                              bytes: _fontBytes!,
-                              info: _builtInfo!,
-                              family: _fontFamily,
-                              sample: _builtSample ?? _char,
-                              exportedPath: _exportedPath,
-                              onExport: _export,
-                              previewPath: _previewPath,
-                              previewValue: _previewValue,
-                              onPreviewDrag: (value) =>
-                                  setState(() => _previewValue = value),
-                              onPreviewChanged: _renderPreview,
-                              variants: _builtVariants,
-                            ),
+          final controlsContent = LayoutBuilder(
+            builder: (context, box) => Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: math.min(box.maxWidth, maxControlWidth),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: _Controls(
+                    charController: _charController,
+                    familyController: _familyController,
+                    strokeWidth: _strokeWidth,
+                    onStrokeWidthChanged: (v) =>
+                        setState(() => _strokeWidth = v),
+                    masterValue: _masterValue,
+                    onMasterValueChanged: (v) =>
+                        setState(() => _masterValue = v),
+                    onUndo: _undo,
+                    onClear: _clear,
+                    onSave: _saveShape,
+                    selectedSet: _selectedSet,
+                    onSelectedSetChanged: (tag) =>
+                        setState(() => _selectedSet = tag),
+                    onSaveVariant: _saveVariant,
+                    variants: _glyphs[_char]?.variants ?? const [],
+                    onDeleteVariant: (tag) => setState(
+                      () => _glyphs[_char] =
+                          (_glyphs[_char] ?? const _GlyphEntry()).copyWith(
+                            variants: (_glyphs[_char]?.variants ?? const [])
+                                .where((v) => v.tag != tag)
+                                .toList(),
+                          ),
                     ),
+                    onBuild: _busy ? null : _buildFont,
+                    glyphChars: _glyphs.keys.toList(),
+                    activeChar: _char,
+                    masters: _glyphs[_char]?.masters ?? const [],
+                    hasDefault:
+                        (_glyphs[_char]?.strokes ?? const []).isNotEmpty,
+                    onDeleteChar: (char) =>
+                        setState(() => _glyphs.remove(char)),
+                    busy: _busy,
+                    error: _error,
+                    result: _builtInfo == null || _fontBytes == null
+                        ? null
+                        : _Result(
+                            bytes: _fontBytes!,
+                            info: _builtInfo!,
+                            family: _fontFamily,
+                            sample: _builtSample ?? _char,
+                            exportedPath: _exportedPath,
+                            onExport: _export,
+                            previewPath: _previewPath,
+                            previewValue: _previewValue,
+                            onPreviewDrag: (value) =>
+                                setState(() => _previewValue = value),
+                            onPreviewChanged: _renderPreview,
+                            variants: _builtVariants,
+                          ),
                   ),
                 ),
               ),
             ),
           );
 
+          // Undo/clear stay reachable when the controls are hidden.
+          const quickActionsHeight = 56.0;
+          final quickActions = SizedBox(
+            height: quickActionsHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  tooltip: l.editorUndo,
+                  icon: const Icon(Icons.undo),
+                  onPressed: _undo,
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: l.editorClear,
+                  icon: const Icon(Icons.clear),
+                  onPressed: _clear,
+                ),
+              ],
+            ),
+          );
+
+          const padding = EdgeInsets.all(16);
+          if (_focusMode) {
+            return Padding(
+              padding: padding,
+              child: Column(
+                children: [
+                  Expanded(child: boardContent),
+                  quickActions,
+                ],
+              ),
+            );
+          }
+
+          if (wide) {
+            return Padding(
+              padding: padding,
+              child: Row(
+                children: [
+                  Expanded(flex: 5, child: boardContent),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 4, child: controlsContent),
+                ],
+              ),
+            );
+          }
+
+          // Board stays outside the scroll view so vertical strokes aren't stolen.
+          final boardSide = math.max(
+            0.0,
+            math.min(
+              constraints.maxWidth - padding.horizontal,
+              (constraints.maxHeight - padding.vertical - quickActionsHeight) *
+                  0.55,
+            ),
+          );
           return Padding(
-            padding: const EdgeInsets.all(16),
-            child: wide
-                ? Row(children: [board, const SizedBox(width: 20), controls])
-                : Column(
-                    children: [
-                      Expanded(child: boardContent),
-                      controls,
-                    ],
-                  ),
+            padding: padding,
+            child: Column(
+              children: [
+                SizedBox(height: boardSide, child: boardContent),
+                quickActions,
+                Expanded(child: controlsContent),
+              ],
+            ),
           );
         },
       ),
@@ -742,6 +806,7 @@ List<Offset> _strokeOutline(List<Offset> points, double half) {
 
 class _Board extends StatelessWidget {
   const _Board({
+    required this.size,
     required this.strokes,
     required this.current,
     required this.strokeWidth,
@@ -750,16 +815,21 @@ class _Board extends StatelessWidget {
     required this.onPanEnd,
   });
 
+  /// On-screen edge length; strokes are stored in [_boardReference] units.
+  final double size;
   final List<List<Offset>> strokes;
   final List<Offset>? current;
   final double strokeWidth;
-  final ValueChanged<DragStartDetails> onPanStart;
-  final ValueChanged<DragUpdateDetails> onPanUpdate;
+  final ValueChanged<Offset> onPanStart;
+  final ValueChanged<Offset> onPanUpdate;
   final VoidCallback onPanEnd;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scale = math.max(size, 1.0) / _boardReference;
+    Offset toReference(Offset point) =>
+        Offset(point.dx / scale, point.dy / scale);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -769,11 +839,12 @@ class _Board extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: GestureDetector(
-          onPanStart: onPanStart,
-          onPanUpdate: onPanUpdate,
+          onPanStart: (d) => onPanStart(toReference(d.localPosition)),
+          onPanUpdate: (d) => onPanUpdate(toReference(d.localPosition)),
           onPanEnd: (_) => onPanEnd(),
           child: CustomPaint(
             painter: _BoardPainter(
+              scale: scale,
               strokes: strokes,
               current: current,
               strokeWidth: strokeWidth,
@@ -791,6 +862,7 @@ class _Board extends StatelessWidget {
 
 class _BoardPainter extends CustomPainter {
   const _BoardPainter({
+    required this.scale,
     required this.strokes,
     required this.current,
     required this.strokeWidth,
@@ -799,6 +871,8 @@ class _BoardPainter extends CustomPainter {
     required this.accentColor,
   });
 
+  /// On-screen pixels per reference-space unit.
+  final double scale;
   final List<List<Offset>> strokes;
   final List<Offset>? current;
   final double strokeWidth;
@@ -835,32 +909,33 @@ class _BoardPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = ink
-      ..strokeWidth = strokeWidth
+      ..strokeWidth = strokeWidth * scale
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
     for (final stroke in strokes) {
-      canvas.drawPath(_pathOf(stroke), paint);
+      canvas.drawPath(_pathOf(stroke, scale), paint);
     }
     final pending = current;
     if (pending != null) {
-      canvas.drawPath(_pathOf(pending), paint);
+      canvas.drawPath(_pathOf(pending, scale), paint);
     }
   }
 
-  static Path _pathOf(List<Offset> points) {
+  static Path _pathOf(List<Offset> points, double scale) {
     final path = Path();
     if (points.isEmpty) return path;
-    path.moveTo(points.first.dx, points.first.dy);
+    path.moveTo(points.first.dx * scale, points.first.dy * scale);
     for (var i = 1; i < points.length; i++) {
-      path.lineTo(points[i].dx, points[i].dy);
+      path.lineTo(points[i].dx * scale, points[i].dy * scale);
     }
     return path;
   }
 
   @override
   bool shouldRepaint(covariant _BoardPainter old) =>
+      old.scale != scale ||
       old.strokes != strokes ||
       old.current != current ||
       old.strokeWidth != strokeWidth ||

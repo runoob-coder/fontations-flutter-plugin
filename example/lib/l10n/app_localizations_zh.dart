@@ -641,4 +641,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get editorExport => '导出 .ttf';
+
+  @override
+  String get editorFocusMode => '专注绘制（隐藏控件）';
+
+  @override
+  String get editorExitFocus => '退出专注绘制';
 }

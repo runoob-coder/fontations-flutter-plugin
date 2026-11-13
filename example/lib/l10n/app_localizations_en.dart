@@ -647,4 +647,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorExport => 'Export .ttf';
+
+  @override
+  String get editorFocusMode => 'Focus mode (hide controls)';
+
+  @override
+  String get editorExitFocus => 'Exit focus mode';
 }

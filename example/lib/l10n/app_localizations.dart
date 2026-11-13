@@ -1172,6 +1172,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export .ttf'**
   String get editorExport;
+
+  /// No description provided for @editorFocusMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus mode (hide controls)'**
+  String get editorFocusMode;
+
+  /// No description provided for @editorExitFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit focus mode'**
+  String get editorExitFocus;
 }
 
 class _AppLocalizationsDelegate

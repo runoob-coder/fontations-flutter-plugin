@@ -137,9 +137,9 @@ class _ExampleShellState extends State<ExampleShell> {
                   extended: constraints.maxWidth >= 1240,
                   minExtendedWidth: 180,
                   groupAlignment: -0.9,
-                  leading: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: FlutterLogo(size: 32),
+                  leading: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Image.asset('assets/app_icon.png', width: 32),
                   ),
                   destinations: [
                     for (final destination in items)

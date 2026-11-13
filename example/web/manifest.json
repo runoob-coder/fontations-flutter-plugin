@@ -1,11 +1,11 @@
 {
-    "name": "fontations_example",
-    "short_name": "fontations_example",
+    "name": "fontations",
+    "short_name": "fontations",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A live Web demo of the fontations Flutter plugin: read and write OpenType, TrueType and variable fonts directly from Dart, parsing glyph outlines, metrics and layout tables without any platform text stack.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

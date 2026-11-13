@@ -68,6 +68,22 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   integration_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+
+# App icon generation: `dart run flutter_launcher_icons`
+flutter_launcher_icons:
+  image_path: assets/app_icon.png
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  macos:
+    generate: true
+  # Web 图标不在此生成：由 googlefonts.svg 矢量渲染手工生成到 web/icons/
+  # （重跑会从 400px 位图覆盖，且 maskable 图标缺少安全区留白）
+  web:
+    generate: false
+  windows:
+    generate: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -86,6 +102,9 @@ flutter:
     # Inter (SIL Open Font License 1.1), used to demonstrate variable font
     # metadata and glyph outlines.
     - assets/fonts/Inter.ttf
+    # Google Fonts logo (same file feeds flutter_launcher_icons and the
+    # NavigationRail leading logo).
+    - assets/app_icon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

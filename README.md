@@ -1,7 +1,7 @@
 # fontations
 
 <div align="center">
-   <img src="https://raw.githubusercontent.com/fontations-flutter-plugin/main/googlefonts.svg" width="300" style="width: 300px;" alt="fontations">
+   <img src="https://github.com/runoob-coder/fontations-flutter-plugin/blob/main/googlefonts.svg" width="300" style="width: 300px;" alt="fontations">
 </div>
 
 Flutter bindings for the [fontations](https://github.com/googlefonts/fontations) Rust font stack, generated with [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge).

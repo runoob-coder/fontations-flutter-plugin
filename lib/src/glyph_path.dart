@@ -1,3 +1,4 @@
+import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
 import 'rust/api/fontations.dart';
@@ -82,6 +83,11 @@ extension RectFToRect on RectF {
   }) {
     double tx(double v) => v * scale + offsetX;
     double ty(double v) => (flipY ? -v : v) * scale + offsetY;
-    return ui.Rect.fromLTRB(tx(xMin), ty(yMax), tx(xMax), ty(yMin));
+    // flipY / negative scale can invert either axis.
+    final x1 = tx(xMin);
+    final x2 = tx(xMax);
+    final y1 = ty(yMin);
+    final y2 = ty(yMax);
+    return ui.Rect.fromLTRB(min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2));
   }
 }

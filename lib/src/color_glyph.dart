@@ -1,3 +1,4 @@
+import 'dart:math' show pi;
 import 'dart:ui' as ui;
 
 import 'glyph_path.dart';
@@ -147,6 +148,21 @@ ui.Paint _paintFor(
     _ => ui.TileMode.clamp,
   };
 
+  // `Gradient.sweep` needs an increasing range; flipY reverses COLR angles.
+  var sweepStart = _radians(paint.startAngle, flipY);
+  var sweepEnd = _radians(paint.endAngle, flipY);
+  if (!sweepStart.isFinite) sweepStart = 0;
+  if (!sweepEnd.isFinite) sweepEnd = sweepStart + 2 * pi;
+  if (sweepEnd < sweepStart) {
+    final lower = sweepEnd;
+    sweepEnd = sweepStart;
+    sweepStart = lower;
+  }
+  if (sweepEnd == sweepStart) {
+    // Equal angles mean a full circle in COLR.
+    sweepEnd += 2 * pi;
+  }
+
   result.shader = switch (paint.kind) {
     PaintKind.linear => ui.Gradient.linear(
       ui.Offset(tx(paint.x0), ty(paint.y0)),
@@ -171,8 +187,8 @@ ui.Paint _paintFor(
       colors,
       stops.isNotEmpty ? stops : null,
       tileMode,
-      _radians(paint.startAngle, flipY),
-      _radians(paint.endAngle, flipY),
+      sweepStart,
+      sweepEnd,
     ),
     PaintKind.solid => null,
   };
@@ -180,4 +196,4 @@ ui.Paint _paintFor(
 }
 
 double _radians(double degrees, bool flipY) =>
-    degrees * 3.1415926535897932 / 180.0 * (flipY ? -1 : 1);
+    degrees * pi / 180.0 * (flipY ? -1 : 1);

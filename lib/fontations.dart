@@ -12,7 +12,17 @@ export 'src/rust/api/fontations.dart';
 export 'src/rust/api/upstream.dart';
 export 'src/rust/frb_generated.dart' show RustLib;
 
-/// Loads and initializes the native Rust library. Safe to call repeatedly.
-Future<void> initFontations() async {
-  await RustLib.init(externalLibrary: await loadFontationsExternalLibrary());
+Future<void>? _initialization;
+
+/// Loads and initializes the native Rust library. Repeated/concurrent calls
+/// share one init; a failed load can be retried.
+Future<void> initFontations() => _initialization ??= _initializeFontations();
+
+Future<void> _initializeFontations() async {
+  try {
+    await RustLib.init(externalLibrary: await loadFontationsExternalLibrary());
+  } catch (_) {
+    _initialization = null;
+    rethrow;
+  }
 }

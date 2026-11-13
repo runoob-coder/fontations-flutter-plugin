@@ -1,0 +1,273 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Every job only reads the repository.
+permissions:
+  contents: read
+
+# A newer push supersedes an in-flight run on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: cargo fmt
+        working-directory: rust
+        run: cargo fmt --check
+      - name: cargo test
+        working-directory: rust
+        run: cargo test --all-targets
+      # Font bytes are untrusted input: fail the build on a known advisory in
+      # any of the Rust dependencies, not just on our own tests.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: cargo audit
+        working-directory: rust
+        run: cargo audit
+
+  fuzz:
+    name: Fuzz smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: cargo audit (fuzz dependencies)
+        working-directory: rust/fuzz
+        run: cargo audit
+      - name: cargo fmt (fuzz targets)
+        working-directory: rust/fuzz
+        run: cargo fmt --check
+      - name: deterministic fuzz tests
+        working-directory: rust/fuzz
+        run: cargo test
+      - name: build all fuzz targets
+        working-directory: rust
+        run: cargo fuzz build
+      # A short, deterministic smoke run per target. Longer campaigns belong
+      # on OSS-Fuzz / a scheduled job; this catches panics, aborts, stack
+      # overflows and hangs introduced by the current diff.
+      - name: smoke run
+        working-directory: rust
+        run: |
+          set -euo pipefail
+          for target in fuzz_font_entry fuzz_shape fuzz_outline fuzz_varc_color fuzz_modify; do
+            mkdir -p "fuzz/corpus/$target"
+            cp fuzz/seeds/* "fuzz/corpus/$target/"
+            echo "::group::$target"
+            cargo fuzz run "$target" -- \
+              -runs=5000 -max_len=8192 -timeout=5 -dict=fuzz/font.dict
+            echo "::endgroup::"
+          done
+
+  dart:
+    name: Dart
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      - name: dart format
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib test example/lib example/test example/integration_test
+      - name: flutter analyze
+        run: flutter analyze
+      # Builds the host library and runs all three Dart suites.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: Dart tests
+        run: ./scripts/test.sh --unit --integration --example
+
+  web:
+    name: WebAssembly build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # `scripts/build_web.sh` needs nightly + rust-src, because the module has
+      # to be built with `-Z build-std` and shared memory for the
+      # `flutter_rust_bridge` worker pool. See the script for the details.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: cache wasm-bindgen-cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ runner.os }}
+      - name: build the wasm module
+        run: ./scripts/build_web.sh example/web/pkg
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      # Compiles the app, and with it the plugin, for the web. This is a compile
+      # check only: integration tests do not run on web devices, and the browser
+      # path needs cross origin isolation, which no test harness provides here.
+      # `--no-web-resources-cdn` keeps CanvasKit on the same origin, which
+      # `Cross-Origin-Embedder-Policy: require-corp` would otherwise block.
+      - name: flutter build web
+        working-directory: example
+        run: flutter build web --no-web-resources-cdn
+      # Guards the two halves of the cross origin isolation setup: the worker has
+      # to reach the build, and Flutter's own service worker must stay
+      # unregistered - one scope can only have one worker, and Flutter's would
+      # evict ours on every load, which puts back the `SharedArrayBuffer transfer
+      # requires self.crossOriginIsolated` panic.
+      - name: check the isolation setup
+        working-directory: example
+        run: |
+          test -f build/web/coi_serviceworker.js
+          grep -q "coi_serviceworker.js" build/web/index.html
+          # `serviceWorkerSettings: {` is how the generated bootstrap registers
+          # Flutter's worker; the inlined `flutter.js` mentions the option
+          # without the brace, hence the space in the pattern.
+          ! grep -q "serviceWorkerSettings: {" build/web/flutter_bootstrap.js
+
+  artifacts:
+    name: XCFrameworks match rust/
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # Cheap on purpose: only hashes rust/, so the expensive macOS job can wait
+      # behind it. A stale XCFramework does not fail a build, it silently links
+      # old Rust code - see scripts/check_xcframework.sh.
+      - run: ./scripts/check_xcframework.sh
+
+  macos:
+    name: macOS integration tests
+    # Gated on the jobs above: without the artifact check these tests could pass
+    # while running a binary that is not the Rust code in this commit.
+    needs: [rust, dart, artifacts]
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # Needed when the example resolves to the CocoaPods path, where cargokit
+      # compiles the crate during the Xcode build.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      - name: integration tests
+        working-directory: example
+        run: flutter test integration_test/simple_test.dart -d macos
+
+  windows:
+    name: Windows integration tests
+    # Mirrors the macOS job: cargokit compiles the Rust crate through
+    # windows/CMakeLists.txt during the Windows build, and the example app's
+    # on-device integration test is the only path that exercises that .dll
+    # bundling + load. macOS cannot build Windows apps, so this must run on a
+    # Windows runner.
+    needs: [rust, dart]
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # cargokit compiles the Rust crate during the Windows build.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      - name: integration tests
+        working-directory: example
+        run: flutter test integration_test/simple_test.dart -d windows
+
+  linux:
+    name: Linux integration tests
+    # Mirrors the Windows/macOS jobs: cargokit compiles the Rust crate through
+    # linux/CMakeLists.txt during the Linux build, and the example app's
+    # on-device integration test exercises that .so bundling + load. The
+    # ubuntu runner is headless, so the desktop app is launched under xvfb.
+    needs: [rust, dart]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # cargokit compiles the Rust crate during the Linux build.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      - name: install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: integration tests
+        working-directory: example
+        run: xvfb-run -a flutter test integration_test/simple_test.dart -d linux

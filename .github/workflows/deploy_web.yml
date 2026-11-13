@@ -1,0 +1,224 @@
+name: Web preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "example/**"
+      - "lib/**"
+      - "rust/src/**"
+      - "rust/Cargo.toml"
+      - "rust/Cargo.lock"
+      - "scripts/build_web.sh"
+      - "pubspec.yaml"
+      - ".github/workflows/deploy_web.yml"
+  # No paths filter here: a closed PR must still be able to remove its preview.
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+# Every job writes to the same gh-pages branch, so deploys must not overlap.
+concurrency:
+  group: web-preview
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build web preview
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      dest_dir: ${{ steps.meta.outputs.dest_dir }}
+      base_href: ${{ steps.meta.outputs.base_href }}
+      preview_url: ${{ steps.meta.outputs.preview_url }}
+      artifact: ${{ steps.meta.outputs.artifact }}
+      deployable: ${{ steps.meta.outputs.deployable }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # build_web.sh needs nightly + rust-src for `-Z build-std` and shared memory.
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: cache wasm-bindgen-cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: wasm-bindgen-cli-${{ runner.os }}-${{ hashFiles('rust/Cargo.lock') }}
+
+      - name: preview paths
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.event.repository.name }}
+          OWNER: ${{ github.repository_owner }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then
+            dir="pr-$PR"
+            href="/$REPO/$dir/"
+          else
+            dir=""
+            href="/$REPO/"
+          fi
+          echo "dest_dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "base_href=$href" >> "$GITHUB_OUTPUT"
+          echo "preview_url=https://$OWNER.github.io$href" >> "$GITHUB_OUTPUT"
+          echo "artifact=web-preview-${PR:-main}" >> "$GITHUB_OUTPUT"
+          # Fork PRs have a read-only token: build and upload, but never deploy.
+          if [ "$EVENT" != "pull_request" ] || [ "$HEAD_REPO" = "$REPOSITORY" ]; then
+            echo "deployable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deployable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: build the wasm module
+        run: ./scripts/build_web.sh example/web/pkg
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - name: example dependencies
+        working-directory: example
+        run: flutter pub get
+      # CanvasKit stays on the same origin so COEP cannot block it.
+      - name: build web
+        working-directory: example
+        env:
+          BASE_HREF: ${{ steps.meta.outputs.base_href }}
+        run: >-
+          flutter build web --release --no-web-resources-cdn
+          --base-href "$BASE_HREF"
+
+      - name: check the bundle
+        working-directory: example
+        env:
+          BASE_HREF: ${{ steps.meta.outputs.base_href }}
+        run: |
+          set -euo pipefail
+          test -f build/web/coi_serviceworker.js
+          test -f build/web/pkg/fontations.js
+          test -f build/web/pkg/fontations_bg.wasm
+          grep -q 'coi_serviceworker.js' build/web/index.html
+          grep -q "<base href=\"$BASE_HREF\">" build/web/index.html
+          # Flutter's own worker would evict the isolation worker.
+          ! grep -q "serviceWorkerSettings: {" build/web/flutter_bootstrap.js
+          touch build/web/.nojekyll
+
+      - name: upload preview bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact }}
+          path: example/build/web
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: error
+
+  deploy:
+    name: Publish preview
+    needs: build
+    if: needs.build.outputs.deployable == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact }}
+          path: site
+      # keep_files preserves the other PR previews on the shared branch.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
+          destination_dir: ${{ needs.build.outputs.dest_dir }}
+          keep_files: true
+          enable_jekyll: false
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: "Deploy ${{ github.event_name }} ${{ github.sha }}"
+
+      - name: Comment the preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ needs.build.outputs.preview_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const marker = '<!-- fontations-web-preview -->';
+            const body = [
+              marker,
+              `Web preview: ${process.env.PREVIEW_URL}`,
+              '',
+              'The wasm module needs cross-origin isolation; `coi_serviceworker.js` adds the',
+              'headers on GitHub Pages, so the first load reloads once.',
+              `Bundle: ${process.env.RUN_URL}`,
+            ].join('\n');
+            const params = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            };
+            const { data: comments } = await github.rest.issues.listComments({
+              ...params,
+              per_page: 100,
+            });
+            const previous = comments.find(
+              (comment) => comment.user.type === 'Bot' && comment.body.includes(marker),
+            );
+            if (previous) {
+              await github.rest.issues.updateComment({
+                ...params,
+                comment_id: previous.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({ ...params, body });
+            }
+
+  cleanup:
+    name: Remove closed PR preview
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The branch does not exist until the first deploy.
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+        continue-on-error: true
+      - name: Remove the preview directory
+        env:
+          DIR: pr-${{ github.event.pull_request.number }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ ! -d "$DIR" ]; then
+            echo "No preview for PR #$PR"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf "$DIR"
+          git add -A
+          git commit -m "Remove web preview for PR #$PR"
+          git push

@@ -195,7 +195,10 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
+      # SwiftPM needs the checkout directory to match the pub package name.
       - uses: actions/checkout@v4
+        with:
+          path: fontations
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -205,14 +208,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: rust
+          workspaces: fontations/rust
       - run: flutter config --no-analytics
-      - run: flutter pub get
+      - name: plugin dependencies
+        working-directory: fontations
+        run: flutter pub get
       - name: example dependencies
-        working-directory: example
+        working-directory: fontations/example
         run: flutter pub get
       - name: integration tests
-        working-directory: example
+        working-directory: fontations/example
         run: flutter test integration_test/simple_test.dart -d macos
 
   windows:

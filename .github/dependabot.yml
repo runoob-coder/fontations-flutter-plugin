@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # The font parsing stack is the security boundary of this plugin.
+  - package-ecosystem: cargo
+    directory: /rust
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  # The fuzz crate is an independent workspace with its own lockfile.
+  - package-ecosystem: cargo
+    directory: /rust/fuzz
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

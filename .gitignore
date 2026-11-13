@@ -35,6 +35,9 @@ migrate_working_dir/
 # Local agent workspace: working memory, not part of the package.
 .codebuddy/
 
+# iOS (cargokit/SwiftPM) Xcode derived build output.
+/ios/fontations/build/
+
 # WebAssembly build output, produced by scripts/build_web.sh.
 # `pkg/` at the package root is what `flutter test` looks for, `example/web/pkg`
 # is what the example app serves.

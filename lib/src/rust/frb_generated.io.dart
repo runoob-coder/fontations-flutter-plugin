@@ -5,6 +5,7 @@
 
 import 'api/build.dart';
 import 'api/fontations.dart';
+import 'api/upstream.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -50,6 +51,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AlternateSubstitutionSpec dco_decode_alternate_substitution_spec(dynamic raw);
+
+  @protected
   AvarInfo dco_decode_avar_info(dynamic raw);
 
   @protected
@@ -65,7 +69,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitmapGlyphInfo dco_decode_bitmap_glyph_info(dynamic raw);
 
   @protected
+  BitmapGlyphSpec dco_decode_bitmap_glyph_spec(dynamic raw);
+
+  @protected
   BitmapStrikeInfo dco_decode_bitmap_strike_info(dynamic raw);
+
+  @protected
+  BitmapStrikeSpec dco_decode_bitmap_strike_spec(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
@@ -86,12 +96,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  FeatureVariationPatchRequest
+  dco_decode_box_autoadd_feature_variation_patch_request(dynamic raw);
+
+  @protected
   FontBuildRequest dco_decode_box_autoadd_font_build_request(dynamic raw);
 
   @protected
   FontModificationRequest dco_decode_box_autoadd_font_modification_request(
     dynamic raw,
   );
+
+  @protected
+  FontSubsetRequest dco_decode_box_autoadd_font_subset_request(dynamic raw);
+
+  @protected
+  HintEngineKind dco_decode_box_autoadd_hint_engine_kind(dynamic raw);
+
+  @protected
+  HintingSpec dco_decode_box_autoadd_hinting_spec(dynamic raw);
 
   @protected
   MathAssemblyPartListInfo dco_decode_box_autoadd_math_assembly_part_list_info(
@@ -102,10 +125,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MathGlyphInfoInfo dco_decode_box_autoadd_math_glyph_info_info(dynamic raw);
 
   @protected
+  MathTableRequest dco_decode_box_autoadd_math_table_request(dynamic raw);
+
+  @protected
   MathVariantsInfo dco_decode_box_autoadd_math_variants_info(dynamic raw);
 
   @protected
+  RasterTargetKind dco_decode_box_autoadd_raster_target_kind(dynamic raw);
+
+  @protected
   RectF dco_decode_box_autoadd_rect_f(dynamic raw);
+
+  @protected
+  SubstitutionPatchRequest dco_decode_box_autoadd_substitution_patch_request(
+    dynamic raw,
+  );
 
   @protected
   int dco_decode_box_autoadd_u_16(dynamic raw);
@@ -117,6 +151,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   VarcGlyphInfo dco_decode_box_autoadd_varc_glyph_info(dynamic raw);
 
   @protected
+  VarcPatchRequest dco_decode_box_autoadd_varc_patch_request(dynamic raw);
+
+  @protected
   VariantMappingInfo dco_decode_box_autoadd_variant_mapping_info(dynamic raw);
 
   @protected
@@ -124,6 +161,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   VerticalMetricsSpec dco_decode_box_autoadd_vertical_metrics_spec(dynamic raw);
+
+  @protected
+  VerticalOriginRequest dco_decode_box_autoadd_vertical_origin_request(
+    dynamic raw,
+  );
 
   @protected
   CharMapping dco_decode_char_mapping(dynamic raw);
@@ -138,6 +180,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ColorGlyphInfo dco_decode_color_glyph_info(dynamic raw);
 
   @protected
+  ColorGlyphPaintSpec dco_decode_color_glyph_paint_spec(dynamic raw);
+
+  @protected
   ColorLayer dco_decode_color_layer(dynamic raw);
 
   @protected
@@ -150,6 +195,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ColorStop dco_decode_color_stop(dynamic raw);
 
   @protected
+  ColorStopSpec dco_decode_color_stop_spec(dynamic raw);
+
+  @protected
+  ContextualSubstitutionSpec dco_decode_contextual_substitution_spec(
+    dynamic raw,
+  );
+
+  @protected
   ContourPoint dco_decode_contour_point(dynamic raw);
 
   @protected
@@ -159,7 +212,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ExistingLigatureSpec dco_decode_existing_ligature_spec(dynamic raw);
 
   @protected
+  ExtendedTableInfo dco_decode_extended_table_info(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FeatureConditionSpec dco_decode_feature_condition_spec(dynamic raw);
+
+  @protected
+  FeatureSubstitutionSpec dco_decode_feature_substitution_spec(dynamic raw);
+
+  @protected
+  FeatureVariationPatchRequest dco_decode_feature_variation_patch_request(
+    dynamic raw,
+  );
+
+  @protected
+  FeatureVariationRecordSpec dco_decode_feature_variation_record_spec(
+    dynamic raw,
+  );
 
   @protected
   FontAttributes dco_decode_font_attributes(dynamic raw);
@@ -180,6 +252,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FontNames dco_decode_font_names(dynamic raw);
 
   @protected
+  FontSubsetRequest dco_decode_font_subset_request(dynamic raw);
+
+  @protected
+  GaspRangeInfo dco_decode_gasp_range_info(dynamic raw);
+
+  @protected
   GlyphColorLayer dco_decode_glyph_color_layer(dynamic raw);
 
   @protected
@@ -196,6 +274,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   GlyphSpec dco_decode_glyph_spec(dynamic raw);
+
+  @protected
+  HintEngineKind dco_decode_hint_engine_kind(dynamic raw);
+
+  @protected
+  HintingSpec dco_decode_hinting_spec(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -216,6 +300,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<AlternateSubstitutionSpec> dco_decode_list_alternate_substitution_spec(
+    dynamic raw,
+  );
+
+  @protected
   List<AxisSegmentMapsInfo> dco_decode_list_axis_segment_maps_info(dynamic raw);
 
   @protected
@@ -225,13 +314,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AxisValueMapSpec> dco_decode_list_axis_value_map_spec(dynamic raw);
 
   @protected
+  List<BitmapGlyphSpec> dco_decode_list_bitmap_glyph_spec(dynamic raw);
+
+  @protected
   List<BitmapStrikeInfo> dco_decode_list_bitmap_strike_info(dynamic raw);
+
+  @protected
+  List<BitmapStrikeSpec> dco_decode_list_bitmap_strike_spec(dynamic raw);
 
   @protected
   List<CharMapping> dco_decode_list_char_mapping(dynamic raw);
 
   @protected
   List<CodePointVariant> dco_decode_list_code_point_variant(dynamic raw);
+
+  @protected
+  List<ColorGlyphPaintSpec> dco_decode_list_color_glyph_paint_spec(dynamic raw);
 
   @protected
   List<ColorLayer> dco_decode_list_color_layer(dynamic raw);
@@ -241,6 +339,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ColorStop> dco_decode_list_color_stop(dynamic raw);
+
+  @protected
+  List<ColorStopSpec> dco_decode_list_color_stop_spec(dynamic raw);
+
+  @protected
+  List<ContextualSubstitutionSpec> dco_decode_list_contextual_substitution_spec(
+    dynamic raw,
+  );
 
   @protected
   List<ContourPoint> dco_decode_list_contour_point(dynamic raw);
@@ -256,6 +362,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FeatureConditionSpec> dco_decode_list_feature_condition_spec(
+    dynamic raw,
+  );
+
+  @protected
+  List<FeatureSubstitutionSpec> dco_decode_list_feature_substitution_spec(
+    dynamic raw,
+  );
+
+  @protected
+  List<FeatureVariationRecordSpec>
+  dco_decode_list_feature_variation_record_spec(dynamic raw);
+
+  @protected
+  List<GaspRangeInfo> dco_decode_list_gasp_range_info(dynamic raw);
+
+  @protected
   List<GlyphColorLayer> dco_decode_list_glyph_color_layer(dynamic raw);
 
   @protected
@@ -263,6 +386,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<GlyphContour> dco_decode_list_glyph_contour(dynamic raw);
+
+  @protected
+  List<GlyphOutline> dco_decode_list_glyph_outline(dynamic raw);
 
   @protected
   List<GlyphSpec> dco_decode_list_glyph_spec(dynamic raw);
@@ -288,10 +414,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<MathConstantInfo> dco_decode_list_math_constant_info(dynamic raw);
 
   @protected
+  List<MathConstantSpec> dco_decode_list_math_constant_spec(dynamic raw);
+
+  @protected
+  List<MathConstructionSpec> dco_decode_list_math_construction_spec(
+    dynamic raw,
+  );
+
+  @protected
+  List<MathGlyphValueSpec> dco_decode_list_math_glyph_value_spec(dynamic raw);
+
+  @protected
   List<MathKernEntryInfo> dco_decode_list_math_kern_entry_info(dynamic raw);
 
   @protected
   List<MathKernInfo> dco_decode_list_math_kern_info(dynamic raw);
+
+  @protected
+  List<MathKernSpec> dco_decode_list_math_kern_spec(dynamic raw);
+
+  @protected
+  List<MathPartSpec> dco_decode_list_math_part_spec(dynamic raw);
 
   @protected
   List<MathVariantRecordInfo> dco_decode_list_math_variant_record_info(
@@ -299,7 +442,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<MathVariantSpec> dco_decode_list_math_variant_spec(dynamic raw);
+
+  @protected
+  List<MetaEntryInfo> dco_decode_list_meta_entry_info(dynamic raw);
+
+  @protected
   List<MetricValue> dco_decode_list_metric_value(dynamic raw);
+
+  @protected
+  List<MultipleSubstitutionSpec> dco_decode_list_multiple_substitution_spec(
+    dynamic raw,
+  );
 
   @protected
   List<NameRecordInfo> dco_decode_list_name_record_info(dynamic raw);
@@ -311,13 +465,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<NamedInstanceSpec> dco_decode_list_named_instance_spec(dynamic raw);
 
   @protected
+  List<PaintNodeSpec> dco_decode_list_paint_node_spec(dynamic raw);
+
+  @protected
+  List<PatchRawTableSpec> dco_decode_list_patch_raw_table_spec(dynamic raw);
+
+  @protected
   List<PathElement> dco_decode_list_path_element(dynamic raw);
 
   @protected
   Float64List dco_decode_list_prim_f_64_strict(dynamic raw);
 
   @protected
+  Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
+
+  @protected
   Uint16List dco_decode_list_prim_u_16_strict(dynamic raw);
+
+  @protected
+  List<int> dco_decode_list_prim_u_32_loose(dynamic raw);
 
   @protected
   Uint32List dco_decode_list_prim_u_32_strict(dynamic raw);
@@ -332,13 +498,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<RawTableSpec> dco_decode_list_raw_table_spec(dynamic raw);
 
   @protected
+  List<ReverseChainSubstitutionSpec>
+  dco_decode_list_reverse_chain_substitution_spec(dynamic raw);
+
+  @protected
   List<ShapedGlyph> dco_decode_list_shaped_glyph(dynamic raw);
 
   @protected
   List<StylisticAlternate> dco_decode_list_stylistic_alternate(dynamic raw);
 
   @protected
+  List<SvgDocumentInfo> dco_decode_list_svg_document_info(dynamic raw);
+
+  @protected
+  List<SvgDocumentSpec> dco_decode_list_svg_document_spec(dynamic raw);
+
+  @protected
   List<VarcComponentInfo> dco_decode_list_varc_component_info(dynamic raw);
+
+  @protected
+  List<VarcComponentSpec> dco_decode_list_varc_component_spec(dynamic raw);
+
+  @protected
+  List<VarcDeltaSetSpec> dco_decode_list_varc_delta_set_spec(dynamic raw);
+
+  @protected
+  List<VarcDeltaSpec> dco_decode_list_varc_delta_spec(dynamic raw);
+
+  @protected
+  List<VarcGlyphSpec> dco_decode_list_varc_glyph_spec(dynamic raw);
+
+  @protected
+  List<VarcRegionAxisSpec> dco_decode_list_varc_region_axis_spec(dynamic raw);
 
   @protected
   List<VariantMappingInfo> dco_decode_list_variant_mapping_info(dynamic raw);
@@ -361,6 +552,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<VariationSetting> dco_decode_list_variation_setting(dynamic raw);
 
   @protected
+  List<VerticalOriginSpec> dco_decode_list_vertical_origin_spec(dynamic raw);
+
+  @protected
   MathAssemblyPartInfo dco_decode_math_assembly_part_info(dynamic raw);
 
   @protected
@@ -370,7 +564,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MathConstantInfo dco_decode_math_constant_info(dynamic raw);
 
   @protected
+  MathConstantSpec dco_decode_math_constant_spec(dynamic raw);
+
+  @protected
+  MathConstructionSpec dco_decode_math_construction_spec(dynamic raw);
+
+  @protected
   MathGlyphInfoInfo dco_decode_math_glyph_info_info(dynamic raw);
+
+  @protected
+  MathGlyphValueSpec dco_decode_math_glyph_value_spec(dynamic raw);
 
   @protected
   MathKernEntryInfo dco_decode_math_kern_entry_info(dynamic raw);
@@ -379,13 +582,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MathKernInfo dco_decode_math_kern_info(dynamic raw);
 
   @protected
+  MathKernSpec dco_decode_math_kern_spec(dynamic raw);
+
+  @protected
+  MathPartSpec dco_decode_math_part_spec(dynamic raw);
+
+  @protected
+  MathTableRequest dco_decode_math_table_request(dynamic raw);
+
+  @protected
   MathVariantRecordInfo dco_decode_math_variant_record_info(dynamic raw);
+
+  @protected
+  MathVariantSpec dco_decode_math_variant_spec(dynamic raw);
 
   @protected
   MathVariantsInfo dco_decode_math_variants_info(dynamic raw);
 
   @protected
+  MetaEntryInfo dco_decode_meta_entry_info(dynamic raw);
+
+  @protected
   MetricValue dco_decode_metric_value(dynamic raw);
+
+  @protected
+  MultipleSubstitutionSpec dco_decode_multiple_substitution_spec(dynamic raw);
 
   @protected
   NameRecordInfo dco_decode_name_record_info(dynamic raw);
@@ -415,6 +636,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  HintEngineKind? dco_decode_opt_box_autoadd_hint_engine_kind(dynamic raw);
+
+  @protected
+  HintingSpec? dco_decode_opt_box_autoadd_hinting_spec(dynamic raw);
+
+  @protected
   MathAssemblyPartListInfo?
   dco_decode_opt_box_autoadd_math_assembly_part_list_info(dynamic raw);
 
@@ -425,6 +652,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MathVariantsInfo? dco_decode_opt_box_autoadd_math_variants_info(dynamic raw);
+
+  @protected
+  RasterTargetKind? dco_decode_opt_box_autoadd_raster_target_kind(dynamic raw);
 
   @protected
   RectF? dco_decode_opt_box_autoadd_rect_f(dynamic raw);
@@ -464,16 +694,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaintKind dco_decode_paint_kind(dynamic raw);
 
   @protected
+  PaintNodeSpec dco_decode_paint_node_spec(dynamic raw);
+
+  @protected
+  PatchRawTableSpec dco_decode_patch_raw_table_spec(dynamic raw);
+
+  @protected
   PathElement dco_decode_path_element(dynamic raw);
 
   @protected
   PathVerb dco_decode_path_verb(dynamic raw);
 
   @protected
+  RasterTargetKind dco_decode_raster_target_kind(dynamic raw);
+
+  @protected
   RawTableSpec dco_decode_raw_table_spec(dynamic raw);
 
   @protected
   RectF dco_decode_rect_f(dynamic raw);
+
+  @protected
+  ReverseChainSubstitutionSpec dco_decode_reverse_chain_substitution_spec(
+    dynamic raw,
+  );
+
+  @protected
+  ScalerInfo dco_decode_scaler_info(dynamic raw);
 
   @protected
   ShapeResult dco_decode_shape_result(dynamic raw);
@@ -486,6 +733,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   StylisticAlternate dco_decode_stylistic_alternate(dynamic raw);
+
+  @protected
+  SubstitutionPatchRequest dco_decode_substitution_patch_request(dynamic raw);
+
+  @protected
+  SvgDocumentInfo dco_decode_svg_document_info(dynamic raw);
+
+  @protected
+  SvgDocumentSpec dco_decode_svg_document_spec(dynamic raw);
 
   @protected
   int dco_decode_u_16(dynamic raw);
@@ -506,7 +762,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   VarcComponentInfo dco_decode_varc_component_info(dynamic raw);
 
   @protected
+  VarcComponentSpec dco_decode_varc_component_spec(dynamic raw);
+
+  @protected
+  VarcDeltaSetSpec dco_decode_varc_delta_set_spec(dynamic raw);
+
+  @protected
+  VarcDeltaSpec dco_decode_varc_delta_spec(dynamic raw);
+
+  @protected
   VarcGlyphInfo dco_decode_varc_glyph_info(dynamic raw);
+
+  @protected
+  VarcGlyphSpec dco_decode_varc_glyph_spec(dynamic raw);
+
+  @protected
+  VarcPatchRequest dco_decode_varc_patch_request(dynamic raw);
+
+  @protected
+  VarcRegionAxisSpec dco_decode_varc_region_axis_spec(dynamic raw);
 
   @protected
   VariantMappingInfo dco_decode_variant_mapping_info(dynamic raw);
@@ -533,6 +807,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   VerticalMetricsSpec dco_decode_vertical_metrics_spec(dynamic raw);
 
   @protected
+  VerticalOriginRequest dco_decode_vertical_origin_request(dynamic raw);
+
+  @protected
+  VerticalOriginSpec dco_decode_vertical_origin_spec(dynamic raw);
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
@@ -557,6 +837,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AlternateSubstitutionSpec sse_decode_alternate_substitution_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   AvarInfo sse_decode_avar_info(SseDeserializer deserializer);
 
   @protected
@@ -574,7 +859,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitmapGlyphInfo sse_decode_bitmap_glyph_info(SseDeserializer deserializer);
 
   @protected
+  BitmapGlyphSpec sse_decode_bitmap_glyph_spec(SseDeserializer deserializer);
+
+  @protected
   BitmapStrikeInfo sse_decode_bitmap_strike_info(SseDeserializer deserializer);
+
+  @protected
+  BitmapStrikeSpec sse_decode_bitmap_strike_spec(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -599,6 +890,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  FeatureVariationPatchRequest
+  sse_decode_box_autoadd_feature_variation_patch_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FontBuildRequest sse_decode_box_autoadd_font_build_request(
     SseDeserializer deserializer,
   );
@@ -607,6 +904,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FontModificationRequest sse_decode_box_autoadd_font_modification_request(
     SseDeserializer deserializer,
   );
+
+  @protected
+  FontSubsetRequest sse_decode_box_autoadd_font_subset_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HintEngineKind sse_decode_box_autoadd_hint_engine_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HintingSpec sse_decode_box_autoadd_hinting_spec(SseDeserializer deserializer);
 
   @protected
   MathAssemblyPartListInfo sse_decode_box_autoadd_math_assembly_part_list_info(
@@ -619,12 +929,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  MathTableRequest sse_decode_box_autoadd_math_table_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MathVariantsInfo sse_decode_box_autoadd_math_variants_info(
     SseDeserializer deserializer,
   );
 
   @protected
+  RasterTargetKind sse_decode_box_autoadd_raster_target_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RectF sse_decode_box_autoadd_rect_f(SseDeserializer deserializer);
+
+  @protected
+  SubstitutionPatchRequest sse_decode_box_autoadd_substitution_patch_request(
+    SseDeserializer deserializer,
+  );
 
   @protected
   int sse_decode_box_autoadd_u_16(SseDeserializer deserializer);
@@ -634,6 +959,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   VarcGlyphInfo sse_decode_box_autoadd_varc_glyph_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VarcPatchRequest sse_decode_box_autoadd_varc_patch_request(
     SseDeserializer deserializer,
   );
 
@@ -653,6 +983,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VerticalOriginRequest sse_decode_box_autoadd_vertical_origin_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CharMapping sse_decode_char_mapping(SseDeserializer deserializer);
 
   @protected
@@ -665,6 +1000,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ColorGlyphInfo sse_decode_color_glyph_info(SseDeserializer deserializer);
 
   @protected
+  ColorGlyphPaintSpec sse_decode_color_glyph_paint_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ColorLayer sse_decode_color_layer(SseDeserializer deserializer);
 
   @protected
@@ -675,6 +1015,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ColorStop sse_decode_color_stop(SseDeserializer deserializer);
+
+  @protected
+  ColorStopSpec sse_decode_color_stop_spec(SseDeserializer deserializer);
+
+  @protected
+  ContextualSubstitutionSpec sse_decode_contextual_substitution_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   ContourPoint sse_decode_contour_point(SseDeserializer deserializer);
@@ -690,7 +1038,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ExtendedTableInfo sse_decode_extended_table_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FeatureConditionSpec sse_decode_feature_condition_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FeatureSubstitutionSpec sse_decode_feature_substitution_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FeatureVariationPatchRequest sse_decode_feature_variation_patch_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FeatureVariationRecordSpec sse_decode_feature_variation_record_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   FontAttributes sse_decode_font_attributes(SseDeserializer deserializer);
@@ -713,6 +1086,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FontNames sse_decode_font_names(SseDeserializer deserializer);
 
   @protected
+  FontSubsetRequest sse_decode_font_subset_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  GaspRangeInfo sse_decode_gasp_range_info(SseDeserializer deserializer);
+
+  @protected
   GlyphColorLayer sse_decode_glyph_color_layer(SseDeserializer deserializer);
 
   @protected
@@ -729,6 +1110,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   GlyphSpec sse_decode_glyph_spec(SseDeserializer deserializer);
+
+  @protected
+  HintEngineKind sse_decode_hint_engine_kind(SseDeserializer deserializer);
+
+  @protected
+  HintingSpec sse_decode_hinting_spec(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -751,6 +1138,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<AlternateSubstitutionSpec> sse_decode_list_alternate_substitution_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<AxisSegmentMapsInfo> sse_decode_list_axis_segment_maps_info(
     SseDeserializer deserializer,
   );
@@ -766,7 +1158,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<BitmapGlyphSpec> sse_decode_list_bitmap_glyph_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<BitmapStrikeInfo> sse_decode_list_bitmap_strike_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<BitmapStrikeSpec> sse_decode_list_bitmap_strike_spec(
     SseDeserializer deserializer,
   );
 
@@ -775,6 +1177,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<CodePointVariant> sse_decode_list_code_point_variant(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ColorGlyphPaintSpec> sse_decode_list_color_glyph_paint_spec(
     SseDeserializer deserializer,
   );
 
@@ -788,6 +1195,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ColorStop> sse_decode_list_color_stop(SseDeserializer deserializer);
+
+  @protected
+  List<ColorStopSpec> sse_decode_list_color_stop_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ContextualSubstitutionSpec> sse_decode_list_contextual_substitution_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ContourPoint> sse_decode_list_contour_point(
@@ -805,6 +1222,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FeatureConditionSpec> sse_decode_list_feature_condition_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FeatureSubstitutionSpec> sse_decode_list_feature_substitution_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FeatureVariationRecordSpec>
+  sse_decode_list_feature_variation_record_spec(SseDeserializer deserializer);
+
+  @protected
+  List<GaspRangeInfo> sse_decode_list_gasp_range_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<GlyphColorLayer> sse_decode_list_glyph_color_layer(
     SseDeserializer deserializer,
   );
@@ -816,6 +1252,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<GlyphContour> sse_decode_list_glyph_contour(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<GlyphOutline> sse_decode_list_glyph_outline(
     SseDeserializer deserializer,
   );
 
@@ -851,6 +1292,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<MathConstantSpec> sse_decode_list_math_constant_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MathConstructionSpec> sse_decode_list_math_construction_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MathGlyphValueSpec> sse_decode_list_math_glyph_value_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MathKernEntryInfo> sse_decode_list_math_kern_entry_info(
     SseDeserializer deserializer,
   );
@@ -861,12 +1317,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<MathKernSpec> sse_decode_list_math_kern_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MathPartSpec> sse_decode_list_math_part_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MathVariantRecordInfo> sse_decode_list_math_variant_record_info(
     SseDeserializer deserializer,
   );
 
   @protected
+  List<MathVariantSpec> sse_decode_list_math_variant_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<MetaEntryInfo> sse_decode_list_meta_entry_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<MetricValue> sse_decode_list_metric_value(SseDeserializer deserializer);
+
+  @protected
+  List<MultipleSubstitutionSpec> sse_decode_list_multiple_substitution_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<NameRecordInfo> sse_decode_list_name_record_info(
@@ -884,13 +1365,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<PaintNodeSpec> sse_decode_list_paint_node_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<PatchRawTableSpec> sse_decode_list_patch_raw_table_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<PathElement> sse_decode_list_path_element(SseDeserializer deserializer);
 
   @protected
   Float64List sse_decode_list_prim_f_64_strict(SseDeserializer deserializer);
 
   @protected
+  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
+
+  @protected
   Uint16List sse_decode_list_prim_u_16_strict(SseDeserializer deserializer);
+
+  @protected
+  List<int> sse_decode_list_prim_u_32_loose(SseDeserializer deserializer);
 
   @protected
   Uint32List sse_decode_list_prim_u_32_strict(SseDeserializer deserializer);
@@ -907,6 +1404,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ReverseChainSubstitutionSpec>
+  sse_decode_list_reverse_chain_substitution_spec(SseDeserializer deserializer);
+
+  @protected
   List<ShapedGlyph> sse_decode_list_shaped_glyph(SseDeserializer deserializer);
 
   @protected
@@ -915,7 +1416,42 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<SvgDocumentInfo> sse_decode_list_svg_document_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SvgDocumentSpec> sse_decode_list_svg_document_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<VarcComponentInfo> sse_decode_list_varc_component_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<VarcComponentSpec> sse_decode_list_varc_component_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<VarcDeltaSetSpec> sse_decode_list_varc_delta_set_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<VarcDeltaSpec> sse_decode_list_varc_delta_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<VarcGlyphSpec> sse_decode_list_varc_glyph_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<VarcRegionAxisSpec> sse_decode_list_varc_region_axis_spec(
     SseDeserializer deserializer,
   );
 
@@ -950,6 +1486,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<VerticalOriginSpec> sse_decode_list_vertical_origin_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MathAssemblyPartInfo sse_decode_math_assembly_part_info(
     SseDeserializer deserializer,
   );
@@ -963,7 +1504,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MathConstantInfo sse_decode_math_constant_info(SseDeserializer deserializer);
 
   @protected
+  MathConstantSpec sse_decode_math_constant_spec(SseDeserializer deserializer);
+
+  @protected
+  MathConstructionSpec sse_decode_math_construction_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MathGlyphInfoInfo sse_decode_math_glyph_info_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MathGlyphValueSpec sse_decode_math_glyph_value_spec(
     SseDeserializer deserializer,
   );
 
@@ -976,15 +1530,35 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MathKernInfo sse_decode_math_kern_info(SseDeserializer deserializer);
 
   @protected
+  MathKernSpec sse_decode_math_kern_spec(SseDeserializer deserializer);
+
+  @protected
+  MathPartSpec sse_decode_math_part_spec(SseDeserializer deserializer);
+
+  @protected
+  MathTableRequest sse_decode_math_table_request(SseDeserializer deserializer);
+
+  @protected
   MathVariantRecordInfo sse_decode_math_variant_record_info(
     SseDeserializer deserializer,
   );
 
   @protected
+  MathVariantSpec sse_decode_math_variant_spec(SseDeserializer deserializer);
+
+  @protected
   MathVariantsInfo sse_decode_math_variants_info(SseDeserializer deserializer);
 
   @protected
+  MetaEntryInfo sse_decode_meta_entry_info(SseDeserializer deserializer);
+
+  @protected
   MetricValue sse_decode_metric_value(SseDeserializer deserializer);
+
+  @protected
+  MultipleSubstitutionSpec sse_decode_multiple_substitution_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   NameRecordInfo sse_decode_name_record_info(SseDeserializer deserializer);
@@ -1022,6 +1596,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  HintEngineKind? sse_decode_opt_box_autoadd_hint_engine_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HintingSpec? sse_decode_opt_box_autoadd_hinting_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   MathAssemblyPartListInfo?
   sse_decode_opt_box_autoadd_math_assembly_part_list_info(
     SseDeserializer deserializer,
@@ -1034,6 +1618,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MathVariantsInfo? sse_decode_opt_box_autoadd_math_variants_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RasterTargetKind? sse_decode_opt_box_autoadd_raster_target_kind(
     SseDeserializer deserializer,
   );
 
@@ -1081,16 +1670,35 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaintKind sse_decode_paint_kind(SseDeserializer deserializer);
 
   @protected
+  PaintNodeSpec sse_decode_paint_node_spec(SseDeserializer deserializer);
+
+  @protected
+  PatchRawTableSpec sse_decode_patch_raw_table_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PathElement sse_decode_path_element(SseDeserializer deserializer);
 
   @protected
   PathVerb sse_decode_path_verb(SseDeserializer deserializer);
 
   @protected
+  RasterTargetKind sse_decode_raster_target_kind(SseDeserializer deserializer);
+
+  @protected
   RawTableSpec sse_decode_raw_table_spec(SseDeserializer deserializer);
 
   @protected
   RectF sse_decode_rect_f(SseDeserializer deserializer);
+
+  @protected
+  ReverseChainSubstitutionSpec sse_decode_reverse_chain_substitution_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ScalerInfo sse_decode_scaler_info(SseDeserializer deserializer);
 
   @protected
   ShapeResult sse_decode_shape_result(SseDeserializer deserializer);
@@ -1105,6 +1713,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   StylisticAlternate sse_decode_stylistic_alternate(
     SseDeserializer deserializer,
   );
+
+  @protected
+  SubstitutionPatchRequest sse_decode_substitution_patch_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SvgDocumentInfo sse_decode_svg_document_info(SseDeserializer deserializer);
+
+  @protected
+  SvgDocumentSpec sse_decode_svg_document_spec(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
@@ -1127,7 +1746,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VarcComponentSpec sse_decode_varc_component_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VarcDeltaSetSpec sse_decode_varc_delta_set_spec(SseDeserializer deserializer);
+
+  @protected
+  VarcDeltaSpec sse_decode_varc_delta_spec(SseDeserializer deserializer);
+
+  @protected
   VarcGlyphInfo sse_decode_varc_glyph_info(SseDeserializer deserializer);
+
+  @protected
+  VarcGlyphSpec sse_decode_varc_glyph_spec(SseDeserializer deserializer);
+
+  @protected
+  VarcPatchRequest sse_decode_varc_patch_request(SseDeserializer deserializer);
+
+  @protected
+  VarcRegionAxisSpec sse_decode_varc_region_axis_spec(
+    SseDeserializer deserializer,
+  );
 
   @protected
   VariantMappingInfo sse_decode_variant_mapping_info(
@@ -1162,6 +1803,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  VerticalOriginRequest sse_decode_vertical_origin_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  VerticalOriginSpec sse_decode_vertical_origin_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
@@ -1192,6 +1843,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_alternate_substitution_spec(
+    AlternateSubstitutionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_avar_info(AvarInfo self, SseSerializer serializer);
 
   @protected
@@ -1219,8 +1876,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_bitmap_glyph_spec(
+    BitmapGlyphSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_bitmap_strike_info(
     BitmapStrikeInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_bitmap_strike_spec(
+    BitmapStrikeSpec self,
     SseSerializer serializer,
   );
 
@@ -1252,6 +1921,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_feature_variation_patch_request(
+    FeatureVariationPatchRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_font_build_request(
     FontBuildRequest self,
     SseSerializer serializer,
@@ -1260,6 +1935,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_font_modification_request(
     FontModificationRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_font_subset_request(
+    FontSubsetRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_hint_engine_kind(
+    HintEngineKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_hinting_spec(
+    HintingSpec self,
     SseSerializer serializer,
   );
 
@@ -1276,13 +1969,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_math_table_request(
+    MathTableRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_math_variants_info(
     MathVariantsInfo self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_box_autoadd_raster_target_kind(
+    RasterTargetKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_rect_f(RectF self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_substitution_patch_request(
+    SubstitutionPatchRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer);
@@ -1293,6 +2004,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_varc_glyph_info(
     VarcGlyphInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_varc_patch_request(
+    VarcPatchRequest self,
     SseSerializer serializer,
   );
 
@@ -1315,6 +2032,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_vertical_origin_request(
+    VerticalOriginRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_char_mapping(CharMapping self, SseSerializer serializer);
 
   @protected
@@ -1329,6 +2052,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_color_glyph_info(
     ColorGlyphInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_color_glyph_paint_spec(
+    ColorGlyphPaintSpec self,
     SseSerializer serializer,
   );
 
@@ -1348,6 +2077,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_color_stop(ColorStop self, SseSerializer serializer);
 
   @protected
+  void sse_encode_color_stop_spec(ColorStopSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_contextual_substitution_spec(
+    ContextualSubstitutionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_contour_point(ContourPoint self, SseSerializer serializer);
 
   @protected
@@ -1363,7 +2101,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_extended_table_info(
+    ExtendedTableInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_feature_condition_spec(
+    FeatureConditionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_feature_substitution_spec(
+    FeatureSubstitutionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_feature_variation_patch_request(
+    FeatureVariationPatchRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_feature_variation_record_spec(
+    FeatureVariationRecordSpec self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_font_attributes(
@@ -1393,6 +2161,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_font_names(FontNames self, SseSerializer serializer);
 
   @protected
+  void sse_encode_font_subset_request(
+    FontSubsetRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_gasp_range_info(GaspRangeInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_glyph_color_layer(
     GlyphColorLayer self,
     SseSerializer serializer,
@@ -1415,6 +2192,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_glyph_spec(GlyphSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hint_engine_kind(
+    HintEngineKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_hinting_spec(HintingSpec self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -1441,6 +2227,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_alternate_substitution_spec(
+    List<AlternateSubstitutionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_axis_segment_maps_info(
     List<AxisSegmentMapsInfo> self,
     SseSerializer serializer,
@@ -1459,8 +2251,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_bitmap_glyph_spec(
+    List<BitmapGlyphSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_bitmap_strike_info(
     List<BitmapStrikeInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_bitmap_strike_spec(
+    List<BitmapStrikeSpec> self,
     SseSerializer serializer,
   );
 
@@ -1473,6 +2277,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_code_point_variant(
     List<CodePointVariant> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_color_glyph_paint_spec(
+    List<ColorGlyphPaintSpec> self,
     SseSerializer serializer,
   );
 
@@ -1495,6 +2305,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_color_stop_spec(
+    List<ColorStopSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_contextual_substitution_spec(
+    List<ContextualSubstitutionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_contour_point(
     List<ContourPoint> self,
     SseSerializer serializer,
@@ -1513,6 +2335,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_feature_condition_spec(
+    List<FeatureConditionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_feature_substitution_spec(
+    List<FeatureSubstitutionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_feature_variation_record_spec(
+    List<FeatureVariationRecordSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_gasp_range_info(
+    List<GaspRangeInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_glyph_color_layer(
     List<GlyphColorLayer> self,
     SseSerializer serializer,
@@ -1527,6 +2373,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_glyph_contour(
     List<GlyphContour> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_glyph_outline(
+    List<GlyphOutline> self,
     SseSerializer serializer,
   );
 
@@ -1570,6 +2422,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_math_constant_spec(
+    List<MathConstantSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_math_construction_spec(
+    List<MathConstructionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_math_glyph_value_spec(
+    List<MathGlyphValueSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_math_kern_entry_info(
     List<MathKernEntryInfo> self,
     SseSerializer serializer,
@@ -1582,14 +2452,44 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_math_kern_spec(
+    List<MathKernSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_math_part_spec(
+    List<MathPartSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_math_variant_record_info(
     List<MathVariantRecordInfo> self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_list_math_variant_spec(
+    List<MathVariantSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_meta_entry_info(
+    List<MetaEntryInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_metric_value(
     List<MetricValue> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_multiple_substitution_spec(
+    List<MultipleSubstitutionSpec> self,
     SseSerializer serializer,
   );
 
@@ -1612,6 +2512,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_paint_node_spec(
+    List<PaintNodeSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_patch_raw_table_spec(
+    List<PatchRawTableSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_path_element(
     List<PathElement> self,
     SseSerializer serializer,
@@ -1624,8 +2536,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_prim_i_32_strict(
+    Int32List self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_16_strict(
     Uint16List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_u_32_loose(
+    List<int> self,
     SseSerializer serializer,
   );
 
@@ -1651,6 +2575,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_reverse_chain_substitution_spec(
+    List<ReverseChainSubstitutionSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_shaped_glyph(
     List<ShapedGlyph> self,
     SseSerializer serializer,
@@ -1663,8 +2593,50 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_svg_document_info(
+    List<SvgDocumentInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_svg_document_spec(
+    List<SvgDocumentSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_varc_component_info(
     List<VarcComponentInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_varc_component_spec(
+    List<VarcComponentSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_varc_delta_set_spec(
+    List<VarcDeltaSetSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_varc_delta_spec(
+    List<VarcDeltaSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_varc_glyph_spec(
+    List<VarcGlyphSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_varc_region_axis_spec(
+    List<VarcRegionAxisSpec> self,
     SseSerializer serializer,
   );
 
@@ -1705,6 +2677,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_vertical_origin_spec(
+    List<VerticalOriginSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_math_assembly_part_info(
     MathAssemblyPartInfo self,
     SseSerializer serializer,
@@ -1723,8 +2701,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_math_constant_spec(
+    MathConstantSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_math_construction_spec(
+    MathConstructionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_math_glyph_info_info(
     MathGlyphInfoInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_math_glyph_value_spec(
+    MathGlyphValueSpec self,
     SseSerializer serializer,
   );
 
@@ -1738,8 +2734,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_math_kern_info(MathKernInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_math_kern_spec(MathKernSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_math_part_spec(MathPartSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_math_table_request(
+    MathTableRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_math_variant_record_info(
     MathVariantRecordInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_math_variant_spec(
+    MathVariantSpec self,
     SseSerializer serializer,
   );
 
@@ -1750,7 +2764,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_meta_entry_info(MetaEntryInfo self, SseSerializer serializer);
+
+  @protected
   void sse_encode_metric_value(MetricValue self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_multiple_substitution_spec(
+    MultipleSubstitutionSpec self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_name_record_info(
@@ -1798,6 +2821,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_hint_engine_kind(
+    HintEngineKind? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_hinting_spec(
+    HintingSpec? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_math_assembly_part_list_info(
     MathAssemblyPartListInfo? self,
     SseSerializer serializer,
@@ -1812,6 +2847,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_math_variants_info(
     MathVariantsInfo? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_raster_target_kind(
+    RasterTargetKind? self,
     SseSerializer serializer,
   );
 
@@ -1867,16 +2908,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_paint_kind(PaintKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_paint_node_spec(PaintNodeSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_patch_raw_table_spec(
+    PatchRawTableSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_path_element(PathElement self, SseSerializer serializer);
 
   @protected
   void sse_encode_path_verb(PathVerb self, SseSerializer serializer);
 
   @protected
+  void sse_encode_raster_target_kind(
+    RasterTargetKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_raw_table_spec(RawTableSpec self, SseSerializer serializer);
 
   @protected
   void sse_encode_rect_f(RectF self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_reverse_chain_substitution_spec(
+    ReverseChainSubstitutionSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_scaler_info(ScalerInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_shape_result(ShapeResult self, SseSerializer serializer);
@@ -1890,6 +2955,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_stylistic_alternate(
     StylisticAlternate self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_substitution_patch_request(
+    SubstitutionPatchRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_svg_document_info(
+    SvgDocumentInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_svg_document_spec(
+    SvgDocumentSpec self,
     SseSerializer serializer,
   );
 
@@ -1915,7 +2998,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_varc_component_spec(
+    VarcComponentSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_varc_delta_set_spec(
+    VarcDeltaSetSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_varc_delta_spec(VarcDeltaSpec self, SseSerializer serializer);
+
+  @protected
   void sse_encode_varc_glyph_info(VarcGlyphInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_varc_glyph_spec(VarcGlyphSpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_varc_patch_request(
+    VarcPatchRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_varc_region_axis_spec(
+    VarcRegionAxisSpec self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_variant_mapping_info(
@@ -1959,6 +3072,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_vertical_metrics_spec(
     VerticalMetricsSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_vertical_origin_request(
+    VerticalOriginRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_vertical_origin_spec(
+    VerticalOriginSpec self,
     SseSerializer serializer,
   );
 }

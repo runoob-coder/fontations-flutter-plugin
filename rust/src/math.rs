@@ -96,6 +96,7 @@ pub fn variants(
     variants: &MathVariants<'_>,
     glyph: GlyphId,
     axis: &str,
+    ppem: u16,
 ) -> Option<MathVariantsInfo> {
     let axis = match axis.to_ascii_lowercase().as_str() {
         "horizontal" | "horiz" | "h" => StretchAxis::Horizontal,
@@ -115,7 +116,7 @@ pub fn variants(
         .glyph_assembly()
         .and_then(|assembly| assembly.ok())
         .map(|assembly| {
-            let correction = assembly.italics_correction_for_ppem(0);
+            let correction = assembly.italics_correction_for_ppem(ppem);
             MathAssemblyPartListInfo {
                 italics_correction: correction.value as f64,
                 italics_correction_delta_px: correction.delta_px as f64,

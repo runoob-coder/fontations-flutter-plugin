@@ -3,16 +3,13 @@ import 'dart:ui' as ui;
 import 'glyph_path.dart';
 import 'rust/api/fontations.dart';
 
+// Keep in sync with `MAX_COLOR_LAYERS` in `rust/src/limits.rs`.
+const int _maxColorLayers = 2048;
+
 /// Paints the layers of a `COLR` color glyph onto a Flutter canvas.
-///
-/// Layers come back in font units with y pointing up, so they are scaled by
-/// `size / unitsPerEm` and flipped by default, exactly like
-/// [GlyphOutlinePath.toPath].
 extension ColorGlyphPainter on ColorGlyphInfo {
-  /// Draws every layer in paint order.
-  ///
-  /// `unitsPerEm` and `size` scale the font unit coordinates into pixels; pass
-  /// `size: null` to draw in font units.
+  /// Draws layers in paint order, scaled by `size / unitsPerEm` and flipped
+  /// into canvas coordinates by default.
   void paint(
     ui.Canvas canvas, {
     double size = 0,
@@ -20,8 +17,14 @@ extension ColorGlyphPainter on ColorGlyphInfo {
     ui.Offset offset = ui.Offset.zero,
     bool flipY = true,
   }) {
-    final scale = size <= 0 ? 1.0 : size / unitsPerEm;
+    final upem = unitsPerEm > 0 ? unitsPerEm : 1000;
+    final scale = (size.isFinite && size > 0) ? size / upem : 1.0;
+    var drawn = 0;
     for (final layer in layers) {
+      if (drawn >= _maxColorLayers) {
+        break;
+      }
+      drawn++;
       final path = buildPath(
         layer.elements,
         scale: scale,
@@ -39,7 +42,6 @@ extension ColorGlyphPainter on ColorGlyphInfo {
       if (blend == ui.BlendMode.srcOver) {
         canvas.drawPath(path, paint);
       } else {
-        // Composite modes other than `SrcOver` need their own layer.
         canvas.saveLayer(null, ui.Paint()..blendMode = blend);
         canvas.drawPath(path, paint);
         canvas.restore();
@@ -122,7 +124,11 @@ ui.Paint _paintFor(
 }) {
   final result = ui.Paint()..color = ui.Color(paint.color);
   if (paint.kind == PaintKind.solid) {
-    result.color = ui.Color(paint.color).withValues(alpha: paint.alpha);
+    // Alpha comes from font data; clamp it before `withValues`.
+    final alpha = paint.alpha.isFinite
+        ? paint.alpha.clamp(0.0, 1.0).toDouble()
+        : 1.0;
+    result.color = ui.Color(paint.color).withValues(alpha: alpha);
     return result;
   }
 
@@ -149,8 +155,7 @@ ui.Paint _paintFor(
       stops.isNotEmpty ? stops : null,
       tileMode,
     ),
-    // Flutter's radial gradient is concentric with a focal point, which is
-    // close enough for the two circle gradients `COLR` produces.
+    // Approximates `COLR`'s two-circle gradients.
     PaintKind.radial => ui.Gradient.radial(
       ui.Offset(tx(paint.x0), ty(paint.y0)),
       paint.r1 * scale,

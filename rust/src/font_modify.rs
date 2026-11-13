@@ -85,7 +85,13 @@ pub fn modify_ttf(bytes: &[u8], request: &FontModificationRequest) -> Result<Vec
     }
 
     if !substitutions.is_empty() || !ligatures.is_empty() {
-        builder.add_table(&build_gsub(&substitutions, &ligatures, &feature_names)?)?;
+        builder.add_table(&build_gsub(
+            &substitutions,
+            &ligatures,
+            &[],
+            &[],
+            &feature_names,
+        )?)?;
     }
 
     // --- name ---------------------------------------------------------------
@@ -169,8 +175,7 @@ pub fn modify_ttf(bytes: &[u8], request: &FontModificationRequest) -> Result<Vec
         builder.add_table(&os2)?;
     }
 
-    // Everything else — `head`, `hhea`, `maxp`, `cmap`, `glyf`, `loca`, `fvar`,
-    // `gvar`, ... — is carried over unchanged.
+    // All other tables are carried over unchanged.
     builder.copy_missing_tables(font);
 
     Ok(builder.build())

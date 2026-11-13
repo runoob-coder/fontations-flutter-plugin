@@ -5,10 +5,13 @@
 //! with types that map cleanly onto Dart (`String`, `double`, `int`, `List`).
 
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::{Arc, OnceLock};
 
 use anyhow::{anyhow, Result};
 use flutter_rust_bridge::frb;
+use read_fonts::model::glyph::outline::PathElement as RawPathElement;
+use read_fonts::model::Blob;
 use read_fonts::tables::cmap::MapVariant;
 use read_fonts::tables::layout::{FeatureList, ScriptList};
 use read_fonts::{FileRef, TableProvider};
@@ -16,12 +19,17 @@ use skrifa::attribute::Style;
 use skrifa::bitmap::{BitmapData, BitmapFormat};
 use skrifa::color::ColorGlyphFormat;
 use skrifa::instance::Location;
-use skrifa::outline::{DrawSettings, HintingInstance, HintingOptions, OutlineGlyphFormat};
 use skrifa::prelude::*;
 use skrifa::string::{LocalizedString, StringId};
-use skrifa::{AxisCollection, GlyphId};
+use skrifa::Font as ModelFont;
+use skrifa::{
+    AxisCollection, DrawMemory, DropoutControl, GlyphId, HintEngine, HintOptions, OutlineSource,
+    RasterTarget, ScalerFont,
+};
 
+use crate::api::upstream::ExtendedTableInfo;
 use crate::color_paint::RecordingPainter;
+use crate::limits::{check_font_bytes, MAX_SHAPE_CHARS, MAX_VARIATION_SETTINGS};
 
 /// Axis-aligned bounding box.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -127,18 +135,129 @@ pub struct PathElement {
     pub points: Vec<f64>,
 }
 
+/// The hinting engine a [`ScalerFont`] is asked to run.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum HintEngineKind {
+    /// Use the font's own instructions where they are worth running and the
+    /// automatic hinter otherwise. This is `skrifa`'s default.
+    #[default]
+    AutoFallback,
+    /// Always run the instructions embedded in the font (TrueType bytecode or
+    /// PostScript stem hints).
+    Interpreter,
+    /// Always run the automatic hinter, ignoring the font's instructions.
+    Auto,
+}
+
+/// The rasterization target hinting is tuned for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RasterTargetKind {
+    /// One bit per pixel, with grid fitting in both directions.
+    Mono,
+    /// Grayscale antialiasing.
+    #[default]
+    Normal,
+    /// Lighter grayscale antialiasing, mostly vertical grid fitting.
+    Light,
+    /// Horizontal subpixel rendering.
+    Lcd,
+    /// Vertical subpixel rendering.
+    VerticalLcd,
+}
+
+/// Configuration for `skrifa` 0.50's `ScalerFont` hinting.
+///
+/// Every field is optional: leaving one out uses the upstream default. Passing
+/// a spec always enables hinting, even when `Font.outline`'s `hinted` flag is
+/// false; `hinted: true` without a spec keeps the old behaviour of running the
+/// font's own instructions in classic ClearType mode.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct HintingSpec {
+    pub engine: Option<HintEngineKind>,
+    pub target: Option<RasterTargetKind>,
+    /// Classic ClearType behaviour: grid fit every glyph instead of following
+    /// the font's `gasp` table.
+    pub classic_cleartype: Option<bool>,
+    /// The `GETINFO` symmetric rendering bit (TrueType interpreter only).
+    pub symmetric_rendering: Option<bool>,
+    /// Keep unhinted horizontal shapes and spacing, hinting only vertically.
+    pub preserve_linear_metrics: Option<bool>,
+    /// Fail a draw when a glyph's instructions fail.
+    pub pedantic: Option<bool>,
+}
+
+impl HintingSpec {
+    fn to_hint_options(self) -> HintOptions {
+        let mut options = match self.engine.unwrap_or_default() {
+            HintEngineKind::AutoFallback => HintOptions::auto_fallback(),
+            HintEngineKind::Interpreter => HintOptions::interpreter(),
+            HintEngineKind::Auto => HintOptions::auto(),
+        };
+        if let Some(target) = self.target {
+            options = options.with_target(match target {
+                RasterTargetKind::Mono => RasterTarget::Mono,
+                RasterTargetKind::Normal => RasterTarget::Normal,
+                RasterTargetKind::Light => RasterTarget::Light,
+                RasterTargetKind::Lcd => RasterTarget::Lcd,
+                RasterTargetKind::VerticalLcd => RasterTarget::VerticalLcd,
+            });
+        }
+        if let Some(value) = self.classic_cleartype {
+            options = options.with_classic_cleartype(value);
+        }
+        if let Some(value) = self.symmetric_rendering {
+            options = options.with_symmetric_rendering(value);
+        }
+        if let Some(value) = self.preserve_linear_metrics {
+            options = options.with_preserve_linear_metrics(value);
+        }
+        if let Some(value) = self.pedantic {
+            options = options.with_pedantic(value);
+        }
+        options
+    }
+}
+
+/// What the scaler reports about the outline it just drew.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ScalerInfo {
+    /// The engine that actually ran: `trueType`, `postScript` or `auto`.
+    pub hint_engine: Option<String>,
+    /// Whether hinting was applied at this size (a font can turn it off).
+    pub is_hinted: bool,
+    /// The size the interpreter hinted at, which can be a whole pixel size.
+    pub hinted_ppem: Option<f64>,
+    /// The table the outlines are drawn from, e.g. `varc` or `glyf`.
+    pub outline_source: Option<String>,
+    /// For a `VARC` font, the table its components are drawn from.
+    pub underlying_outline_source: Option<String>,
+    /// The font's `gasp` smoothing policy, only for TrueType hinting.
+    pub symmetric_smoothing: Option<bool>,
+    pub grid_fit: Option<bool>,
+    /// How a bilevel rasterizer should restore dropped-out pixels.
+    pub dropout_control: String,
+    /// The advance after hinting, which can differ from `advance_width`.
+    pub drawn_advance: Option<f64>,
+    /// The left side bearing reported by the draw.
+    pub drawn_left_side_bearing: Option<f64>,
+}
+
 /// A drawn glyph outline.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlyphOutline {
     pub elements: Vec<PathElement>,
+    /// Linearly scaled bounds; hinting does not change them.
     pub bounds: Option<RectF>,
+    /// Linearly scaled advance; hinting does not change it either.
     pub advance_width: Option<f64>,
-    /// Where the outline came from: `glyf`, `cff`, `cff2` or `varc`.
+    /// Where the outline came from: `glyf`, `cff`, `cff2`, `varc` or `type1`.
     pub format: Option<String>,
-    /// True when the outline embeds hinting instructions.
+    /// True when the scaler has a hinting engine configured for the font.
     pub has_hinting: bool,
     /// True when the glyph is flagged as having overlapping contours.
     pub has_overlaps: bool,
+    /// State of the `ScalerFont` that drew this outline.
+    pub scaler: ScalerInfo,
 }
 
 /// One record of the `name` table, resolved to a string.
@@ -510,20 +629,39 @@ pub struct AvarInfo {
 ///
 /// The raw bytes are owned by Rust, so Dart only ever holds an opaque handle.
 #[frb(opaque)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Font {
-    data: Vec<u8>,
+    data: Arc<Vec<u8>>,
     index: u32,
     /// Glyph id -> first code point that maps to it, built the first time
     /// `glyph_to_char` needs it. `Arc` so clones of this opaque handle share
     /// one map; `OnceLock` so repeated lookups cost nothing after the first.
     reverse_cmap: Arc<OnceLock<HashMap<u32, u32>>>,
+    /// Variation settings this handle is pinned to, set by `with_variations`.
+    /// Every glyph read uses them unless the caller passes an override.
+    pinned: Option<Vec<VariationSetting>>,
+    /// `skrifa` 0.50's font model. Parsing the table directory happens once;
+    /// every `ScalerFont` built from this handle shares the cached tables and
+    /// only has to pick its variation instance, size and hinting.
+    model: Arc<OnceLock<ModelFont>>,
+}
+
+// `read_fonts::model::Font` is not `Debug`, so derive cannot cover the cache.
+impl fmt::Debug for Font {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Font")
+            .field("index", &self.index)
+            .field("bytes", &self.data.len())
+            .field("pinned", &self.pinned)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Font {
     /// Parses a font (or a single font out of a `.ttc` collection).
     #[frb(sync)]
     pub fn from_bytes(bytes: Vec<u8>, index: Option<u32>) -> Result<Font> {
+        check_font_bytes(&bytes)?;
         let index = index.unwrap_or(0);
         let file = FileRef::new(&bytes).map_err(|e| anyhow!("not a valid font file: {e}"))?;
         file.fonts()
@@ -531,23 +669,129 @@ impl Font {
             .ok_or_else(|| anyhow!("font index {index} is out of range"))?
             .map_err(|e| anyhow!("failed to read font {index}: {e}"))?;
         Ok(Font {
-            data: bytes,
+            data: Arc::new(bytes),
             index,
             reverse_cmap: Arc::new(OnceLock::new()),
+            pinned: None,
+            model: Arc::new(OnceLock::new()),
         })
     }
 
+    /// Returns a handle pinned to a variation location. Every glyph read on
+    /// the new handle uses these settings; an explicit `variations` argument
+    /// still overrides the axes it names.
+    #[frb(sync)]
+    pub fn with_variations(&self, variations: Vec<VariationSetting>) -> Result<Font> {
+        if variations.len() > MAX_VARIATION_SETTINGS {
+            return Err(anyhow!(
+                "too many variation settings: {} (max {MAX_VARIATION_SETTINGS})",
+                variations.len()
+            ));
+        }
+        let mut pinned_font = self.clone();
+        pinned_font.pinned = Some(variations);
+        Ok(pinned_font)
+    }
+
+    /// The settings this handle was pinned to, empty for a plain handle.
+    #[frb(sync)]
+    pub fn pinned_variations(&self) -> Vec<VariationSetting> {
+        self.pinned.clone().unwrap_or_default()
+    }
+
+    /// Structured view of the optional tables (`SVG `, `gasp`, `meta`, `BASE`
+    /// and the AAT tables), which `tableData` only exposes as raw bytes.
+    #[frb(sync)]
+    pub fn extended_tables(&self) -> Result<ExtendedTableInfo> {
+        let font = self.font_ref()?;
+        Ok(crate::api::upstream::read_extended_tables(&font))
+    }
+
+    /// Explicit settings win over the pinned ones; axes the caller leaves out
+    /// keep their pinned value.
+    fn effective_variations(&self, variations: &[VariationSetting]) -> Vec<VariationSetting> {
+        let Some(pinned) = &self.pinned else {
+            return variations.to_vec();
+        };
+        let mut merged = pinned.clone();
+        for setting in variations {
+            if let Some(existing) = merged.iter_mut().find(|p| p.tag == setting.tag) {
+                *existing = setting.clone();
+            } else {
+                merged.push(setting.clone());
+            }
+        }
+        merged
+    }
+
     fn font_ref(&self) -> Result<FontRef<'_>> {
-        let file = FileRef::new(&self.data).map_err(|e| anyhow!("not a valid font file: {e}"))?;
+        let file =
+            FileRef::new(self.data.as_ref()).map_err(|e| anyhow!("not a valid font file: {e}"))?;
         file.fonts()
             .nth(self.index as usize)
             .ok_or_else(|| anyhow!("font index {} is out of range", self.index))?
             .map_err(|e| anyhow!("failed to read font {}: {e}", self.index))
     }
 
+    /// The `skrifa` 0.50 font model, parsed once and shared by every scaler.
+    /// The `Blob` borrows the same `Arc` as the raw bytes, so caching it costs
+    /// no copy of the font data.
+    fn model_font(&self) -> Result<ModelFont> {
+        if let Some(model) = self.model.get() {
+            return Ok(model.clone());
+        }
+        let shared: Arc<dyn AsRef<[u8]> + Send + Sync> = self.data.clone();
+        let model = ModelFont::new(Blob::Shared(shared), self.index)
+            .ok_or_else(|| anyhow!("font {} has no readable outline model", self.index))?;
+        // A racing thread may win the `set`; both models are equivalent.
+        let _ = self.model.set(model.clone());
+        Ok(self.model.get().cloned().unwrap_or(model))
+    }
+
+    /// Builds a scaler for one size, variation location and hinting setup.
+    /// `hinted` is the old boolean flag; a `HintingSpec` takes precedence.
+    fn scaler_font(
+        &self,
+        ppem: Option<f32>,
+        variations: &[VariationSetting],
+        hinted: bool,
+        hinting: Option<&HintingSpec>,
+    ) -> Result<ScalerFont> {
+        let model = self.model_font()?;
+        let settings = self.effective_variations(variations);
+        let instance = model
+            .instance_builder()
+            .variations(
+                settings
+                    .iter()
+                    .map(|setting| (setting.tag.as_str(), setting.value as f32)),
+            )
+            .build();
+        let scaler = match ppem {
+            Some(ppem) => match hinting {
+                Some(spec) => ScalerFont::hinted(instance, ppem, spec.to_hint_options()),
+                // `HintOptions::interpreter()` in classic ClearType mode is
+                // the equivalent of the old `HintingOptions::default()`.
+                None if hinted => ScalerFont::hinted(
+                    instance,
+                    ppem,
+                    HintOptions::interpreter().with_classic_cleartype(true),
+                ),
+                None => ScalerFont::unhinted(instance, Some(ppem)),
+            },
+            // Hinting needs a real size; font units are always unhinted.
+            None => ScalerFont::unhinted(instance, None),
+        };
+        if let Some(error) = scaler.hinting_error() {
+            return Err(anyhow!("failed to set up hinting: {error}"));
+        }
+        Ok(scaler)
+    }
+
     /// Number of fonts contained in `bytes` (1 for a plain font, >1 for a `.ttc`).
     #[frb(sync)]
     pub fn count_fonts(bytes: Vec<u8>) -> Result<u32> {
+        check_font_bytes(&bytes)?;
         let file = FileRef::new(&bytes).map_err(|e| anyhow!("not a valid font file: {e}"))?;
         match file {
             FileRef::Font(_) => Ok(1),
@@ -610,7 +854,7 @@ impl Font {
         variations: Vec<VariationSetting>,
     ) -> Result<FontMetrics> {
         let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         let metrics = font.metrics(to_size(size), &location);
         Ok(FontMetrics {
             units_per_em: metrics.units_per_em as u32,
@@ -823,16 +1067,14 @@ impl Font {
     /// want the whole table in one go.
     #[frb(sync)]
     pub fn glyph_to_char(&self, glyph_id: u32) -> Result<Option<u32>> {
-        // Surface a parse failure the same way every other method does, rather
-        // than caching an empty map and quietly reporting "no such glyph".
+        // Report parse failures instead of caching an empty map.
         self.font_ref()?;
 
         let map = self.reverse_cmap.get_or_init(|| {
             let Ok(font) = self.font_ref() else {
                 return HashMap::new();
             };
-            // `or_insert` keeps the first code point of each glyph, which is
-            // what a fresh linear scan would have found.
+            // `or_insert` keeps the first code point of each glyph.
             font.charmap()
                 .mappings()
                 .fold(HashMap::new(), |mut map, (code_point, gid)| {
@@ -853,7 +1095,7 @@ impl Font {
         variations: Vec<VariationSetting>,
     ) -> Result<GlyphMetrics> {
         let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         let metrics = font.glyph_metrics(to_size(size), &location);
         let glyph_id = GlyphId::new(glyph_id);
         Ok(GlyphMetrics {
@@ -984,8 +1226,11 @@ impl Font {
             .map(|palette| palette.colors().iter().map(argb).collect())
             .unwrap_or_default();
 
-        let location = build_location(&font, &variations);
-        let mut painter = RecordingPainter::new(&font, palette);
+        let location = build_location(&font, &self.effective_variations(&variations));
+        // `COLR` clips are outlines in font units, drawn through the same
+        // scaler as `Font.outline` (with no size and therefore no hinting).
+        let scaler = self.scaler_font(None, &variations, false, None)?;
+        let mut painter = RecordingPainter::new(scaler, palette);
         glyph
             .paint(&location, &mut painter)
             .map_err(|e| anyhow!("failed to paint color glyph {glyph_id}: {e}"))?;
@@ -1084,11 +1329,10 @@ impl Font {
     /// Which table the outlines of this font come from.
     #[frb(sync)]
     pub fn outline_format(&self) -> Result<Option<String>> {
-        let font = self.font_ref()?;
-        Ok(font
-            .outline_glyphs()
-            .format()
-            .map(|format| outline_format_name(format).to_string()))
+        let scaler = self.scaler_font(None, &[], false, None)?;
+        Ok(scaler
+            .outline_source()
+            .map(|source| outline_source_name(source).to_string()))
     }
 
     /// Maps a Unicode code point to a glyph id, if the font covers it.
@@ -1110,69 +1354,67 @@ impl Font {
         variations: Vec<VariationSetting>,
     ) -> Result<Option<f64>> {
         let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         Ok(font
             .glyph_metrics(to_size(size), &location)
             .advance_width(GlyphId::new(glyph_id))
             .map(|v| v as f64))
     }
 
-    /// Draws a glyph outline into a list of path elements.
+    /// Draws a glyph outline into a list of path elements, using `skrifa`
+    /// 0.50's `ScalerFont`.
     ///
-    /// Set `hinted` to apply the hinting instructions embedded in the font
-    /// (`glyf` bytecode or CFF stem hints). Hinting needs a real size, so it
-    /// is ignored when `size` is `null` (font units).
+    /// `hinted: true` runs the font's own instructions in classic ClearType
+    /// mode, which is what the older API did. `hinting` exposes the full new
+    /// configuration (engine, rasterization target, ClearType compatibility,
+    /// linear metrics, strictness); a spec always enables hinting and takes
+    /// precedence over `hinted`. Hinting needs a real size, so both are ignored
+    /// when `size` is `null` (font units).
+    ///
+    /// `bounds` and `advance_width` are linearly scaled, as upstream reports
+    /// them. The advance after hinting, the engine that ran and the
+    /// rasterizer settings are in `scaler`.
     pub fn outline(
         &self,
         glyph_id: u32,
         size: Option<f64>,
         variations: Vec<VariationSetting>,
         hinted: Option<bool>,
+        hinting: Option<HintingSpec>,
     ) -> Result<GlyphOutline> {
-        let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
-        let glyph_id = GlyphId::new(glyph_id);
-        let size = to_size(size);
+        let scaler = self.scaler_font(
+            scaled_ppem(size),
+            &variations,
+            hinted.unwrap_or(false),
+            hinting.as_ref(),
+        )?;
+        draw_glyph_outline(&scaler, GlyphId::new(glyph_id), None)
+    }
 
-        let outlines = font.outline_glyphs();
-        let glyph = outlines
-            .get(glyph_id)
-            .ok_or_else(|| anyhow!("glyph {glyph_id} has no outline"))?;
-
-        let mut elements = Vec::<read_fonts::model::glyph::outline::PathElement>::new();
-        let wants_hinting = hinted.unwrap_or(false) && size.ppem().is_some();
-        if wants_hinting {
-            let instance =
-                HintingInstance::new(&outlines, size, &location, HintingOptions::default())
-                    .map_err(|e| anyhow!("failed to set up hinting: {e}"))?;
-            glyph
-                .draw(DrawSettings::hinted(&instance, false), &mut elements)
-                .map_err(|e| anyhow!("failed to draw glyph {glyph_id}: {e}"))?;
-        } else {
-            glyph
-                .draw(DrawSettings::unhinted(size, &location), &mut elements)
-                .map_err(|e| anyhow!("failed to draw glyph {glyph_id}: {e}"))?;
-        }
-
-        // One metrics instance for both lookups: it re-reads `hmtx` (and
-        // `HVAR`/`VORG` when present) every time it is constructed.
-        let metrics = font.glyph_metrics(size, &location);
-        let bounds = metrics.bounds(glyph_id).map(|b| RectF {
-            x_min: b.x_min as f64,
-            y_min: b.y_min as f64,
-            x_max: b.x_max as f64,
-            y_max: b.y_max as f64,
-        });
-        let advance_width = metrics.advance_width(glyph_id).map(|v| v as f64);
-
-        Ok(GlyphOutline {
-            elements: elements.iter().map(convert_element).collect(),
-            bounds,
-            advance_width,
-            format: Some(outline_format_name(glyph.format()).to_string()),
-            has_hinting: glyph.has_hinting().unwrap_or(false),
-            has_overlaps: glyph.has_overlaps().unwrap_or(false),
-        })
+    /// Draws several glyphs through one scaler with a reusable work buffer.
+    ///
+    /// The variation instance, size and hinting programs are set up once, and
+    /// `DrawMemory::Buffer` reuses the memory the largest glyph needs. This is
+    /// the cheap way to outline a run of text; results follow `glyph_ids`.
+    pub fn outlines(
+        &self,
+        glyph_ids: Vec<u32>,
+        size: Option<f64>,
+        variations: Vec<VariationSetting>,
+        hinted: Option<bool>,
+        hinting: Option<HintingSpec>,
+    ) -> Result<Vec<GlyphOutline>> {
+        let scaler = self.scaler_font(
+            scaled_ppem(size),
+            &variations,
+            hinted.unwrap_or(false),
+            hinting.as_ref(),
+        )?;
+        let mut memory = Vec::new();
+        glyph_ids
+            .into_iter()
+            .map(|id| draw_glyph_outline(&scaler, GlyphId::new(id), Some(&mut memory)))
+            .collect()
     }
 
     /// Applies `GSUB` and `GPOS` to a run of text.
@@ -1198,13 +1440,46 @@ impl Font {
         language: Option<String>,
         features: Option<Vec<String>>,
     ) -> Result<ShapeResult> {
+        // Caller-supplied inputs run on the UI thread; reject invalid ones.
+        let chars = text.chars().count();
+        if chars > MAX_SHAPE_CHARS {
+            return Err(anyhow!(
+                "text is too long: {chars} characters (limit {MAX_SHAPE_CHARS})"
+            ));
+        }
+        if variations.len() > MAX_VARIATION_SETTINGS {
+            return Err(anyhow!(
+                "too many variation settings: {} (limit {MAX_VARIATION_SETTINGS})",
+                variations.len()
+            ));
+        }
+        let size = match size {
+            Some(size) => {
+                // `ppem` is a u16: NaN would become 0 and huge sizes would wrap.
+                if !size.is_finite() || size <= 0.0 || size > u16::MAX as f64 {
+                    return Err(anyhow!(
+                        "size must be finite and in (0, {}], got {size}",
+                        u16::MAX
+                    ));
+                }
+                Some(size)
+            }
+            None => None,
+        };
+        let features = match features {
+            Some(tags) => Some(
+                tags.iter()
+                    .map(|tag| table_tag(tag).map_err(|e| anyhow!("invalid feature tag: {e}")))
+                    .collect::<Result<Vec<_>>>()?,
+            ),
+            None => None,
+        };
         let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         let options = crate::shaping::ShapeOptions {
             script: optional_tag(script.as_deref())?,
             language: optional_tag(language.as_deref())?,
-            features: features
-                .map(|tags| tags.iter().filter_map(|tag| table_tag(tag).ok()).collect()),
+            features,
             size: size.map(|size| size as f32),
             coords: location.coords(),
         };
@@ -1229,7 +1504,7 @@ impl Font {
             return Ok(None);
         };
         let Ok(constants) = math.math_constants() else {
-            return Ok(Some(Vec::new()));
+            return Ok(None);
         };
         Ok(Some(crate::math::constants(
             &constants,
@@ -1250,11 +1525,7 @@ impl Font {
             return Ok(None);
         };
         let Ok(info) = math.math_glyph_info() else {
-            return Ok(Some(crate::math::glyph_info(
-                &read_fonts::tables::math::MathGlyphInfo::default(),
-                GlyphId::new(glyph_id),
-                ppem.unwrap_or(0) as u16,
-            )));
+            return Ok(None);
         };
         Ok(Some(crate::math::glyph_info(
             &info,
@@ -1266,10 +1537,17 @@ impl Font {
     /// How a `MATH` glyph stretches: the ready made sizes and, when no size
     /// fits, the pieces it is assembled from.
     ///
-    /// `axis` is `horizontal` or `vertical`. `None` when the font has no
-    /// `MATH` table or the glyph does not stretch along that axis.
+    /// `axis` is `horizontal` or `vertical`. `ppem` is the size the device
+    /// table of the assembly's italics correction is resolved at. `None` when
+    /// the font has no `MATH` table or the glyph does not stretch along that
+    /// axis.
     #[frb(sync)]
-    pub fn math_variants(&self, glyph_id: u32, axis: String) -> Result<Option<MathVariantsInfo>> {
+    pub fn math_variants(
+        &self,
+        glyph_id: u32,
+        axis: String,
+        ppem: Option<u32>,
+    ) -> Result<Option<MathVariantsInfo>> {
         let font = self.font_ref()?;
         let Ok(math) = font.math() else {
             return Ok(None);
@@ -1281,6 +1559,7 @@ impl Font {
             &variants,
             GlyphId::new(glyph_id),
             &axis,
+            ppem.unwrap_or(0) as u16,
         ))
     }
 
@@ -1304,7 +1583,7 @@ impl Font {
         let Ok(varc) = font.varc() else {
             return Ok(None);
         };
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         crate::varc::components(&varc, GlyphId::new(glyph_id), location.coords()).map(Some)
     }
 
@@ -1413,7 +1692,7 @@ impl Font {
     #[frb(sync)]
     pub fn normalized_coords(&self, variations: Vec<VariationSetting>) -> Result<Vec<f64>> {
         let font = self.font_ref()?;
-        let location = build_location(&font, &variations);
+        let location = build_location(&font, &self.effective_variations(&variations));
         Ok(location
             .coords()
             .iter()
@@ -1434,6 +1713,13 @@ fn to_size(size: Option<f64>) -> Size {
         Some(ppem) => Size::new(ppem as f32),
         None => Size::unscaled(),
     }
+}
+
+/// Pixels per em for a `ScalerFont`, or `None` for font units. A non-positive
+/// or non-finite size cannot be hinted or scaled, so it counts as unscaled.
+fn scaled_ppem(size: Option<f64>) -> Option<f32> {
+    size.map(|value| value as f32)
+        .filter(|ppem| ppem.is_finite() && *ppem > 0.0)
 }
 
 fn build_location(font: &FontRef<'_>, variations: &[VariationSetting]) -> Location {
@@ -1651,16 +1937,105 @@ fn bitmap_format_name(format: Option<BitmapFormat>) -> &'static str {
     }
 }
 
-fn outline_format_name(format: OutlineGlyphFormat) -> &'static str {
-    match format {
-        OutlineGlyphFormat::Glyf => "glyf",
-        OutlineGlyphFormat::Cff => "cff",
-        OutlineGlyphFormat::Cff2 => "cff2",
-        OutlineGlyphFormat::Varc => "varc",
+fn outline_source_name(source: OutlineSource) -> &'static str {
+    match source {
+        OutlineSource::Varc => "varc",
+        OutlineSource::Glyf => "glyf",
+        OutlineSource::Cff2 => "cff2",
+        OutlineSource::Cff => "cff",
+        OutlineSource::Type1 => "type1",
     }
 }
 
-fn convert_element(element: &read_fonts::model::glyph::outline::PathElement) -> PathElement {
+fn hint_engine_name(engine: HintEngine) -> &'static str {
+    match engine {
+        HintEngine::TrueType => "trueType",
+        HintEngine::PostScript => "postScript",
+        HintEngine::Auto => "auto",
+    }
+}
+
+fn dropout_control_name(control: DropoutControl) -> &'static str {
+    match control {
+        DropoutControl::Ignore => "ignore",
+        DropoutControl::Simple => "simple",
+        DropoutControl::SimpleWithStubs => "simpleWithStubs",
+        DropoutControl::Smart => "smart",
+        DropoutControl::SmartWithStubs => "smartWithStubs",
+    }
+}
+
+/// Draws one glyph through a `ScalerFont` and reports what the scaler says.
+///
+/// `memory` is the reusable buffer `Font.outlines` grows to the largest
+/// `required_memory_size`; a single outline uses the scaler's scratch memory.
+fn draw_glyph_outline(
+    scaler: &ScalerFont,
+    glyph_id: GlyphId,
+    memory: Option<&mut Vec<u8>>,
+) -> Result<GlyphOutline> {
+    let outline = scaler
+        .outline(glyph_id)
+        .ok_or_else(|| anyhow!("glyph {glyph_id} has no outline"))?;
+    let source = outline.source();
+    let mut raw: Vec<RawPathElement> = Vec::new();
+    let drawn = match memory {
+        Some(buffer) => {
+            let required = outline.required_memory_size();
+            if buffer.len() < required {
+                buffer.resize(required, 0);
+            }
+            outline.draw(DrawMemory::Buffer(buffer.as_mut_slice()), &mut raw)
+        }
+        None => outline.draw(DrawMemory::Scratch, &mut raw),
+    }
+    .map_err(|e| anyhow!("failed to draw glyph {glyph_id}: {e}"))?;
+
+    // Linear metrics are independent of hinting; the hinted advance is in
+    // `DrawnMetrics`, reported separately in `ScalerInfo`.
+    let metrics = scaler.linear_glyph_metrics();
+    let bounds = metrics.extents(glyph_id).map(|e| RectF {
+        x_min: e.x_bearing as f64,
+        y_min: (e.y_bearing - e.height) as f64,
+        x_max: (e.x_bearing + e.width) as f64,
+        y_max: e.y_bearing as f64,
+    });
+    let advance_width = Some(metrics.h_advance(glyph_id) as f64);
+    let policy = scaler.raster_policy();
+    let info = ScalerInfo {
+        hint_engine: scaler
+            .hint_engine()
+            .map(hint_engine_name)
+            .map(str::to_string),
+        is_hinted: scaler.is_hinted(),
+        hinted_ppem: scaler.hinted_ppem().map(f64::from),
+        outline_source: scaler
+            .outline_source()
+            .map(outline_source_name)
+            .map(str::to_string),
+        underlying_outline_source: scaler
+            .underlying_outline_source()
+            .map(outline_source_name)
+            .map(str::to_string),
+        symmetric_smoothing: policy.map(|p| p.symmetric_smoothing),
+        grid_fit: policy.map(|p| p.grid_fit),
+        dropout_control: dropout_control_name(drawn.dropout_control).to_string(),
+        drawn_advance: drawn.h_advance.map(f64::from),
+        drawn_left_side_bearing: drawn.x_bearing.map(f64::from),
+    };
+
+    Ok(GlyphOutline {
+        elements: raw.iter().map(convert_element).collect(),
+        bounds,
+        advance_width,
+        format: Some(outline_source_name(source).to_string()),
+        has_hinting: scaler.hint_engine().is_some(),
+        has_overlaps: drawn.has_overlaps,
+        scaler: info,
+    })
+}
+
+fn convert_element(element: &RawPathElement) -> PathElement {
     use read_fonts::model::glyph::outline::PathElement as E;
     match *element {
         E::MoveTo { x, y } => PathElement {
@@ -1881,13 +2256,56 @@ mod tests {
         assert!((scaled.advance_width.unwrap() - 50.0).abs() < 0.01);
 
         assert_eq!(font.outline_format().unwrap(), Some("glyf".to_string()));
-        let outline = font.outline(1, Some(48.0), Vec::new(), None).unwrap();
+        let outline = font.outline(1, Some(48.0), Vec::new(), None, None).unwrap();
         assert_eq!(outline.format.as_deref(), Some("glyf"));
         assert!(!outline.elements.is_empty());
+        assert!((outline.advance_width.unwrap() - 48.0).abs() < 0.01);
+        assert_eq!(outline.scaler.outline_source.as_deref(), Some("glyf"));
+        assert_eq!(outline.scaler.dropout_control, "simple");
+        assert!(!outline.scaler.is_hinted);
+        assert!(outline.scaler.hint_engine.is_none());
         // Hinting is a no-op on a font without instructions, but it must not
         // fail or change the element count.
-        let hinted = font.outline(1, Some(48.0), Vec::new(), Some(true)).unwrap();
+        let hinted = font
+            .outline(1, Some(48.0), Vec::new(), Some(true), None)
+            .unwrap();
         assert_eq!(hinted.elements.len(), outline.elements.len());
+    }
+
+    #[test]
+    fn scaler_reports_hinting_and_reuses_memory_for_batches() {
+        let font = sample_font();
+        let spec = HintingSpec {
+            engine: Some(HintEngineKind::Auto),
+            target: Some(RasterTargetKind::Mono),
+            preserve_linear_metrics: Some(true),
+            ..Default::default()
+        };
+        let hinted = font
+            .outline(1, Some(24.0), Vec::new(), None, Some(spec))
+            .unwrap();
+        assert_eq!(hinted.scaler.hint_engine.as_deref(), Some("auto"));
+        assert!(hinted.scaler.is_hinted);
+        assert_eq!(hinted.scaler.hinted_ppem, Some(24.0));
+        assert!(hinted.scaler.drawn_advance.is_some());
+        assert_eq!(hinted.scaler.symmetric_smoothing, None);
+
+        // A single scaler and one reusable buffer must give byte-identical
+        // outlines, including for glyphs drawn after a larger one.
+        let batch = font
+            .outlines(vec![1, 1, 1], Some(24.0), Vec::new(), None, Some(spec))
+            .unwrap();
+        assert_eq!(batch.len(), 3);
+        assert!(batch.iter().all(|outline| outline == &hinted));
+
+        // Font units have no hinting, even when a spec was supplied.
+        let unscaled = font
+            .outline(1, None, Vec::new(), Some(true), Some(spec))
+            .unwrap();
+        assert!(!unscaled.scaler.is_hinted);
+        assert_eq!(unscaled.scaler.hint_engine, None);
+        assert_eq!(unscaled.scaler.hinted_ppem, None);
+        assert!((unscaled.advance_width.unwrap() - 1000.0).abs() < 0.01);
     }
 
     #[test]
@@ -2083,7 +2501,7 @@ mod tests {
         assert!(font.math_constants(None).unwrap().is_none());
         assert!(font.math_glyph_info(1, None).unwrap().is_none());
         assert!(font
-            .math_variants(1, "vertical".to_string())
+            .math_variants(1, "vertical".to_string(), None)
             .unwrap()
             .is_none());
 
@@ -2107,5 +2525,106 @@ mod tests {
             "{source}"
         );
         assert!(font.glyph_name(1).unwrap().is_some());
+    }
+
+    // ---------------------------------------------------------------------
+    // Bounds on untrusted input
+    // ---------------------------------------------------------------------
+
+    #[test]
+    fn oversized_fonts_are_rejected_before_parsing() {
+        let bytes = vec![0u8; crate::limits::MAX_FONT_BYTES + 1];
+        let err = Font::from_bytes(bytes.clone(), None).unwrap_err();
+        assert!(err.to_string().contains("too large"), "{err}");
+        let err = count_fonts(bytes).unwrap_err();
+        assert!(err.to_string().contains("too large"), "{err}");
+    }
+
+    #[test]
+    fn shape_rejects_invalid_sizes_and_feature_tags() {
+        let font = sample_font();
+        for size in [f64::NAN, f64::INFINITY, -1.0, 0.0, 70_000.0] {
+            let err = font
+                .shape("AV".to_string(), Some(size), vec![], None, None, None)
+                .unwrap_err();
+            assert!(err.to_string().contains("size"), "{size}: {err}");
+        }
+        // An invalid tag used to be dropped silently by `filter_map`.
+        let err = font
+            .shape(
+                "AV".to_string(),
+                None,
+                vec![],
+                None,
+                None,
+                Some(vec!["not_a_tag".to_string()]),
+            )
+            .unwrap_err();
+        assert!(err.to_string().contains("feature tag"), "{err}");
+
+        // The guards must not reject a normal call.
+        let result = font
+            .shape(
+                "AV".to_string(),
+                Some(24.0),
+                vec![],
+                None,
+                None,
+                Some(vec!["kern".to_string()]),
+            )
+            .unwrap();
+        assert_eq!(result.glyphs.len(), 2);
+    }
+
+    #[test]
+    fn shape_rejects_oversized_text_and_variation_lists() {
+        let font = sample_font();
+        let text = "A".repeat(crate::limits::MAX_SHAPE_CHARS + 1);
+        let err = font
+            .shape(text, None, vec![], None, None, None)
+            .unwrap_err();
+        assert!(err.to_string().contains("too long"), "{err}");
+
+        let variants = (0..crate::limits::MAX_VARIATION_SETTINGS + 1)
+            .map(|_| VariationSetting {
+                tag: "wght".to_string(),
+                value: 0.0,
+            })
+            .collect::<Vec<_>>();
+        let err = font
+            .shape("A".to_string(), None, variants, None, None, None)
+            .unwrap_err();
+        assert!(err.to_string().contains("variation settings"), "{err}");
+    }
+
+    #[test]
+    fn truncated_and_mutated_fonts_do_not_panic() {
+        let bytes: Vec<u8> = sample_font().data.as_ref().clone();
+        let mut probes: Vec<Vec<u8>> = Vec::new();
+        for len in [0usize, 1, 4, 12, 64, 256] {
+            probes.push(bytes[..len.min(bytes.len())].to_vec());
+        }
+        // A deterministic mutation corpus: the same bytes on every platform,
+        // no fuzzing toolchain needed, but enough coverage to catch a parser
+        // path that allocates or recurses before validating its input.
+        let mut state: u32 = 0x9E37_79B9;
+        for _ in 0..256 {
+            state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let index = (state as usize) % bytes.len();
+            state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let mut mutated = bytes.clone();
+            mutated[index] ^= ((state >> 16) as u8) | 1;
+            probes.push(mutated);
+        }
+
+        for probe in probes {
+            assert!(check_font_bytes(&probe).is_ok());
+            if let Ok(font) = Font::from_bytes(probe.clone(), None) {
+                let _ = font.info();
+                let _ = font.has_varc();
+                let _ = font.shape("AV".to_string(), None, vec![], None, None, None);
+            }
+            let _ = count_fonts(probe);
+        }
     }
 }

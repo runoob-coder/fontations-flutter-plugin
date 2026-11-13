@@ -25,30 +25,40 @@
 //! `Ignore*` flags, and `USE_MARK_FILTERING_SET`, which replaces the `GDEF`
 //! glyph classes with a coverage table of the font's choosing.
 //!
-//! Still missing, and worth knowing before shaping non-Latin text: feature
-//! variations, Unicode normalization and cluster splitting, and vertical or
-//! right to left runs.
+//! Still missing, and worth knowing before shaping non-Latin text: Unicode
+//! normalization and cluster splitting, and vertical or right to left runs.
+//! Feature variations (`GSUB`/`GPOS` condition sets and lookup variations)
+//! are applied at the current variation location.
+//!
+//! OpenType's 2026 revision adds "v2" lookup subtables with 32-bit offsets and
+//! 24-bit glyph ids. Every lookup type reads both the original and the v2
+//! subtables: the v2 data is normalized into the same runtime shape (a
+//! [`GlyphRun`] for glyph sequences, plain `Vec<u32>` for substitution tables)
+//! before the matching code runs.
 
 use read_fonts::tables::gdef::{GlyphClassDef, MarkGlyphSets};
 use read_fonts::tables::gpos::{
-    AnchorTable, CursivePosFormat1, MarkBasePosFormat1, MarkLigPosFormat1, MarkMarkPosFormat1,
-    PairPos, PositionLookupList, PositionSubtables, SinglePos, ValueRecord,
+    AnchorTable, CursivePos, MarkBasePos, MarkLigPos, MarkMarkPos, PairPos, PositionLookupList,
+    PositionSubtables, SinglePos, ValueRecord,
 };
 use read_fonts::tables::gsub::{
-    AlternateSubstFormat1, LigatureSubstFormat1, MultipleSubstFormat1, SingleSubst,
+    AlternateSubst, LigatureSubst, MultipleSubst, ReverseChainSingleSubst, SingleSubst,
     SubstitutionLookupList, SubstitutionSubtables,
 };
 use read_fonts::tables::layout::{
-    ChainedSequenceContext, ClassDef, CoverageTable, DeviceOrVariationIndex, FeatureList,
-    LookupFlag, ScriptList, SequenceContext, SequenceLookupRecord,
+    ChainedSequenceContext, ClassDef, CoverageTable, DeviceOrVariationIndex, Feature, FeatureList,
+    FeatureVariations, LookupFlag, ScriptList, SelectedFeatureVariations, SequenceContext,
+    SequenceLookupRecord,
 };
-use read_fonts::types::{BigEndian, F2Dot14, GlyphId, Tag};
+use read_fonts::tables::variations::{DeltaSetIndex, ItemVariationStore};
+use read_fonts::types::{BigEndian, F2Dot14, GlyphId, GlyphId16, GlyphId24, Tag};
 use read_fonts::{FontRef, ReadError, TableProvider};
 use skrifa::instance::LocationRef;
 use skrifa::metrics::GlyphMetrics;
 use skrifa::prelude::*;
 
 use crate::api::fontations::{ShapeResult, ShapedGlyph};
+use crate::limits::{WorkBudget, MAX_SHAPE_OPERATIONS};
 
 /// How deeply nested contextual lookups may recurse. Real fonts nest two or
 /// three levels; the bound only exists so a malformed font cannot loop.
@@ -86,6 +96,10 @@ struct Ctx<'a> {
     /// font has them) on every call, and shaping asks for an advance once per
     /// input character plus once per substitution.
     metrics: GlyphMetrics<'a>,
+    /// Shared by every lookup of this shaping call. A lookup over a buffer of
+    /// `n` glyphs spends `n + 1` visits, so a font with many lookups (or a long
+    /// text run) cannot turn into unbounded work.
+    budget: WorkBudget,
 }
 
 impl<'a> Ctx<'a> {
@@ -107,7 +121,18 @@ impl<'a> Ctx<'a> {
             class_def,
             mark_sets,
             metrics: font.glyph_metrics(Size::unscaled(), LocationRef::new(coords)),
+            budget: WorkBudget::new(MAX_SHAPE_OPERATIONS),
         }
+    }
+
+    /// Charges one lookup pass over `buffer`. Returns `false` when the call has
+    /// spent its whole budget, in which case the caller stops applying lookups.
+    fn spend(&self, buffer_len: usize) -> bool {
+        self.budget.spend((buffer_len as u32).saturating_add(1))
+    }
+
+    fn exhausted(&self) -> bool {
+        self.budget.exhausted()
     }
 
     fn advance(&self, glyph: GlyphId) -> f32 {
@@ -150,6 +175,75 @@ impl<'a> Ctx<'a> {
     }
 }
 
+/// Resolves a condition's format 2 variation index against `GDEF`'s item
+/// variation store. A font without one (or a missing delta set) gets zero.
+fn gdef_delta(store: Option<&ItemVariationStore<'_>>, coords: &[F2Dot14], index: u32) -> f64 {
+    store
+        .and_then(|store| {
+            store.compute_delta(
+                DeltaSetIndex {
+                    outer: (index >> 16) as u16,
+                    inner: index as u16,
+                },
+                coords,
+            )
+        })
+        .map(|delta| delta.to_f64())
+        .unwrap_or(0.0)
+}
+
+/// The lookups a feature runs at this variation location.
+///
+/// A selected `FeatureVariations` record may replace the whole feature table
+/// (feature table substitution), and version 1.1 lookup variations may then
+/// replace or append to its lookup list. Both apply before any lookup runs.
+fn feature_lookups<E>(
+    variations: Option<&FeatureVariations<'_>>,
+    record_index: Option<u32>,
+    feature_index: u16,
+    feature: &Feature<'_>,
+    coords: &[F2Dot14],
+    delta: impl FnMut(u32) -> Result<f64, E> + Copy,
+) -> Vec<u16> {
+    let mut lookups: Vec<u16> = variations
+        .and_then(|table| {
+            record_index.and_then(|index| table.feature_variation_records().get(index as usize))
+        })
+        .and_then(|record| {
+            variations
+                .and_then(|table| record.feature_table_substitution(table.offset_data()))
+                .and_then(Result::ok)
+        })
+        .and_then(|substitution| {
+            let data = substitution.offset_data();
+            substitution
+                .substitutions()
+                .iter()
+                .find(|record| record.feature_index() == feature_index)
+                .and_then(|record| record.alternate_feature(data).ok())
+                .map(|alternate| {
+                    alternate
+                        .lookup_list_indices()
+                        .iter()
+                        .map(|index| index.get())
+                        .collect()
+                })
+        })
+        .unwrap_or_else(|| {
+            feature
+                .lookup_list_indices()
+                .iter()
+                .map(|index| index.get())
+                .collect()
+        });
+    if let Some(variations) = variations {
+        if let Some(lookup_variations) = variations.lookup_variations() {
+            lookup_variations.apply(feature_index, coords, delta, &mut lookups);
+        }
+    }
+    lookups
+}
+
 /// Shapes `text` with the given script, language and feature selection.
 pub fn shape(font: &FontRef<'_>, text: &str, options: &ShapeOptions<'_>) -> ShapeResult {
     let upem = font
@@ -178,11 +272,20 @@ pub fn shape(font: &FontRef<'_>, text: &str, options: &ShapeOptions<'_>) -> Shap
         });
     }
 
+    // The same variation location selects feature variations in both tables.
+    // `GDEF`'s item variation store resolves their format 2 conditions.
+    let selected = SelectedFeatureVariations::new(font, options.coords);
+    let var_store = font
+        .gdef()
+        .ok()
+        .and_then(|gdef| gdef.item_var_store().transpose().ok().flatten());
+
     // -- GSUB -----------------------------------------------------------
     if let Ok(gsub) = font.gsub() {
         let lookups = gsub.lookup_list().ok();
         let features = gsub.feature_list().ok();
         let scripts = gsub.script_list().ok();
+        let variations = gsub.feature_variations().transpose().ok().flatten();
         let plan = Plan::new(
             scripts.as_ref(),
             features.as_ref(),
@@ -192,11 +295,28 @@ pub fn shape(font: &FontRef<'_>, text: &str, options: &ShapeOptions<'_>) -> Shap
         );
         if let (Some(lookups), Some(features)) = (lookups.as_ref(), features.as_ref()) {
             for index in &plan.features {
+                if ctx.exhausted() {
+                    break;
+                }
                 if let Some(feature) = features.feature_records().get(*index as usize) {
                     let data = features.offset_data();
                     if let Ok(feature) = feature.feature(data) {
-                        for lookup in feature.lookup_list_indices() {
-                            apply_substitution(&mut buffer, lookup.get(), lookups, &ctx, 0);
+                        let indices = feature_lookups(
+                            variations.as_ref(),
+                            selected.gsub,
+                            *index,
+                            &feature,
+                            options.coords,
+                            |delta| {
+                                Ok::<f64, std::convert::Infallible>(gdef_delta(
+                                    var_store.as_ref(),
+                                    options.coords,
+                                    delta,
+                                ))
+                            },
+                        );
+                        for lookup in indices {
+                            apply_substitution(&mut buffer, lookup, lookups, &ctx, 0);
                         }
                     }
                 }
@@ -209,6 +329,7 @@ pub fn shape(font: &FontRef<'_>, text: &str, options: &ShapeOptions<'_>) -> Shap
         let lookups = gpos.lookup_list().ok();
         let features = gpos.feature_list().ok();
         let scripts = gpos.script_list().ok();
+        let variations = gpos.feature_variations().transpose().ok().flatten();
         let plan = Plan::new(
             scripts.as_ref(),
             features.as_ref(),
@@ -218,11 +339,28 @@ pub fn shape(font: &FontRef<'_>, text: &str, options: &ShapeOptions<'_>) -> Shap
         );
         if let (Some(lookups), Some(features)) = (lookups.as_ref(), features.as_ref()) {
             for index in &plan.features {
+                if ctx.exhausted() {
+                    break;
+                }
                 if let Some(feature) = features.feature_records().get(*index as usize) {
                     let data = features.offset_data();
                     if let Ok(feature) = feature.feature(data) {
-                        for lookup in feature.lookup_list_indices() {
-                            apply_position(&mut buffer, lookup.get(), lookups, &ctx, 0);
+                        let indices = feature_lookups(
+                            variations.as_ref(),
+                            selected.gpos,
+                            *index,
+                            &feature,
+                            options.coords,
+                            |delta| {
+                                Ok::<f64, std::convert::Infallible>(gdef_delta(
+                                    var_store.as_ref(),
+                                    options.coords,
+                                    delta,
+                                ))
+                            },
+                        );
+                        for lookup in indices {
+                            apply_position(&mut buffer, lookup, lookups, &ctx, 0);
                         }
                     }
                 }
@@ -275,7 +413,9 @@ pub struct ShapeOptions<'a> {
 ///
 /// The split is the one HarfBuzz makes: the first group is always on, the
 /// second only for horizontal text, which is all this shaper does.
-const ALWAYS_ON: &[&str] = &["abvm", "blwm", "ccmp", "locl", "mark", "mkmk", "rlig"];
+const ALWAYS_ON: &[&str] = &[
+    "abvm", "blwm", "ccmp", "locl", "mark", "mkmk", "rlig", "rvrn",
+];
 const ON_WHEN_EMPTY: &[&str] = &["calt", "clig", "curs", "dist", "kern", "liga", "rclt"];
 
 /// The feature indices of one layout table, in the order they are applied.
@@ -442,7 +582,7 @@ fn apply_substitution(
     ctx: &Ctx<'_>,
     depth: u32,
 ) {
-    if depth > MAX_NESTING {
+    if depth > MAX_NESTING || !ctx.spend(buffer.len()) {
         return;
     }
     let Ok(lookup) = lookups.lookups().get(lookup_index as usize) else {
@@ -492,18 +632,67 @@ fn apply_substitution(
     }
 }
 
+/// A single substitution's replacement, in the original 16-bit glyph id
+/// encoding or the 2026 24-bit one.
+enum SingleReplacement<'a> {
+    Delta(i32),
+    Glyphs16(&'a [BigEndian<GlyphId16>]),
+    Glyphs24(&'a [BigEndian<GlyphId24>]),
+}
+
+/// A glyph sequence in either encoding. Contextual rules and ligature
+/// components are stored as 16-bit ids in the original layouts and as 24-bit
+/// ids in the 2026 v2 ones; matching only needs the numeric id.
+#[derive(Clone, Copy)]
+enum GlyphRun<'a> {
+    G16(&'a [BigEndian<GlyphId16>]),
+    G24(&'a [BigEndian<GlyphId24>]),
+}
+
+impl GlyphRun<'_> {
+    fn len(&self) -> usize {
+        match self {
+            GlyphRun::G16(run) => run.len(),
+            GlyphRun::G24(run) => run.len(),
+        }
+    }
+
+    fn at(&self, index: usize) -> u32 {
+        match self {
+            GlyphRun::G16(run) => run[index].get().to_u32(),
+            GlyphRun::G24(run) => run[index].get().to_u32(),
+        }
+    }
+}
+
 fn apply_single(buffer: &mut [Item], subtable: &SingleSubst<'_>, filter: &Filter, ctx: &Ctx<'_>) {
-    let (coverage, delta, glyphs): (
-        CoverageTable<'_>,
-        Option<i16>,
-        &[BigEndian<read_fonts::types::GlyphId16>],
-    ) = match subtable {
+    let (coverage, replacement) = match subtable {
         SingleSubst::Format1(format) => match format.coverage() {
-            Ok(coverage) => (coverage, Some(format.delta_glyph_id()), &[]),
+            Ok(coverage) => (
+                coverage,
+                SingleReplacement::Delta(format.delta_glyph_id() as i32),
+            ),
             Err(_) => return,
         },
         SingleSubst::Format2(format) => match format.coverage() {
-            Ok(coverage) => (coverage, None, format.substitute_glyph_ids()),
+            Ok(coverage) => (
+                coverage,
+                SingleReplacement::Glyphs16(format.substitute_glyph_ids()),
+            ),
+            Err(_) => return,
+        },
+        SingleSubst::Format3(format) => match format.coverage() {
+            Ok(coverage) => (
+                coverage,
+                SingleReplacement::Delta(format.delta_glyph_id().to_i32()),
+            ),
+            Err(_) => return,
+        },
+        SingleSubst::Format4(format) => match format.coverage() {
+            Ok(coverage) => (
+                coverage,
+                SingleReplacement::Glyphs24(format.substitute_glyph_ids()),
+            ),
             Err(_) => return,
         },
     };
@@ -514,9 +703,14 @@ fn apply_single(buffer: &mut [Item], subtable: &SingleSubst<'_>, filter: &Filter
         let Some(position) = coverage.get(buffer[index].glyph) else {
             continue;
         };
-        let replacement = match delta {
-            Some(delta) => Some((buffer[index].glyph.to_u32() as i32 + delta as i32) as u32),
-            None => glyphs
+        let replacement = match replacement {
+            SingleReplacement::Delta(delta) => {
+                Some((buffer[index].glyph.to_u32() as i32 + delta) as u32)
+            }
+            SingleReplacement::Glyphs16(glyphs) => glyphs
+                .get(position as usize)
+                .map(|glyph| glyph.get().to_u32()),
+            SingleReplacement::Glyphs24(glyphs) => glyphs
                 .get(position as usize)
                 .map(|glyph| glyph.get().to_u32()),
         };
@@ -528,12 +722,57 @@ fn apply_single(buffer: &mut [Item], subtable: &SingleSubst<'_>, filter: &Filter
 
 fn apply_multiple(
     buffer: &mut Vec<Item>,
-    subtable: &MultipleSubstFormat1<'_>,
+    subtable: &MultipleSubst<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
-    let Ok(coverage) = subtable.coverage() else {
-        return;
+    // Normalize both the original and the 2026 v2 subtable into coverage plus
+    // one glyph-id vector per coverage position.
+    let (coverage, sequences): (_, Vec<Vec<u32>>) = match subtable {
+        MultipleSubst::Format1(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .sequences()
+                    .iter()
+                    .map(|sequence| {
+                        sequence
+                            .map(|seq| {
+                                seq.substitute_glyph_ids()
+                                    .iter()
+                                    .map(|glyph| glyph.get().to_u32())
+                                    .collect()
+                            })
+                            .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
+        MultipleSubst::Format2(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .sequences()
+                    .iter()
+                    .map(|sequence| {
+                        sequence
+                            .map(|seq| {
+                                seq.substitute_glyph_ids()
+                                    .iter()
+                                    .map(|glyph| glyph.get().to_u32())
+                                    .collect()
+                            })
+                            .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
     };
     let mut index = 0;
     while index < buffer.len() {
@@ -545,15 +784,10 @@ fn apply_multiple(
             index += 1;
             continue;
         };
-        let Ok(sequence) = subtable.sequences().get(position as usize) else {
+        let Some(glyphs) = sequences.get(position as usize) else {
             index += 1;
             continue;
         };
-        let glyphs = sequence
-            .substitute_glyph_ids()
-            .iter()
-            .map(|glyph| glyph.get().to_u16())
-            .collect::<Vec<_>>();
         if glyphs.is_empty() {
             index += 1;
             continue;
@@ -561,7 +795,7 @@ fn apply_multiple(
         let template = buffer[index];
         buffer.remove(index);
         for (offset, glyph) in glyphs.iter().enumerate() {
-            let glyph = GlyphId::new(*glyph as u32);
+            let glyph = GlyphId::new(*glyph);
             buffer.insert(
                 index + offset,
                 Item {
@@ -581,12 +815,53 @@ fn apply_multiple(
 
 fn apply_alternate(
     buffer: &mut [Item],
-    subtable: &AlternateSubstFormat1<'_>,
+    subtable: &AlternateSubst<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
-    let Ok(coverage) = subtable.coverage() else {
-        return;
+    let (coverage, alternates): (_, Vec<Vec<u32>>) = match subtable {
+        AlternateSubst::Format1(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .alternate_sets()
+                    .iter()
+                    .map(|set| {
+                        set.map(|set| {
+                            set.alternate_glyph_ids()
+                                .iter()
+                                .map(|glyph| glyph.get().to_u32())
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
+        AlternateSubst::Format2(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .alternate_sets()
+                    .iter()
+                    .map(|set| {
+                        set.map(|set| {
+                            set.alternate_glyph_ids()
+                                .iter()
+                                .map(|glyph| glyph.get().to_u32())
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
     };
     for index in 0..buffer.len() {
         if !filter.eligible(buffer, index, ctx) {
@@ -595,26 +870,88 @@ fn apply_alternate(
         let Some(position) = coverage.get(buffer[index].glyph) else {
             continue;
         };
-        let Ok(set) = subtable.alternate_sets().get(position as usize) else {
+        let Some(set) = alternates.get(position as usize) else {
             continue;
         };
         // The first alternate: which one to use is a user choice, and there is
         // no API to express it here.
-        let Some(glyph) = set.alternate_glyph_ids().first() else {
+        let Some(glyph) = set.first() else {
             continue;
         };
-        advance_of(buffer, index, GlyphId::new(glyph.get().to_u32()), ctx);
+        advance_of(buffer, index, GlyphId::new(*glyph), ctx);
     }
 }
 
 fn apply_ligature(
     buffer: &mut Vec<Item>,
-    subtable: &LigatureSubstFormat1<'_>,
+    subtable: &LigatureSubst<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
-    let Ok(coverage) = subtable.coverage() else {
-        return;
+    // One entry per coverage position: (ligature glyph, component glyph ids).
+    let (coverage, sets): (_, Vec<Vec<(u32, Vec<u32>)>>) = match subtable {
+        LigatureSubst::Format1(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .ligature_sets()
+                    .iter()
+                    .map(|set| {
+                        set.map(|set| {
+                            set.ligatures()
+                                .iter()
+                                .flatten()
+                                .map(|ligature| {
+                                    (
+                                        ligature.ligature_glyph().to_u32(),
+                                        ligature
+                                            .component_glyph_ids()
+                                            .iter()
+                                            .map(|glyph| glyph.get().to_u32())
+                                            .collect(),
+                                    )
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
+        LigatureSubst::Format2(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .ligature_sets()
+                    .iter()
+                    .map(|set| {
+                        set.map(|set| {
+                            set.ligatures()
+                                .iter()
+                                .flatten()
+                                .map(|ligature| {
+                                    (
+                                        ligature.ligature_glyph().to_u32(),
+                                        ligature
+                                            .component_glyph_ids()
+                                            .iter()
+                                            .map(|glyph| glyph.get().to_u32())
+                                            .collect(),
+                                    )
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                    })
+                    .collect(),
+            )
+        }
     };
     let mut index = 0;
     while index < buffer.len() {
@@ -626,32 +963,29 @@ fn apply_ligature(
             index += 1;
             continue;
         };
-        let Ok(set) = subtable.ligature_sets().get(position as usize) else {
+        let Some(ligatures) = sets.get(position as usize) else {
             index += 1;
             continue;
         };
         let mut matched = None;
-        for ligature in set.ligatures().iter().flatten() {
-            let components = ligature.component_glyph_ids();
+        for (glyph, components) in ligatures {
             let count = components.len() + 1;
             if index + count > buffer.len() {
                 continue;
             }
             let mut fits = true;
             for (offset, component) in components.iter().enumerate() {
-                // Every glyph of the sequence has to be eligible, not just the
-                // first one: a lookup that ignores marks must not ligate across
-                // one, otherwise the mark ends up attached to the ligature.
+                // Every glyph of the sequence must be eligible, not just the first.
                 let position = index + offset + 1;
                 if !filter.eligible(buffer, position, ctx)
-                    || buffer[position].glyph != GlyphId::new(component.get().to_u32())
+                    || buffer[position].glyph != GlyphId::new(*component)
                 {
                     fits = false;
                     break;
                 }
             }
             if fits {
-                matched = Some((ligature.ligature_glyph().to_u32(), count));
+                matched = Some((*glyph, count));
                 break;
             }
         }
@@ -674,15 +1008,64 @@ fn apply_ligature(
 
 fn apply_reverse(
     buffer: &mut [Item],
-    subtable: &read_fonts::tables::gsub::ReverseChainSingleSubstFormat1<'_>,
+    subtable: &ReverseChainSingleSubst<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
-    let Ok(coverage) = subtable.coverage() else {
-        return;
+    let (coverage, backtrack, lookahead, substitutes): (
+        _,
+        Vec<CoverageTable<'_>>,
+        Vec<CoverageTable<'_>>,
+        Vec<u32>,
+    ) = match subtable {
+        ReverseChainSingleSubst::Format1(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .backtrack_coverages()
+                    .iter()
+                    .filter_map(|coverage| coverage.ok())
+                    .collect(),
+                format
+                    .lookahead_coverages()
+                    .iter()
+                    .filter_map(|coverage| coverage.ok())
+                    .collect(),
+                format
+                    .substitute_glyph_ids()
+                    .iter()
+                    .map(|glyph| glyph.get().to_u32())
+                    .collect(),
+            )
+        }
+        ReverseChainSingleSubst::Format2(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            (
+                coverage,
+                format
+                    .backtrack_coverages()
+                    .iter()
+                    .filter_map(|coverage| coverage.ok())
+                    .collect(),
+                format
+                    .lookahead_coverages()
+                    .iter()
+                    .filter_map(|coverage| coverage.ok())
+                    .collect(),
+                format
+                    .substitute_glyph_ids()
+                    .iter()
+                    .map(|glyph| glyph.get().to_u32())
+                    .collect(),
+            )
+        }
     };
-    // Reverse lookups run back to front, which is what lets them see the
-    // glyphs before the one they change.
+    // Reverse lookups run back to front to see the glyphs before the change.
     for index in (0..buffer.len()).rev() {
         if !filter.eligible(buffer, index, ctx) {
             continue;
@@ -690,14 +1073,8 @@ fn apply_reverse(
         let Some(position) = coverage.get(buffer[index].glyph) else {
             continue;
         };
-        let backtrack = subtable.backtrack_coverages();
-        let lookahead = subtable.lookahead_coverages();
         let mut matches = true;
         for (offset, coverage) in backtrack.iter().enumerate() {
-            let Ok(coverage) = coverage else {
-                matches = false;
-                break;
-            };
             if index < offset + 1 || coverage.get(buffer[index - offset - 1].glyph).is_none() {
                 matches = false;
                 break;
@@ -705,10 +1082,6 @@ fn apply_reverse(
         }
         if matches {
             for (offset, coverage) in lookahead.iter().enumerate() {
-                let Ok(coverage) = coverage else {
-                    matches = false;
-                    break;
-                };
                 if index + offset + 1 >= buffer.len()
                     || coverage.get(buffer[index + offset + 1].glyph).is_none()
                 {
@@ -720,10 +1093,10 @@ fn apply_reverse(
         if !matches {
             continue;
         }
-        let Some(glyph) = subtable.substitute_glyph_ids().get(position as usize) else {
+        let Some(glyph) = substitutes.get(position as usize) else {
             continue;
         };
-        advance_of(buffer, index, GlyphId::new(glyph.get().to_u32()), ctx);
+        advance_of(buffer, index, GlyphId::new(*glyph), ctx);
     }
 }
 
@@ -741,8 +1114,7 @@ fn apply_records(
     ctx: &Ctx<'_>,
     depth: u32,
 ) {
-    // Applying from the back keeps the offsets of the matches in front valid
-    // even when a nested ligature swallows glyphs.
+    // Applying from the back keeps earlier offsets valid.
     let mut matches = matches;
     matches.sort_by(|a, b| b.start.cmp(&a.start));
     for m in matches {
@@ -775,6 +1147,8 @@ fn match_sequence_context(
 ) -> Vec<ContextMatch> {
     let mut out = Vec::new();
     match subtable {
+        // Format4/5/6 are the 2026 v2 variants of Format1/2/3: the same rules
+        // behind 32-bit offsets, with 24-bit glyph ids in the glyph rules.
         SequenceContext::Format1(format) => {
             let Ok(coverage) = format.coverage() else {
                 return out;
@@ -796,7 +1170,7 @@ fn match_sequence_context(
                     if let Some(m) = match_glyph_sequence(
                         buffer,
                         start,
-                        rule.input_sequence(),
+                        GlyphRun::G16(rule.input_sequence()),
                         rule.seq_lookup_records(),
                     ) {
                         out.push(m);
@@ -857,6 +1231,91 @@ fn match_sequence_context(
                 }
             }
         }
+        SequenceContext::Format4(format) => {
+            // v2 of Format1: glyph rules with 24-bit glyph ids.
+            let Ok(coverage) = format.coverage() else {
+                return out;
+            };
+            for start in 0..buffer.len() {
+                if !filter.eligible(buffer, start, ctx) {
+                    continue;
+                }
+                let Some(position) = coverage.get(buffer[start].glyph) else {
+                    continue;
+                };
+                let Some(set) = format
+                    .seq_rule_sets()
+                    .get(position as usize)
+                    .and_then(|set| set.ok())
+                else {
+                    continue;
+                };
+                for rule in set.seq_rules().iter().flatten() {
+                    if let Some(m) = match_glyph_sequence(
+                        buffer,
+                        start,
+                        GlyphRun::G24(rule.input_sequence()),
+                        rule.seq_lookup_records(),
+                    ) {
+                        out.push(m);
+                        break;
+                    }
+                }
+            }
+        }
+        SequenceContext::Format5(format) => {
+            // v2 of Format2: class rules are unchanged (16-bit class values).
+            let (Ok(coverage), Ok(class_def)) = (format.coverage(), format.class_def()) else {
+                return out;
+            };
+            for start in 0..buffer.len() {
+                if !filter.eligible(buffer, start, ctx) {
+                    continue;
+                }
+                let Some(position) = coverage.get(buffer[start].glyph) else {
+                    continue;
+                };
+                let Some(set) = format
+                    .class_seq_rule_sets()
+                    .get(position as usize)
+                    .and_then(|set| set.ok())
+                else {
+                    continue;
+                };
+                for rule in set.class_seq_rules().iter().flatten() {
+                    if let Some(m) = match_class_sequence(
+                        buffer,
+                        start,
+                        rule.input_sequence(),
+                        &class_def,
+                        rule.seq_lookup_records(),
+                    ) {
+                        out.push(m);
+                        break;
+                    }
+                }
+            }
+        }
+        SequenceContext::Format6(format) => {
+            // v2 of Format3: a coverage table per input glyph.
+            let mut sequence = Vec::with_capacity(format.coverages().len());
+            for coverage in format.coverages().iter() {
+                match coverage {
+                    Ok(coverage) => sequence.push(coverage),
+                    _ => return out,
+                }
+            }
+            for start in 0..buffer.len() {
+                if !filter.eligible(buffer, start, ctx) {
+                    continue;
+                }
+                if let Some(m) =
+                    match_coverage_sequence(buffer, start, &sequence, format.seq_lookup_records())
+                {
+                    out.push(m);
+                }
+            }
+        }
     }
     out
 }
@@ -881,6 +1340,7 @@ fn match_chain_context(
 ) -> Vec<ContextMatch> {
     let mut out = Vec::new();
     match subtable {
+        // Format4/5 are the 2026 v2 variants of Format1/2.
         ChainedSequenceContext::Format1(format) => {
             let Ok(coverage) = format.coverage() else {
                 return out;
@@ -900,16 +1360,26 @@ fn match_chain_context(
                     continue;
                 };
                 for rule in set.chained_seq_rules().iter().flatten() {
-                    if !match_glyph_run(buffer, start, rule.backtrack_sequence(), true) {
+                    if !match_glyph_run(
+                        buffer,
+                        start,
+                        GlyphRun::G16(rule.backtrack_sequence()),
+                        true,
+                    ) {
                         continue;
                     }
-                    if !match_glyph_run(buffer, start, rule.lookahead_sequence(), false) {
+                    if !match_glyph_run(
+                        buffer,
+                        start,
+                        GlyphRun::G16(rule.lookahead_sequence()),
+                        false,
+                    ) {
                         continue;
                     }
                     if let Some(m) = match_glyph_sequence(
                         buffer,
                         start,
-                        rule.input_sequence(),
+                        GlyphRun::G16(rule.input_sequence()),
                         rule.seq_lookup_records(),
                     ) {
                         out.push(m);
@@ -1012,6 +1482,110 @@ fn match_chain_context(
                 }
             }
         }
+        ChainedSequenceContext::Format4(format) => {
+            // v2 of Format1: chained glyph rules with 24-bit glyph ids.
+            let Ok(coverage) = format.coverage() else {
+                return out;
+            };
+            for start in 0..buffer.len() {
+                if !filter.eligible(buffer, start, ctx) {
+                    continue;
+                }
+                let Some(position) = coverage.get(buffer[start].glyph) else {
+                    continue;
+                };
+                let Some(set) = format
+                    .chained_seq_rule_sets()
+                    .get(position as usize)
+                    .and_then(|set| set.ok())
+                else {
+                    continue;
+                };
+                for rule in set.chained_seq_rules().iter().flatten() {
+                    if !match_glyph_run(
+                        buffer,
+                        start,
+                        GlyphRun::G24(rule.backtrack_sequence()),
+                        true,
+                    ) {
+                        continue;
+                    }
+                    if !match_glyph_run(
+                        buffer,
+                        start,
+                        GlyphRun::G24(rule.lookahead_sequence()),
+                        false,
+                    ) {
+                        continue;
+                    }
+                    if let Some(m) = match_glyph_sequence(
+                        buffer,
+                        start,
+                        GlyphRun::G24(rule.input_sequence()),
+                        rule.seq_lookup_records(),
+                    ) {
+                        out.push(m);
+                        break;
+                    }
+                }
+            }
+        }
+        ChainedSequenceContext::Format5(format) => {
+            // v2 of Format2: class rules are unchanged (16-bit class values).
+            let (Ok(coverage), Ok(input_classes), Ok(backtrack_classes), Ok(lookahead_classes)) = (
+                format.coverage(),
+                format.input_class_def(),
+                format.backtrack_class_def(),
+                format.lookahead_class_def(),
+            ) else {
+                return out;
+            };
+            for start in 0..buffer.len() {
+                if !filter.eligible(buffer, start, ctx) {
+                    continue;
+                }
+                let Some(position) = coverage.get(buffer[start].glyph) else {
+                    continue;
+                };
+                let Some(set) = format
+                    .chained_class_seq_rule_sets()
+                    .get(position as usize)
+                    .and_then(|set| set.ok())
+                else {
+                    continue;
+                };
+                for rule in set.chained_class_seq_rules().iter().flatten() {
+                    if !match_class_run(
+                        buffer,
+                        start,
+                        rule.backtrack_sequence(),
+                        &backtrack_classes,
+                        true,
+                    ) {
+                        continue;
+                    }
+                    if !match_class_run(
+                        buffer,
+                        start,
+                        rule.lookahead_sequence(),
+                        &lookahead_classes,
+                        false,
+                    ) {
+                        continue;
+                    }
+                    if let Some(m) = match_class_sequence(
+                        buffer,
+                        start,
+                        rule.input_sequence(),
+                        &input_classes,
+                        rule.seq_lookup_records(),
+                    ) {
+                        out.push(m);
+                        break;
+                    }
+                }
+            }
+        }
     }
     out
 }
@@ -1021,15 +1595,15 @@ fn match_chain_context(
 fn match_glyph_sequence(
     buffer: &[Item],
     start: usize,
-    tail: &[BigEndian<read_fonts::types::GlyphId16>],
+    tail: GlyphRun<'_>,
     records: &[SequenceLookupRecord],
 ) -> Option<ContextMatch> {
     let count = tail.len() + 1;
     if start + count > buffer.len() {
         return None;
     }
-    for (offset, glyph) in tail.iter().enumerate() {
-        if buffer[start + offset + 1].glyph != GlyphId::new(glyph.get().to_u32()) {
+    for offset in 0..tail.len() {
+        if buffer[start + offset + 1].glyph != GlyphId::new(tail.at(offset)) {
             return None;
         }
     }
@@ -1051,7 +1625,7 @@ fn match_class_sequence(
         return None;
     }
     for (offset, class) in tail.iter().enumerate() {
-        if classes.get(buffer[start + offset + 1].glyph) != class.get() {
+        if classes.get(buffer[start + offset + 1].glyph) != u32::from(class.get()) {
             return None;
         }
     }
@@ -1083,13 +1657,8 @@ fn match_coverage_sequence(
 
 /// `backtrack` walks the glyphs *before* `start`; `lookahead` the ones after
 /// the matched input, which is `start + 1` for these rules.
-fn match_glyph_run(
-    buffer: &[Item],
-    start: usize,
-    glyphs: &[BigEndian<read_fonts::types::GlyphId16>],
-    backtrack: bool,
-) -> bool {
-    for (offset, glyph) in glyphs.iter().enumerate() {
+fn match_glyph_run(buffer: &[Item], start: usize, glyphs: GlyphRun<'_>, backtrack: bool) -> bool {
+    for offset in 0..glyphs.len() {
         let index = if backtrack {
             start.checked_sub(offset + 1)
         } else {
@@ -1097,7 +1666,7 @@ fn match_glyph_run(
         };
         match index {
             Some(index) if index < buffer.len() => {
-                if buffer[index].glyph != GlyphId::new(glyph.get().to_u32()) {
+                if buffer[index].glyph != GlyphId::new(glyphs.at(offset)) {
                     return false;
                 }
             }
@@ -1122,7 +1691,7 @@ fn match_class_run(
         };
         match index {
             Some(index) if index < buffer.len() => {
-                if classes.get(buffer[index].glyph) != class.get() {
+                if classes.get(buffer[index].glyph) != u32::from(class.get()) {
                     return false;
                 }
             }
@@ -1167,7 +1736,7 @@ fn apply_position(
     ctx: &Ctx<'_>,
     depth: u32,
 ) {
-    if depth > MAX_NESTING {
+    if depth > MAX_NESTING || !ctx.spend(buffer.len()) {
         return;
     }
     let Ok(lookup) = lookups.lookups().get(lookup_index as usize) else {
@@ -1270,6 +1839,17 @@ fn apply_single_pos(buffer: &mut [Item], subtable: &SinglePos<'_>, filter: &Filt
                 .filter_map(|record| record.ok())
                 .collect(),
         ),
+        // The 2026 v2 formats keep the same value records behind 32-bit
+        // offsets, so both of them are handled here.
+        SinglePos::Format3(format) => (format.coverage(), vec![format.value_record()]),
+        SinglePos::Format4(format) => (
+            format.coverage(),
+            format
+                .value_records()
+                .iter()
+                .filter_map(|record| record.ok())
+                .collect(),
+        ),
     };
     let Ok(coverage) = coverage else {
         return;
@@ -1289,6 +1869,65 @@ fn apply_single_pos(buffer: &mut [Item], subtable: &SinglePos<'_>, filter: &Filt
 
 fn apply_pair_pos(buffer: &mut [Item], subtable: &PairPos<'_>, filter: &Filter, ctx: &Ctx<'_>) {
     match subtable {
+        // v2 of Format1: pair sets with 24-bit second glyph ids.
+        PairPos::Format3(format) => {
+            let Ok(coverage) = format.coverage() else {
+                return;
+            };
+            for index in 0..buffer.len().saturating_sub(1) {
+                if !filter.eligible(buffer, index, ctx) {
+                    continue;
+                }
+                let Some(position) = coverage.get(buffer[index].glyph) else {
+                    continue;
+                };
+                let Ok(set) = format.pair_sets().get(position as usize) else {
+                    continue;
+                };
+                let Some(record) = set.pair_value_records().iter().flatten().find(|record| {
+                    GlyphId::new(record.second_glyph().to_u32()) == buffer[index + 1].glyph
+                }) else {
+                    continue;
+                };
+                apply_value(&mut buffer[index], record.value_record1(), ctx);
+                apply_value(&mut buffer[index + 1], record.value_record2(), ctx);
+            }
+        }
+        // v2 of Format2: class records reached through Class1Record rows.
+        PairPos::Format4(format) => {
+            let (Ok(coverage), Ok(first_classes), Ok(second_classes)) =
+                (format.coverage(), format.class_def1(), format.class_def2())
+            else {
+                return;
+            };
+            let class1_count = format.class1_count() as usize;
+            let class2_count = format.class2_count() as usize;
+            for index in 0..buffer.len().saturating_sub(1) {
+                if !filter.eligible(buffer, index, ctx) {
+                    continue;
+                }
+                if coverage.get(buffer[index].glyph).is_none() {
+                    continue;
+                }
+                let (Ok(class1), Ok(class2)) = (
+                    usize::try_from(first_classes.get(buffer[index].glyph)),
+                    usize::try_from(second_classes.get(buffer[index + 1].glyph)),
+                ) else {
+                    continue;
+                };
+                if class1 >= class1_count || class2 >= class2_count {
+                    continue;
+                }
+                let Ok(row) = format.class1_records().get(class1) else {
+                    continue;
+                };
+                let Ok(cell) = row.class2_records().get(class2) else {
+                    continue;
+                };
+                apply_value(&mut buffer[index], cell.value_record1(), ctx);
+                apply_value(&mut buffer[index + 1], cell.value_record2(), ctx);
+            }
+        }
         PairPos::Format1(format) => {
             let Ok(coverage) = format.coverage() else {
                 return;
@@ -1329,6 +1968,12 @@ fn apply_pair_pos(buffer: &mut [Item], subtable: &PairPos<'_>, filter: &Filter, 
                 }
                 let class1 = first_classes.get(buffer[index].glyph);
                 let class2 = second_classes.get(buffer[index + 1].glyph);
+                // PairPos class indices are still 16-bit; a v2 class value
+                // outside that range cannot index this table.
+                let (Ok(class1), Ok(class2)) = (u16::try_from(class1), u16::try_from(class2))
+                else {
+                    continue;
+                };
                 let Some([first, second]) = records.get(class1, class2) else {
                     continue;
                 };
@@ -1339,12 +1984,10 @@ fn apply_pair_pos(buffer: &mut [Item], subtable: &PairPos<'_>, filter: &Filter, 
     }
 }
 
-fn apply_cursive(
-    buffer: &mut [Item],
-    subtable: &CursivePosFormat1<'_>,
-    filter: &Filter,
-    ctx: &Ctx<'_>,
-) {
+fn apply_cursive(buffer: &mut [Item], subtable: &CursivePos<'_>, filter: &Filter, ctx: &Ctx<'_>) {
+    let CursivePos::Format1(subtable) = subtable else {
+        return;
+    };
     let Ok(coverage) = subtable.coverage() else {
         return;
     };
@@ -1374,13 +2017,10 @@ fn apply_cursive(
         };
         let (exit_x, exit_y) = anchor_position(&exit, ctx);
         let (entry_x, entry_y) = anchor_position(&entry, ctx);
-        // Main direction: stretch or squeeze the advance so the two anchors
-        // meet. Only the advance moves; the glyphs themselves stay put.
+        // Main direction: only the advance moves so the anchors meet.
         buffer[index].x_advance += exit_x - entry_x;
-        // Cross stream: the next glyph is shifted, chained through the current
-        // offset. `y_advance` must not change - it belongs to vertical layout,
-        // and writing it here used to shift every following glyph in a vertical
-        // run by the cross stream correction.
+        // Cross stream: shift the next glyph, but never `y_advance` (vertical
+        // layout only).
         buffer[index + 1].y_offset = buffer[index].y_offset + exit_y - entry_y;
     }
 }
@@ -1411,10 +2051,13 @@ fn previous_base(buffer: &[Item], index: usize, ctx: &Ctx<'_>) -> Option<usize> 
 
 fn apply_mark_to_base(
     buffer: &mut [Item],
-    subtable: &MarkBasePosFormat1<'_>,
+    subtable: &MarkBasePos<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
+    let MarkBasePos::Format1(subtable) = subtable else {
+        return;
+    };
     let (Ok(mark_coverage), Ok(base_coverage), Ok(mark_array), Ok(base_array)) = (
         subtable.mark_coverage(),
         subtable.base_coverage(),
@@ -1467,10 +2110,13 @@ fn apply_mark_to_base(
 
 fn apply_mark_to_lig(
     buffer: &mut [Item],
-    subtable: &MarkLigPosFormat1<'_>,
+    subtable: &MarkLigPos<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
+    let MarkLigPos::Format1(subtable) = subtable else {
+        return;
+    };
     let (Ok(mark_coverage), Ok(lig_coverage), Ok(mark_array), Ok(lig_array)) = (
         subtable.mark_coverage(),
         subtable.ligature_coverage(),
@@ -1514,9 +2160,7 @@ fn apply_mark_to_lig(
         if components.is_empty() {
             continue;
         }
-        // A mark that follows a ligature belongs to its last component, which
-        // is where an accent over `fi` sits. HarfBuzz decides this by comparing
-        // cluster values; here it is the only sensible default.
+        // A mark after a ligature belongs to its last component.
         let mut component = components.len() - 1;
         let class = record.mark_class() as usize;
         while component > 0
@@ -1549,10 +2193,13 @@ fn apply_mark_to_lig(
 
 fn apply_mark_to_mark(
     buffer: &mut [Item],
-    subtable: &MarkMarkPosFormat1<'_>,
+    subtable: &MarkMarkPos<'_>,
     filter: &Filter,
     ctx: &Ctx<'_>,
 ) {
+    let MarkMarkPos::Format1(subtable) = subtable else {
+        return;
+    };
     let (Ok(mark1_coverage), Ok(mark2_coverage), Ok(mark1_array), Ok(mark2_array)) = (
         subtable.mark1_coverage(),
         subtable.mark2_coverage(),
@@ -1661,8 +2308,7 @@ mod bench {
             }
         }
 
-        // 200 glyphs, each with masters that declare an advance, so the font has
-        // both `gvar` and `HVAR` - the expensive case for `glyph_metrics`.
+        // 200 glyphs with masters: the expensive `glyph_metrics` case.
         let glyphs = (0u32..200)
             .map(|i| GlyphSpec {
                 code_point: 0x4E00 + i,
@@ -1750,14 +2396,13 @@ mod shape_tests {
     use write_fonts::tables::gsub::{
         AlternateSet, AlternateSubstFormat1, Gsub, Ligature, LigatureSet, LigatureSubstFormat1,
         MultipleSubstFormat1, Sequence, SingleSubst, SubstitutionLookup, SubstitutionLookupList,
-        SubstitutionSequenceContext,
     };
     use write_fonts::tables::layout::{
         ClassDef, CoverageFormat1, CoverageTable, Feature, FeatureList, FeatureRecord, LangSys,
         Lookup, LookupFlag, Script, ScriptList, ScriptRecord, SequenceContext,
         SequenceContextFormat3, SequenceLookupRecord,
     };
-    use write_fonts::{FontBuilder, OffsetMarker};
+    use write_fonts::FontBuilder;
 
     // The fixture font has four glyphs, so glyph ids are stable:
     //   A = 1, B = 2, C = 3, D = 4, each one `units_per_em` wide.
@@ -1816,7 +2461,7 @@ mod shape_tests {
     ///
     /// Everything the request does not name — `glyf`, `cmap`, `hmtx`, ... — is
     /// copied over unchanged, which is the same trick `modify_font` uses.
-    fn with_layout(gsub: Option<Gsub>, gpos: Option<Gpos>, gdef: Option<Gdef>) -> Font {
+    fn with_layout_bytes(gsub: Option<Gsub>, gpos: Option<Gpos>, gdef: Option<Gdef>) -> Vec<u8> {
         let base = base_font();
         let font = FontRef::new(&base).expect("parse");
         let mut builder = FontBuilder::new();
@@ -1830,7 +2475,37 @@ mod shape_tests {
             builder.add_table(table).expect("gdef");
         }
         builder.copy_missing_tables(font);
-        Font::from_bytes(builder.build(), None).expect("parse")
+        builder.build()
+    }
+
+    fn with_layout(gsub: Option<Gsub>, gpos: Option<Gpos>, gdef: Option<Gdef>) -> Font {
+        Font::from_bytes(with_layout_bytes(gsub, gpos, gdef), None).expect("parse")
+    }
+
+    /// Shapes at an explicit normalized location, without needing `fvar` in
+    /// the fixture font (the plugin normally derives these coords from fvar).
+    fn shape_at(
+        bytes: &[u8],
+        text: &str,
+        coords: &[f32],
+        features: Option<Vec<Tag>>,
+    ) -> ShapeResult {
+        let font = FontRef::new(bytes).expect("parse");
+        let coords: Vec<F2Dot14> = coords
+            .iter()
+            .map(|value| F2Dot14::from_f32(*value))
+            .collect();
+        shape(
+            &font,
+            text,
+            &ShapeOptions {
+                script: None,
+                language: None,
+                features,
+                size: None,
+                coords: &coords,
+            },
+        )
     }
 
     fn coverage(glyphs: &[u16]) -> CoverageTable {
@@ -1864,12 +2539,13 @@ mod shape_tests {
     }
 
     fn gsub_with(lookups: Vec<SubstitutionLookup>) -> Gsub {
-        Gsub {
-            script_list: OffsetMarker::new(default_script_list()),
-            feature_list: OffsetMarker::new(features(b"calt")),
-            lookup_list: OffsetMarker::new(SubstitutionLookupList::new(lookups)),
-            feature_variations: None.into(),
-        }
+        // `Gsub::new` emits the original 16-bit header; the 2026 32-bit header
+        // fields stay null.
+        Gsub::new(
+            default_script_list(),
+            features(b"calt"),
+            SubstitutionLookupList::new(lookups),
+        )
     }
 
     fn gpos_with(lookups: Vec<PositionLookup>) -> Gpos {
@@ -1903,7 +2579,8 @@ mod shape_tests {
                 vec![MultipleSubstFormat1::new(
                     coverage(&[A]),
                     vec![Sequence::new(vec![GlyphId16::new(B), GlyphId16::new(C)])],
-                )],
+                )
+                .into()],
                 LookupFlag::empty(),
                 None,
             ))])),
@@ -1931,7 +2608,8 @@ mod shape_tests {
                         GlyphId16::new(D),
                         GlyphId16::new(B),
                     ])],
-                )],
+                )
+                .into()],
                 LookupFlag::empty(),
                 None,
             ))])),
@@ -1952,7 +2630,8 @@ mod shape_tests {
                         GlyphId16::new(D),
                         vec![GlyphId16::new(B)],
                     )])],
-                )],
+                )
+                .into()],
                 LookupFlag::empty(),
                 None,
             ))])),
@@ -1989,7 +2668,8 @@ mod shape_tests {
                             GlyphId16::new(D),
                             vec![GlyphId16::new(B)],
                         )])],
-                    )],
+                    )
+                    .into()],
                     flag,
                     None,
                 ))])),
@@ -2057,7 +2737,8 @@ mod shape_tests {
                         ),
                         EntryExitRecord::new(Some(AnchorTable::format_1(20, 10)), None),
                     ],
-                )],
+                )
+                .into()],
                 LookupFlag::empty(),
                 None,
             ))])),
@@ -2099,7 +2780,8 @@ mod shape_tests {
                     BaseArray::new(vec![BaseRecord::new(vec![Some(AnchorTable::format_1(
                         100, 200,
                     ))])]),
-                )],
+                )
+                .into()],
                 LookupFlag::empty(),
                 None,
             ))])),
@@ -2146,5 +2828,449 @@ mod shape_tests {
         assert_eq!(glyphs_of(&font, "A"), [4]);
         // The context does not match `B`, so nothing happens.
         assert_eq!(glyphs_of(&font, "B"), [2]);
+    }
+
+    // ---- 2026 v2 subtables ------------------------------------------------
+
+    #[test]
+    fn v2_ligature_substitution_merges_a_sequence() {
+        use read_fonts::types::GlyphId24;
+        use write_fonts::tables::gsub::{Ligature2, LigatureSet2, LigatureSubstFormat2};
+
+        let font = with_layout(
+            Some(gsub_with(vec![SubstitutionLookup::Ligature(lookup(
+                vec![LigatureSubstFormat2::new(
+                    coverage(&[A]),
+                    vec![LigatureSet2::new(vec![Ligature2::new(
+                        GlyphId24::new(D as u32),
+                        vec![GlyphId24::new(B as u32)],
+                    )])],
+                )
+                .into()],
+                LookupFlag::empty(),
+                None,
+            ))])),
+            None,
+            None,
+        );
+        assert_eq!(glyphs_of(&font, "AB"), [4]);
+    }
+
+    #[test]
+    fn v2_sequence_context_format4_runs_nested_lookup() {
+        use read_fonts::types::GlyphId24;
+        use write_fonts::tables::layout::{
+            SequenceContextFormat4, SequenceRule2, SequenceRuleSet2,
+        };
+
+        // Lookup 0: "A followed by B -> run lookup 1 on A". Lookup 1: A -> D.
+        let font = with_layout(
+            Some(gsub_with(vec![
+                SubstitutionLookup::Contextual(lookup(
+                    vec![SequenceContext::Format4(SequenceContextFormat4::new(
+                        coverage(&[A]),
+                        vec![Some(SequenceRuleSet2::new(vec![SequenceRule2::new(
+                            vec![GlyphId24::new(B as u32)],
+                            vec![SequenceLookupRecord::new(0, 1)],
+                        )]))],
+                    ))
+                    .into()],
+                    LookupFlag::empty(),
+                    None,
+                )),
+                SubstitutionLookup::Single(lookup(
+                    vec![SingleSubst::format_2(
+                        coverage(&[A]),
+                        vec![GlyphId16::new(D)],
+                    )],
+                    LookupFlag::empty(),
+                    None,
+                )),
+            ])),
+            None,
+            None,
+        );
+        assert_eq!(glyphs_of(&font, "AB"), [4, 2]);
+        assert_eq!(glyphs_of(&font, "A"), [1]);
+    }
+
+    #[test]
+    fn v2_chained_context_format4_respects_backtrack_and_lookahead() {
+        use read_fonts::types::GlyphId24;
+        use write_fonts::tables::layout::{
+            ChainedSequenceContext as WriteChainedContext, ChainedSequenceContextFormat4,
+            ChainedSequenceRule2, ChainedSequenceRuleSet2,
+        };
+
+        // Lookup 0: "C A B -> run lookup 1 on A". Lookup 1: A -> D.
+        let font = with_layout(
+            Some(gsub_with(vec![
+                SubstitutionLookup::ChainContextual(lookup(
+                    vec![
+                        WriteChainedContext::Format4(ChainedSequenceContextFormat4::new(
+                            coverage(&[A]),
+                            vec![Some(ChainedSequenceRuleSet2::new(vec![
+                                ChainedSequenceRule2::new(
+                                    vec![GlyphId24::new(C as u32)],
+                                    vec![],
+                                    vec![GlyphId24::new(B as u32)],
+                                    vec![SequenceLookupRecord::new(0, 1)],
+                                ),
+                            ]))],
+                        ))
+                        .into(),
+                    ],
+                    LookupFlag::empty(),
+                    None,
+                )),
+                SubstitutionLookup::Single(lookup(
+                    vec![SingleSubst::format_2(
+                        coverage(&[A]),
+                        vec![GlyphId16::new(D)],
+                    )],
+                    LookupFlag::empty(),
+                    None,
+                )),
+            ])),
+            None,
+            None,
+        );
+        assert_eq!(glyphs_of(&font, "CAB"), [3, 4, 2]);
+        assert_eq!(glyphs_of(&font, "AB"), [1, 2]);
+    }
+
+    #[test]
+    fn v2_pair_pos_format3_kerns() {
+        use read_fonts::types::GlyphId24;
+        use write_fonts::tables::gpos::{PairPosFormat3, PairSet2, PairValueRecord2, ValueRecord};
+
+        let record = PairValueRecord2::new(
+            GlyphId24::new(B as u32),
+            ValueRecord::new().with_x_advance(-80),
+            ValueRecord::new(),
+        );
+        let gpos = gpos_with(vec![PositionLookup::Pair(lookup(
+            vec![PairPosFormat3::new(coverage(&[A]), vec![PairSet2::new(vec![record])]).into()],
+            LookupFlag::empty(),
+            None,
+        ))]);
+        let font = with_layout(None, Some(gpos), None);
+        let shaped = font
+            .shape("AB".to_string(), None, Vec::new(), None, None, None)
+            .unwrap();
+        assert_eq!(shaped.glyphs[0].x_advance, 920.0);
+    }
+
+    #[test]
+    fn v2_pair_pos_format4_kerns_by_class() {
+        use write_fonts::tables::gpos::{Class1Record, Class2Record, PairPosFormat4, ValueRecord};
+        use write_fonts::tables::layout::ClassDef;
+
+        // Class 1 is A (class_def1) and B (class_def2); the (1, 1) cell kerns.
+        let class_def1 = ClassDef::format_1(GlyphId16::new(A), vec![1, 0, 0, 0]);
+        let class_def2 = ClassDef::format_1(GlyphId16::new(A), vec![0, 1, 0, 0]);
+        // Class-based PairPos needs every cell to write the same value-record
+        // format, so the "no kerning" cells carry an explicit zero advance.
+        let empty = || Class2Record::new(ValueRecord::new().with_x_advance(0), ValueRecord::new());
+        let rows = vec![
+            Class1Record::new(vec![empty(), empty()]),
+            Class1Record::new(vec![
+                empty(),
+                Class2Record::new(ValueRecord::new().with_x_advance(-60), ValueRecord::new()),
+            ]),
+        ];
+        let gpos = gpos_with(vec![PositionLookup::Pair(lookup(
+            vec![PairPosFormat4::new(coverage(&[A]), class_def1, class_def2, rows).into()],
+            LookupFlag::empty(),
+            None,
+        ))]);
+        let font = with_layout(None, Some(gpos), None);
+        let shaped = font
+            .shape("AB".to_string(), None, Vec::new(), None, None, None)
+            .unwrap();
+        assert_eq!(shaped.glyphs[0].x_advance, 940.0);
+    }
+
+    #[test]
+    fn v2_sequence_context_format5_matches_by_class() {
+        use write_fonts::tables::layout::{
+            ClassDef, ClassSequenceRule, ClassSequenceRuleSet2, SequenceContextFormat5,
+        };
+
+        // Lookup 0: "A followed by a class-1 glyph -> run lookup 1 on A".
+        // Lookup 1: A -> D. The class def puts B in class 1, C in class 0.
+        let class_def = ClassDef::format_1(GlyphId16::new(A), vec![0, 1, 0, 0]);
+        let rule = ClassSequenceRule::new(vec![1], vec![SequenceLookupRecord::new(0, 1)]);
+        let font = with_layout(
+            Some(gsub_with(vec![
+                SubstitutionLookup::Contextual(lookup(
+                    vec![SequenceContext::Format5(SequenceContextFormat5::new(
+                        coverage(&[A]),
+                        class_def,
+                        vec![Some(ClassSequenceRuleSet2::new(vec![rule]))],
+                    ))
+                    .into()],
+                    LookupFlag::empty(),
+                    None,
+                )),
+                SubstitutionLookup::Single(lookup(
+                    vec![SingleSubst::format_2(
+                        coverage(&[A]),
+                        vec![GlyphId16::new(D)],
+                    )],
+                    LookupFlag::empty(),
+                    None,
+                )),
+            ])),
+            None,
+            None,
+        );
+        assert_eq!(glyphs_of(&font, "AB"), [4, 2]);
+        assert_eq!(glyphs_of(&font, "AC"), [1, 3]);
+    }
+
+    #[test]
+    fn v2_chained_context_format5_matches_by_class() {
+        use write_fonts::tables::layout::{
+            ChainedClassSequenceRule, ChainedClassSequenceRuleSet2,
+            ChainedSequenceContext as WriteChainedContext, ChainedSequenceContextFormat5, ClassDef,
+        };
+
+        // Lookup 0: "C A B -> run lookup 1 on A", expressed with class rules.
+        // B and C are class 1; lookup 1 replaces A with D.
+        let classes = || ClassDef::format_1(GlyphId16::new(A), vec![0, 1, 1, 0]);
+        let rule = ChainedClassSequenceRule::new(
+            vec![1],
+            vec![],
+            vec![1],
+            vec![SequenceLookupRecord::new(0, 1)],
+        );
+        let font = with_layout(
+            Some(gsub_with(vec![
+                SubstitutionLookup::ChainContextual(lookup(
+                    vec![
+                        WriteChainedContext::Format5(ChainedSequenceContextFormat5::new(
+                            coverage(&[A]),
+                            classes(),
+                            classes(),
+                            classes(),
+                            vec![Some(ChainedClassSequenceRuleSet2::new(vec![rule]))],
+                        ))
+                        .into(),
+                    ],
+                    LookupFlag::empty(),
+                    None,
+                )),
+                SubstitutionLookup::Single(lookup(
+                    vec![SingleSubst::format_2(
+                        coverage(&[A]),
+                        vec![GlyphId16::new(D)],
+                    )],
+                    LookupFlag::empty(),
+                    None,
+                )),
+            ])),
+            None,
+            None,
+        );
+        assert_eq!(glyphs_of(&font, "CAB"), [3, 4, 2]);
+        assert_eq!(glyphs_of(&font, "AB"), [1, 2]);
+    }
+
+    // -----------------------------------------------------------------------
+    // Feature variations: conditions select a different lookup list.
+    // -----------------------------------------------------------------------
+
+    use write_fonts::tables::layout::{
+        Condition, ConditionSet, FeatureLookups, FeatureLookupsFlags, FeatureTableSubstitution,
+        FeatureTableSubstitutionRecord, FeatureVariationRecord, FeatureVariations,
+        LookupConditionRecord, LookupIndexList, LookupVariationRecord,
+    };
+    use write_fonts::tables::variations::{
+        ivs_builder::VariationStoreBuilder, RegionAxisCoordinates, VariationRegion,
+    };
+
+    fn substitute(from: u16, to: u16) -> SubstitutionLookup {
+        SubstitutionLookup::Single(lookup(
+            vec![SingleSubst::format_2(
+                coverage(&[from]),
+                vec![GlyphId16::new(to)],
+            )],
+            LookupFlag::empty(),
+            None,
+        ))
+    }
+
+    /// Lookup 0 maps A -> B; lookup 1 maps A -> C. The single `rvrn` feature
+    /// uses lookup 0, and the selected variation record substitutes lookup 1.
+    fn variation_gsub(conditions: Vec<Condition>, alternate: Vec<u16>) -> Gsub {
+        let mut gsub = gsub_with(vec![substitute(A, B), substitute(A, C)]);
+        gsub.feature_list = Some(FeatureList::new(vec![FeatureRecord::new(
+            Tag::new(b"rvrn"),
+            Feature {
+                feature_params: None.into(),
+                lookup_list_indices: vec![0],
+            },
+        )]))
+        .into();
+        gsub.feature_variations = Some(FeatureVariations::new(vec![FeatureVariationRecord::new(
+            Some(ConditionSet::new(conditions)),
+            Some(FeatureTableSubstitution::new(vec![
+                FeatureTableSubstitutionRecord::new(
+                    0,
+                    Feature {
+                        feature_params: None.into(),
+                        lookup_list_indices: alternate,
+                    },
+                ),
+            ])),
+        )]))
+        .into();
+        gsub
+    }
+
+    fn first_glyph(bytes: &[u8], coords: &[f32], features: Option<Vec<Tag>>) -> u32 {
+        shape_at(bytes, "A", coords, features).glyphs[0].glyph_id
+    }
+
+    #[test]
+    fn feature_variations_replace_the_feature_table_at_a_location() {
+        let condition =
+            Condition::format_1_axis_range(0, F2Dot14::from_f32(0.5), F2Dot14::from_f32(1.0));
+        let bytes = with_layout_bytes(Some(variation_gsub(vec![condition], vec![1])), None, None);
+
+        assert_eq!(first_glyph(&bytes, &[0.0], None), B as u32);
+        assert_eq!(first_glyph(&bytes, &[0.75], None), C as u32);
+        // A missing coordinate is the default location, and `rvrn` is on by
+        // default (otherwise none of the above would have shaped at all).
+        assert_eq!(first_glyph(&bytes, &[], None), B as u32);
+        // An empty feature list still turns everything off.
+        assert_eq!(first_glyph(&bytes, &[0.75], Some(Vec::new())), A as u32);
+    }
+
+    #[test]
+    fn every_condition_format_is_evaluated() {
+        let axis =
+            || Condition::format_1_axis_range(0, F2Dot14::from_f32(0.5), F2Dot14::from_f32(1.0));
+        let always = || Condition::format_2_variable_value(1, u32::MAX);
+        let never = || Condition::format_2_variable_value(-1, u32::MAX);
+        let cases: Vec<(Vec<Condition>, bool)> = vec![
+            (vec![axis()], false), // coordinate 0 is outside [0.5, 1]
+            (vec![always()], true),
+            (vec![never()], false),
+            (
+                vec![Condition::format_3_and(2, vec![axis(), always()])],
+                false,
+            ),
+            (
+                vec![Condition::format_4_or(2, vec![axis(), always()])],
+                true,
+            ),
+            (vec![Condition::format_5_negate(axis())], true),
+            (vec![Condition::format_5_negate(always())], false),
+            (vec![axis(), always()], false), // a condition set is an AND
+        ];
+        for (conditions, matched) in cases {
+            let bytes = with_layout_bytes(Some(variation_gsub(conditions, vec![1])), None, None);
+            let expected = if matched { C } else { B } as u32;
+            assert_eq!(first_glyph(&bytes, &[0.0], None), expected);
+        }
+    }
+
+    #[test]
+    fn format_2_conditions_resolve_deltas_through_gdef() {
+        // At axis 0 = 1 the store contributes -2, turning default_value 1
+        // into -1: the condition stops matching and the base feature runs.
+        let mut store = VariationStoreBuilder::new(1);
+        let temporary = store.add_deltas(vec![(
+            VariationRegion::new(vec![RegionAxisCoordinates::new(
+                F2Dot14::ZERO,
+                F2Dot14::from_f32(1.0),
+                F2Dot14::from_f32(1.0),
+            )]),
+            -2i32,
+        )]);
+        let (store, remapping) = store.build();
+        let index = remapping.get(temporary).expect("variation index");
+        let var_index =
+            (u32::from(index.delta_set_outer_index) << 16) | u32::from(index.delta_set_inner_index);
+        let mut gdef = Gdef::default();
+        gdef.item_var_store = Some(store).into();
+
+        let bytes = with_layout_bytes(
+            Some(variation_gsub(
+                vec![Condition::format_2_variable_value(1, var_index)],
+                vec![1],
+            )),
+            None,
+            Some(gdef),
+        );
+        assert_eq!(first_glyph(&bytes, &[0.0], None), C as u32);
+        assert_eq!(first_glyph(&bytes, &[1.0], None), B as u32);
+    }
+
+    #[test]
+    fn lookup_variations_replace_a_features_lookups() {
+        let mut gsub = gsub_with(vec![substitute(A, B), substitute(A, C)]);
+        let lookups = FeatureLookups::new(
+            FeatureLookupsFlags::empty(),
+            vec![LookupConditionRecord::new(
+                Some(Condition::format_1_axis_range(
+                    0,
+                    F2Dot14::from_f32(0.5),
+                    F2Dot14::from_f32(1.0),
+                )),
+                LookupIndexList::new(vec![1]),
+            )],
+        );
+        let variations = FeatureVariations {
+            feature_variation_records: Vec::new(),
+            lookup_variation_records: Some(vec![LookupVariationRecord::new(0, lookups)]),
+        };
+        gsub.feature_variations = Some(variations).into();
+        let bytes = with_layout_bytes(Some(gsub), None, None);
+
+        // Without ADD_DEFAULT_LOOKUPS the base lookup list is cleared when no
+        // condition holds; at 0.75 the conditional lookup 1 runs instead.
+        assert_eq!(first_glyph(&bytes, &[0.0], None), A as u32);
+        assert_eq!(first_glyph(&bytes, &[0.75], None), C as u32);
+    }
+
+    #[test]
+    fn feature_variations_apply_to_gpos_too() {
+        use write_fonts::tables::gpos::{SinglePos, ValueRecord};
+
+        let position = |delta| {
+            PositionLookup::Single(lookup(
+                vec![SinglePos::format_1(
+                    coverage(&[A]),
+                    ValueRecord::new().with_x_advance(delta),
+                )],
+                LookupFlag::empty(),
+                None,
+            ))
+        };
+        let mut gpos = gpos_with(vec![position(100), position(-100)]);
+        gpos.feature_variations = Some(FeatureVariations::new(vec![FeatureVariationRecord::new(
+            Some(ConditionSet::new(vec![Condition::format_1_axis_range(
+                0,
+                F2Dot14::from_f32(0.5),
+                F2Dot14::from_f32(1.0),
+            )])),
+            Some(FeatureTableSubstitution::new(vec![
+                FeatureTableSubstitutionRecord::new(
+                    0,
+                    Feature {
+                        feature_params: None.into(),
+                        lookup_list_indices: vec![1],
+                    },
+                ),
+            ])),
+        )]))
+        .into();
+        let bytes = with_layout_bytes(None, Some(gpos), None);
+
+        assert_eq!(shape_at(&bytes, "A", &[0.0], None).advance, 1100.0);
+        assert_eq!(shape_at(&bytes, "A", &[0.75], None).advance, 900.0);
     }
 }

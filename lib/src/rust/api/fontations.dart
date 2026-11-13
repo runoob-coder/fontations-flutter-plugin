@@ -7,8 +7,10 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `alpha_to_rgba`, `argb`, `bgra_to_rgba`, `bitmap_format_name`, `build_location`, `convert_element`, `font_ref`, `optional_tag`, `outline_format_name`, `read_axes`, `read_instances`, `read_layout`, `read_names`, `table_tag`, `to_size`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+import 'upstream.dart';
+
+// These functions are ignored because they are not marked as `pub`: `alpha_to_rgba`, `argb`, `bgra_to_rgba`, `bitmap_format_name`, `build_location`, `convert_element`, `draw_glyph_outline`, `dropout_control_name`, `effective_variations`, `font_ref`, `hint_engine_name`, `model_font`, `optional_tag`, `outline_source_name`, `read_axes`, `read_instances`, `read_layout`, `read_names`, `scaled_ppem`, `scaler_font`, `table_tag`, `to_hint_options`, `to_size`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Number of fonts inside `bytes`, without keeping anything alive.
 int countFonts({required List<int> bytes}) =>
@@ -82,6 +84,10 @@ abstract class Font implements RustOpaqueInterface {
   static int countFonts({required List<int> bytes}) =>
       RustLib.instance.api.crateApiFontationsFontCountFonts(bytes: bytes);
 
+  /// Structured view of the optional tables (`SVG `, `gasp`, `meta`, `BASE`
+  /// and the AAT tables), which `tableData` only exposes as raw bytes.
+  ExtendedTableInfo extendedTables();
+
   /// Parses a font (or a single font out of a `.ttc` collection).
   static Font fromBytes({required List<int> bytes, int? index}) => RustLib
       .instance
@@ -102,6 +108,10 @@ abstract class Font implements RustOpaqueInterface {
   String glyphNameSource();
 
   /// First code point that maps to `glyph_id`, if any.
+  ///
+  /// The reverse `cmap` is built on the first call and then reused, so asking
+  /// for one glyph after another stays cheap. Use `charMappings` when you
+  /// want the whole table in one go.
   int? glyphToChar({required int glyphId});
 
   /// Whether `glyph_id` has a `COLR` color outline.
@@ -150,9 +160,15 @@ abstract class Font implements RustOpaqueInterface {
   /// How a `MATH` glyph stretches: the ready made sizes and, when no size
   /// fits, the pieces it is assembled from.
   ///
-  /// `axis` is `horizontal` or `vertical`. `None` when the font has no
-  /// `MATH` table or the glyph does not stretch along that axis.
-  MathVariantsInfo? mathVariants({required int glyphId, required String axis});
+  /// `axis` is `horizontal` or `vertical`. `ppem` is the size the device
+  /// table of the assembly's italics correction is resolved at. `None` when
+  /// the font has no `MATH` table or the glyph does not stretch along that
+  /// axis.
+  MathVariantsInfo? mathVariants({
+    required int glyphId,
+    required String axis,
+    int? ppem,
+  });
 
   /// Metrics at the given size (pass `None` for font units) and variation location.
   FontMetrics metrics({
@@ -176,20 +192,45 @@ abstract class Font implements RustOpaqueInterface {
   /// shifted by any `avar2` deltas.
   Float64List normalizedCoords({required List<VariationSetting> variations});
 
-  /// Draws a glyph outline into a list of path elements.
+  /// Draws a glyph outline into a list of path elements, using `skrifa`
+  /// 0.50's `ScalerFont`.
   ///
-  /// Set `hinted` to apply the hinting instructions embedded in the font
-  /// (`glyf` bytecode or CFF stem hints). Hinting needs a real size, so it
-  /// is ignored when `size` is `null` (font units).
+  /// `hinted: true` runs the font's own instructions in classic ClearType
+  /// mode, which is what the older API did. `hinting` exposes the full new
+  /// configuration (engine, rasterization target, ClearType compatibility,
+  /// linear metrics, strictness); a spec always enables hinting and takes
+  /// precedence over `hinted`. Hinting needs a real size, so both are ignored
+  /// when `size` is `null` (font units).
+  ///
+  /// `bounds` and `advance_width` are linearly scaled, as upstream reports
+  /// them. The advance after hinting, the engine that ran and the
+  /// rasterizer settings are in `scaler`.
   Future<GlyphOutline> outline({
     required int glyphId,
     double? size,
     required List<VariationSetting> variations,
     bool? hinted,
+    HintingSpec? hinting,
   });
 
   /// Which table the outlines of this font come from.
   String? outlineFormat();
+
+  /// Draws several glyphs through one scaler with a reusable work buffer.
+  ///
+  /// The variation instance, size and hinting programs are set up once, and
+  /// `DrawMemory::Buffer` reuses the memory the largest glyph needs. This is
+  /// the cheap way to outline a run of text; results follow `glyph_ids`.
+  Future<List<GlyphOutline>> outlines({
+    required List<int> glyphIds,
+    double? size,
+    required List<VariationSetting> variations,
+    bool? hinted,
+    HintingSpec? hinting,
+  });
+
+  /// The settings this handle was pinned to, empty for a plain handle.
+  List<VariationSetting> pinnedVariations();
 
   /// Applies `GSUB` and `GPOS` to a run of text.
   ///
@@ -246,6 +287,11 @@ abstract class Font implements RustOpaqueInterface {
   /// Vertical origin of a glyph: `VORG` when present, otherwise `vhea`
   /// ascender minus the top side bearing.
   double? verticalOrigin({required int glyphId});
+
+  /// Returns a handle pinned to a variation location. Every glyph read on
+  /// the new handle uses these settings; an explicit `variations` argument
+  /// still overrides the axes it names.
+  Font withVariations({required List<VariationSetting> variations});
 }
 
 /// What the `avar` table does.
@@ -896,17 +942,24 @@ class GlyphMetrics {
 /// A drawn glyph outline.
 class GlyphOutline {
   final List<PathElement> elements;
+
+  /// Linearly scaled bounds; hinting does not change them.
   final RectF? bounds;
+
+  /// Linearly scaled advance; hinting does not change it either.
   final double? advanceWidth;
 
-  /// Where the outline came from: `glyf`, `cff`, `cff2` or `varc`.
+  /// Where the outline came from: `glyf`, `cff`, `cff2`, `varc` or `type1`.
   final String? format;
 
-  /// True when the outline embeds hinting instructions.
+  /// True when the scaler has a hinting engine configured for the font.
   final bool hasHinting;
 
   /// True when the glyph is flagged as having overlapping contours.
   final bool hasOverlaps;
+
+  /// State of the `ScalerFont` that drew this outline.
+  final ScalerInfo scaler;
 
   const GlyphOutline({
     required this.elements,
@@ -915,6 +968,7 @@ class GlyphOutline {
     this.format,
     required this.hasHinting,
     required this.hasOverlaps,
+    required this.scaler,
   });
 
   @override
@@ -924,7 +978,8 @@ class GlyphOutline {
       advanceWidth.hashCode ^
       format.hashCode ^
       hasHinting.hashCode ^
-      hasOverlaps.hashCode;
+      hasOverlaps.hashCode ^
+      scaler.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -936,7 +991,82 @@ class GlyphOutline {
           advanceWidth == other.advanceWidth &&
           format == other.format &&
           hasHinting == other.hasHinting &&
-          hasOverlaps == other.hasOverlaps;
+          hasOverlaps == other.hasOverlaps &&
+          scaler == other.scaler;
+}
+
+/// The hinting engine a [`ScalerFont`] is asked to run.
+enum HintEngineKind {
+  /// Use the font's own instructions where they are worth running and the
+  /// automatic hinter otherwise. This is `skrifa`'s default.
+  autoFallback,
+
+  /// Always run the instructions embedded in the font (TrueType bytecode or
+  /// PostScript stem hints).
+  interpreter,
+
+  /// Always run the automatic hinter, ignoring the font's instructions.
+  auto;
+
+  static Future<HintEngineKind> default_() =>
+      RustLib.instance.api.crateApiFontationsHintEngineKindDefault();
+}
+
+/// Configuration for `skrifa` 0.50's `ScalerFont` hinting.
+///
+/// Every field is optional: leaving one out uses the upstream default. Passing
+/// a spec always enables hinting, even when `Font.outline`'s `hinted` flag is
+/// false; `hinted: true` without a spec keeps the old behaviour of running the
+/// font's own instructions in classic ClearType mode.
+class HintingSpec {
+  final HintEngineKind? engine;
+  final RasterTargetKind? target;
+
+  /// Classic ClearType behaviour: grid fit every glyph instead of following
+  /// the font's `gasp` table.
+  final bool? classicCleartype;
+
+  /// The `GETINFO` symmetric rendering bit (TrueType interpreter only).
+  final bool? symmetricRendering;
+
+  /// Keep unhinted horizontal shapes and spacing, hinting only vertically.
+  final bool? preserveLinearMetrics;
+
+  /// Fail a draw when a glyph's instructions fail.
+  final bool? pedantic;
+
+  const HintingSpec({
+    this.engine,
+    this.target,
+    this.classicCleartype,
+    this.symmetricRendering,
+    this.preserveLinearMetrics,
+    this.pedantic,
+  });
+
+  static Future<HintingSpec> default_() =>
+      RustLib.instance.api.crateApiFontationsHintingSpecDefault();
+
+  @override
+  int get hashCode =>
+      engine.hashCode ^
+      target.hashCode ^
+      classicCleartype.hashCode ^
+      symmetricRendering.hashCode ^
+      preserveLinearMetrics.hashCode ^
+      pedantic.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HintingSpec &&
+          runtimeType == other.runtimeType &&
+          engine == other.engine &&
+          target == other.target &&
+          classicCleartype == other.classicCleartype &&
+          symmetricRendering == other.symmetricRendering &&
+          preserveLinearMetrics == other.preserveLinearMetrics &&
+          pedantic == other.pedantic;
 }
 
 /// One feature of a `GSUB` / `GPOS` table.
@@ -1368,6 +1498,27 @@ class PathElement {
 /// The verb of a single path element of a glyph outline.
 enum PathVerb { moveTo, lineTo, quadTo, cubicTo, close }
 
+/// The rasterization target hinting is tuned for.
+enum RasterTargetKind {
+  /// One bit per pixel, with grid fitting in both directions.
+  mono,
+
+  /// Grayscale antialiasing.
+  normal,
+
+  /// Lighter grayscale antialiasing, mostly vertical grid fitting.
+  light,
+
+  /// Horizontal subpixel rendering.
+  lcd,
+
+  /// Vertical subpixel rendering.
+  verticalLcd;
+
+  static Future<RasterTargetKind> default_() =>
+      RustLib.instance.api.crateApiFontationsRasterTargetKindDefault();
+}
+
 /// Axis-aligned bounding box.
 class RectF {
   final double xMin;
@@ -1395,6 +1546,79 @@ class RectF {
           yMin == other.yMin &&
           xMax == other.xMax &&
           yMax == other.yMax;
+}
+
+/// What the scaler reports about the outline it just drew.
+class ScalerInfo {
+  /// The engine that actually ran: `trueType`, `postScript` or `auto`.
+  final String? hintEngine;
+
+  /// Whether hinting was applied at this size (a font can turn it off).
+  final bool isHinted;
+
+  /// The size the interpreter hinted at, which can be a whole pixel size.
+  final double? hintedPpem;
+
+  /// The table the outlines are drawn from, e.g. `varc` or `glyf`.
+  final String? outlineSource;
+
+  /// For a `VARC` font, the table its components are drawn from.
+  final String? underlyingOutlineSource;
+
+  /// The font's `gasp` smoothing policy, only for TrueType hinting.
+  final bool? symmetricSmoothing;
+  final bool? gridFit;
+
+  /// How a bilevel rasterizer should restore dropped-out pixels.
+  final String dropoutControl;
+
+  /// The advance after hinting, which can differ from `advance_width`.
+  final double? drawnAdvance;
+
+  /// The left side bearing reported by the draw.
+  final double? drawnLeftSideBearing;
+
+  const ScalerInfo({
+    this.hintEngine,
+    required this.isHinted,
+    this.hintedPpem,
+    this.outlineSource,
+    this.underlyingOutlineSource,
+    this.symmetricSmoothing,
+    this.gridFit,
+    required this.dropoutControl,
+    this.drawnAdvance,
+    this.drawnLeftSideBearing,
+  });
+
+  @override
+  int get hashCode =>
+      hintEngine.hashCode ^
+      isHinted.hashCode ^
+      hintedPpem.hashCode ^
+      outlineSource.hashCode ^
+      underlyingOutlineSource.hashCode ^
+      symmetricSmoothing.hashCode ^
+      gridFit.hashCode ^
+      dropoutControl.hashCode ^
+      drawnAdvance.hashCode ^
+      drawnLeftSideBearing.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ScalerInfo &&
+          runtimeType == other.runtimeType &&
+          hintEngine == other.hintEngine &&
+          isHinted == other.isHinted &&
+          hintedPpem == other.hintedPpem &&
+          outlineSource == other.outlineSource &&
+          underlyingOutlineSource == other.underlyingOutlineSource &&
+          symmetricSmoothing == other.symmetricSmoothing &&
+          gridFit == other.gridFit &&
+          dropoutControl == other.dropoutControl &&
+          drawnAdvance == other.drawnAdvance &&
+          drawnLeftSideBearing == other.drawnLeftSideBearing;
 }
 
 /// The result of applying `GSUB` and `GPOS` to a run of text.

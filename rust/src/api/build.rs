@@ -5,6 +5,8 @@
 
 use anyhow::Result;
 
+use crate::limits::check_font_bytes;
+
 /// A point of a glyph contour, in font units (y up, baseline at `y = 0`).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ContourPoint {
@@ -336,5 +338,6 @@ pub fn build_font(request: FontBuildRequest) -> Result<Vec<u8>> {
 /// request does not mention is copied over, so variable fonts keep their
 /// `fvar`/`gvar`/`STAT`/`HVAR`.
 pub fn modify_font(bytes: Vec<u8>, request: FontModificationRequest) -> Result<Vec<u8>> {
+    check_font_bytes(&bytes)?;
     crate::font_modify::modify_ttf(&bytes, &request)
 }

@@ -2,10 +2,8 @@ import 'dart:ui' as ui;
 
 import 'rust/api/fontations.dart';
 
-/// Builds a [ui.Path] from recorded path elements.
-///
-/// Font coordinates are y-up while Flutter's canvas is y-down, so [flipY]
-/// defaults to `true`.
+/// Builds a [ui.Path] from recorded path elements. Font coordinates are y-up,
+/// while Flutter's canvas is y-down, so [flipY] defaults to `true`.
 ui.Path buildPath(
   Iterable<PathElement> elements, {
   double scale = 1.0,
@@ -19,6 +17,16 @@ ui.Path buildPath(
   final path = ui.Path();
   for (final element in elements) {
     final p = element.points;
+    final requiredPoints = switch (element.verb) {
+      PathVerb.moveTo || PathVerb.lineTo => 2,
+      PathVerb.quadTo => 4,
+      PathVerb.cubicTo => 6,
+      PathVerb.close => 0,
+    };
+    if (p.length < requiredPoints) {
+      // Skip incomplete elements instead of throwing mid-paint.
+      continue;
+    }
     switch (element.verb) {
       case PathVerb.moveTo:
         path.moveTo(tx(p[0]), ty(p[1]));
@@ -44,11 +52,8 @@ ui.Path buildPath(
 
 /// Converts outlines produced by `Font.outline` into Flutter primitives.
 extension GlyphOutlinePath on GlyphOutline {
-  /// Builds a [ui.Path] from the recorded path elements.
-  ///
-  /// Font coordinates are y-up, while Flutter's canvas is y-down, so [flipY]
-  /// defaults to `true`. When drawing, remember that the baseline sits at
-  /// `y = 0`, so glyphs extend towards negative y (see [ui.Path.getBounds]).
+  /// Builds a [ui.Path]; the baseline is at `y = 0`, so flipped glyphs extend
+  /// towards negative y.
   ui.Path toPath({
     double scale = 1.0,
     bool flipY = true,

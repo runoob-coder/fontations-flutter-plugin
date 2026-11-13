@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1629252631;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -267220215;
 
 // Section: executor
 
@@ -630,6 +630,55 @@ fn wire__crate__api__fontations__Font_count_fonts_impl(
             transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
                     let output_ok = crate::api::fontations::Font::count_fonts(api_bytes)?;
+                    std::result::Result::Ok(output_ok)
+                })(),
+            )
+        },
+    )
+}
+fn wire__crate__api__fontations__Font_extended_tables_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Font_extended_tables",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Font>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                (move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok =
+                        crate::api::fontations::Font::extended_tables(&*api_that_guard)?;
                     std::result::Result::Ok(output_ok)
                 })(),
             )
@@ -1357,6 +1406,7 @@ fn wire__crate__api__fontations__Font_math_variants_impl(
             >>::sse_decode(&mut deserializer);
             let api_glyph_id = <u32>::sse_decode(&mut deserializer);
             let api_axis = <String>::sse_decode(&mut deserializer);
+            let api_ppem = <Option<u32>>::sse_decode(&mut deserializer);
             deserializer.end();
             transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                 (move || {
@@ -1378,6 +1428,7 @@ fn wire__crate__api__fontations__Font_math_variants_impl(
                         &*api_that_guard,
                         api_glyph_id,
                         api_axis,
+                        api_ppem,
                     )?;
                     std::result::Result::Ok(output_ok)
                 })(),
@@ -1670,6 +1721,8 @@ fn wire__crate__api__fontations__Font_outline_impl(
             let api_variations =
                 <Vec<crate::api::fontations::VariationSetting>>::sse_decode(&mut deserializer);
             let api_hinted = <Option<bool>>::sse_decode(&mut deserializer);
+            let api_hinting =
+                <Option<crate::api::fontations::HintingSpec>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -1694,6 +1747,7 @@ fn wire__crate__api__fontations__Font_outline_impl(
                             api_size,
                             api_variations,
                             api_hinted,
+                            api_hinting,
                         )?;
                         std::result::Result::Ok(output_ok)
                     })(),
@@ -1747,6 +1801,119 @@ fn wire__crate__api__fontations__Font_outline_format_impl(
                     std::result::Result::Ok(output_ok)
                 })(),
             )
+        },
+    )
+}
+fn wire__crate__api__fontations__Font_outlines_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Font_outlines",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Font>,
+            >>::sse_decode(&mut deserializer);
+            let api_glyph_ids = <Vec<u32>>::sse_decode(&mut deserializer);
+            let api_size = <Option<f64>>::sse_decode(&mut deserializer);
+            let api_variations =
+                <Vec<crate::api::fontations::VariationSetting>>::sse_decode(&mut deserializer);
+            let api_hinted = <Option<bool>>::sse_decode(&mut deserializer);
+            let api_hinting =
+                <Option<crate::api::fontations::HintingSpec>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::api::fontations::Font::outlines(
+                            &*api_that_guard,
+                            api_glyph_ids,
+                            api_size,
+                            api_variations,
+                            api_hinted,
+                            api_hinting,
+                        )?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__fontations__Font_pinned_variations_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Font_pinned_variations",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Font>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_that_guard = api_that_guard.unwrap();
+                let output_ok = Ok::<_, ()>(crate::api::fontations::Font::pinned_variations(
+                    &*api_that_guard,
+                ))?;
+                std::result::Result::Ok(output_ok)
+            })())
         },
     )
 }
@@ -2218,6 +2385,502 @@ fn wire__crate__api__fontations__Font_vertical_origin_impl(
         },
     )
 }
+fn wire__crate__api__fontations__Font_with_variations_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Font_with_variations",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Font>,
+            >>::sse_decode(&mut deserializer);
+            let api_variations =
+                <Vec<crate::api::fontations::VariationSetting>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                (move || {
+                    let mut api_that_guard = None;
+                    let decode_indices_ =
+                        flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                &api_that, 0, false,
+                            ),
+                        ]);
+                    for i in decode_indices_ {
+                        match i {
+                            0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
+                            _ => unreachable!(),
+                        }
+                    }
+                    let api_that_guard = api_that_guard.unwrap();
+                    let output_ok = crate::api::fontations::Font::with_variations(
+                        &*api_that_guard,
+                        api_variations,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })(),
+            )
+        },
+    )
+}
+fn wire__crate__api__upstream__add_bitmap_strikes_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_bitmap_strikes",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_strikes =
+                <Vec<crate::api::upstream::BitmapStrikeSpec>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_bitmap_strikes(api_bytes, api_strikes)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_color_paints_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_color_paints",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_palette = <Vec<u32>>::sse_decode(&mut deserializer);
+            let api_glyphs =
+                <Vec<crate::api::upstream::ColorGlyphPaintSpec>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::upstream::add_color_paints(
+                            api_bytes,
+                            api_palette,
+                            api_glyphs,
+                        )?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_feature_variations_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_feature_variations",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::FeatureVariationPatchRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_feature_variations(api_bytes, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_math_table_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_math_table",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::MathTableRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_math_table(api_bytes, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_raw_tables_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_raw_tables",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_tables =
+                <Vec<crate::api::upstream::PatchRawTableSpec>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_raw_tables(api_bytes, api_tables)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_substitutions_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_substitutions",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::SubstitutionPatchRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_substitutions(api_bytes, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_svg_documents_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_svg_documents",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_documents =
+                <Vec<crate::api::upstream::SvgDocumentSpec>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_svg_documents(api_bytes, api_documents)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_varc_glyphs_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_varc_glyphs",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::VarcPatchRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_varc_glyphs(api_bytes, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__add_vertical_origins_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "add_vertical_origins",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::VerticalOriginRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::add_vertical_origins(api_bytes, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__alternate_substitution_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "alternate_substitution_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::AlternateSubstitutionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__bitmap_glyph_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "bitmap_glyph_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::BitmapGlyphSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__bitmap_strike_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "bitmap_strike_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::BitmapStrikeSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__build__build_font_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2249,6 +2912,104 @@ fn wire__crate__api__build__build_font_impl(
                         std::result::Result::Ok(output_ok)
                     })(),
                 )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__color_glyph_paint_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "color_glyph_paint_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::ColorGlyphPaintSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__color_stop_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "color_stop_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::ColorStopSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__contextual_substitution_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "contextual_substitution_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::ContextualSubstitutionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
             }
         },
     )
@@ -2345,6 +3106,171 @@ fn wire__crate__api__build__existing_ligature_spec_default_impl(
                 transform_result_sse::<_, ()>((move || {
                     let output_ok =
                         Ok::<_, ()>(crate::api::build::ExistingLigatureSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__extended_table_info_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "extended_table_info_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::ExtendedTableInfo::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__feature_condition_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feature_condition_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::FeatureConditionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__feature_substitution_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feature_substitution_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::FeatureSubstitutionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__feature_variation_patch_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feature_variation_patch_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::FeatureVariationPatchRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__feature_variation_record_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feature_variation_record_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::FeatureVariationRecordSpec::default())?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -2448,6 +3374,39 @@ fn wire__crate__api__fontations__font_names_default_impl(
         },
     )
 }
+fn wire__crate__api__upstream__font_subset_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "font_subset_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::FontSubsetRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__fontations__fontations_version_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -2474,6 +3433,38 @@ fn wire__crate__api__fontations__fontations_version_impl(
                 let output_ok = Ok::<_, ()>(crate::api::fontations::fontations_version())?;
                 std::result::Result::Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__api__upstream__gasp_range_info_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "gasp_range_info_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::GaspRangeInfo::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
         },
     )
 }
@@ -2535,6 +3526,70 @@ fn wire__crate__api__build__glyph_spec_default_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Ok::<_, ()>(crate::api::build::GlyphSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__fontations__hint_engine_kind_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "hint_engine_kind_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::fontations::HintEngineKind::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__fontations__hinting_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "hinting_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::fontations::HintingSpec::default())?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -2607,6 +3662,264 @@ fn wire__crate__api__build__ligature_spec_default_impl(
         },
     )
 }
+fn wire__crate__api__upstream__math_constant_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_constant_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MathConstantSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_construction_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_construction_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::MathConstructionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_glyph_value_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_glyph_value_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::MathGlyphValueSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_kern_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_kern_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MathKernSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_part_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_part_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MathPartSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_table_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_table_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MathTableRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__math_variant_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "math_variant_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MathVariantSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__meta_entry_info_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "meta_entry_info_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::MetaEntryInfo::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__build__modify_font_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2644,6 +3957,39 @@ fn wire__crate__api__build__modify_font_impl(
         },
     )
 }
+fn wire__crate__api__upstream__multiple_substitution_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "multiple_substitution_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::MultipleSubstitutionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__build__named_instance_spec_default_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2670,6 +4016,104 @@ fn wire__crate__api__build__named_instance_spec_default_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Ok::<_, ()>(crate::api::build::NamedInstanceSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__paint_node_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "paint_node_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::PaintNodeSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__patch_raw_table_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "patch_raw_table_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::PatchRawTableSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__fontations__raster_target_kind_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "raster_target_kind_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::fontations::RasterTargetKind::default())?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -2709,6 +4153,39 @@ fn wire__crate__api__fontations__read_font_info_impl(
         },
     )
 }
+fn wire__crate__api__upstream__reverse_chain_substitution_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "reverse_chain_substitution_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::ReverseChainSubstitutionSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__build__stylistic_alternate_default_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2735,6 +4212,336 @@ fn wire__crate__api__build__stylistic_alternate_default_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Ok::<_, ()>(crate::api::build::StylisticAlternate::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__subset_font_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "subset_font",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_index = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_request =
+                <crate::api::upstream::FontSubsetRequest>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::upstream::subset_font(api_bytes, api_index, api_request)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__substitution_patch_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "substitution_patch_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::SubstitutionPatchRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__svg_document_info_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "svg_document_info_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::SvgDocumentInfo::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__svg_document_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "svg_document_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::SvgDocumentSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_component_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_component_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::VarcComponentSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_delta_set_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_delta_set_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::VarcDeltaSetSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_delta_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_delta_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::VarcDeltaSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_glyph_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_glyph_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::VarcGlyphSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_patch_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_patch_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Ok::<_, ()>(crate::api::upstream::VarcPatchRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__varc_region_axis_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "varc_region_axis_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::VarcRegionAxisSpec::default())?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -2870,6 +4677,72 @@ fn wire__crate__api__build__vertical_metrics_spec_default_impl(
         },
     )
 }
+fn wire__crate__api__upstream__vertical_origin_request_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "vertical_origin_request_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::VerticalOriginRequest::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__upstream__vertical_origin_spec_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "vertical_origin_spec_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Ok::<_, ()>(crate::api::upstream::VerticalOriginSpec::default())?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 
 // Section: related_funcs
 
@@ -2910,6 +4783,20 @@ impl SseDecode for String {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <Vec<u8>>::sse_decode(deserializer);
         return String::from_utf8(inner).unwrap();
+    }
+}
+
+impl SseDecode for crate::api::upstream::AlternateSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_featureTag = <String>::sse_decode(deserializer);
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_replacementCodePoints = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::AlternateSubstitutionSpec {
+            feature_tag: var_featureTag,
+            code_point: var_codePoint,
+            replacement_code_points: var_replacementCodePoints,
+        };
     }
 }
 
@@ -2997,6 +4884,24 @@ impl SseDecode for crate::api::fontations::BitmapGlyphInfo {
     }
 }
 
+impl SseDecode for crate::api::upstream::BitmapGlyphSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_format = <String>::sse_decode(deserializer);
+        let mut var_data = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_originOffsetX = <i32>::sse_decode(deserializer);
+        let mut var_originOffsetY = <i32>::sse_decode(deserializer);
+        return crate::api::upstream::BitmapGlyphSpec {
+            code_point: var_codePoint,
+            format: var_format,
+            data: var_data,
+            origin_offset_x: var_originOffsetX,
+            origin_offset_y: var_originOffsetY,
+        };
+    }
+}
+
 impl SseDecode for crate::api::fontations::BitmapStrikeInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3009,6 +4914,20 @@ impl SseDecode for crate::api::fontations::BitmapStrikeInfo {
             ppem_x: var_ppemX,
             ppem_y: var_ppemY,
             format: var_format,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::BitmapStrikeSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_ppem = <u32>::sse_decode(deserializer);
+        let mut var_ppi = <u32>::sse_decode(deserializer);
+        let mut var_glyphs = <Vec<crate::api::upstream::BitmapGlyphSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::BitmapStrikeSpec {
+            ppem: var_ppem,
+            ppi: var_ppi,
+            glyphs: var_glyphs,
         };
     }
 }
@@ -3070,6 +4989,20 @@ impl SseDecode for crate::api::fontations::ColorGlyphInfo {
             format: var_format,
             bounds: var_bounds,
             layers: var_layers,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::ColorGlyphPaintSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_root = <u32>::sse_decode(deserializer);
+        let mut var_nodes = <Vec<crate::api::upstream::PaintNodeSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::ColorGlyphPaintSpec {
+            code_point: var_codePoint,
+            root: var_root,
+            nodes: var_nodes,
         };
     }
 }
@@ -3148,6 +5081,38 @@ impl SseDecode for crate::api::fontations::ColorStop {
     }
 }
 
+impl SseDecode for crate::api::upstream::ColorStopSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_offset = <f64>::sse_decode(deserializer);
+        let mut var_paletteIndex = <u32>::sse_decode(deserializer);
+        let mut var_alpha = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::ColorStopSpec {
+            offset: var_offset,
+            palette_index: var_paletteIndex,
+            alpha: var_alpha,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::ContextualSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_featureTag = <String>::sse_decode(deserializer);
+        let mut var_backtrack = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_input = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_lookahead = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_replacementCodePoint = <u32>::sse_decode(deserializer);
+        return crate::api::upstream::ContextualSubstitutionSpec {
+            feature_tag: var_featureTag,
+            backtrack: var_backtrack,
+            input: var_input,
+            lookahead: var_lookahead,
+            replacement_code_point: var_replacementCodePoint,
+        };
+    }
+}
+
 impl SseDecode for crate::api::build::ContourPoint {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3192,10 +5157,106 @@ impl SseDecode for crate::api::build::ExistingLigatureSpec {
     }
 }
 
+impl SseDecode for crate::api::upstream::ExtendedTableInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_tables = <Vec<String>>::sse_decode(deserializer);
+        let mut var_svgDocuments =
+            <Vec<crate::api::upstream::SvgDocumentInfo>>::sse_decode(deserializer);
+        let mut var_gaspRanges =
+            <Vec<crate::api::upstream::GaspRangeInfo>>::sse_decode(deserializer);
+        let mut var_metaEntries =
+            <Vec<crate::api::upstream::MetaEntryInfo>>::sse_decode(deserializer);
+        let mut var_aatTables = <Vec<String>>::sse_decode(deserializer);
+        let mut var_hasBase = <bool>::sse_decode(deserializer);
+        let mut var_hasCvar = <bool>::sse_decode(deserializer);
+        let mut var_hasVvar = <bool>::sse_decode(deserializer);
+        let mut var_hasMvar = <bool>::sse_decode(deserializer);
+        let mut var_hasDsig = <bool>::sse_decode(deserializer);
+        let mut var_hasHdmx = <bool>::sse_decode(deserializer);
+        return crate::api::upstream::ExtendedTableInfo {
+            tables: var_tables,
+            svg_documents: var_svgDocuments,
+            gasp_ranges: var_gaspRanges,
+            meta_entries: var_metaEntries,
+            aat_tables: var_aatTables,
+            has_base: var_hasBase,
+            has_cvar: var_hasCvar,
+            has_vvar: var_hasVvar,
+            has_mvar: var_hasMvar,
+            has_dsig: var_hasDsig,
+            has_hdmx: var_hasHdmx,
+        };
+    }
+}
+
 impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::api::upstream::FeatureConditionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_kind = <String>::sse_decode(deserializer);
+        let mut var_axisIndex = <u32>::sse_decode(deserializer);
+        let mut var_minValue = <f64>::sse_decode(deserializer);
+        let mut var_maxValue = <f64>::sse_decode(deserializer);
+        let mut var_defaultValue = <i32>::sse_decode(deserializer);
+        let mut var_varIndex = <u32>::sse_decode(deserializer);
+        let mut var_children = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::FeatureConditionSpec {
+            kind: var_kind,
+            axis_index: var_axisIndex,
+            min_value: var_minValue,
+            max_value: var_maxValue,
+            default_value: var_defaultValue,
+            var_index: var_varIndex,
+            children: var_children,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::FeatureSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_featureTag = <String>::sse_decode(deserializer);
+        let mut var_lookupIndices = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::FeatureSubstitutionSpec {
+            feature_tag: var_featureTag,
+            lookup_indices: var_lookupIndices,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::FeatureVariationPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_table = <String>::sse_decode(deserializer);
+        let mut var_conditions =
+            <Vec<crate::api::upstream::FeatureConditionSpec>>::sse_decode(deserializer);
+        let mut var_records =
+            <Vec<crate::api::upstream::FeatureVariationRecordSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::FeatureVariationPatchRequest {
+            table: var_table,
+            conditions: var_conditions,
+            records: var_records,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::FeatureVariationRecordSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_conditionIndices = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_substitutions =
+            <Vec<crate::api::upstream::FeatureSubstitutionSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::FeatureVariationRecordSpec {
+            condition_indices: var_conditionIndices,
+            substitutions: var_substitutions,
+        };
     }
 }
 
@@ -3383,6 +5444,44 @@ impl SseDecode for crate::api::fontations::FontNames {
     }
 }
 
+impl SseDecode for crate::api::upstream::FontSubsetRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoints = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_glyphIds = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_retainGlyphIds = <bool>::sse_decode(deserializer);
+        let mut var_noHinting = <bool>::sse_decode(deserializer);
+        let mut var_passthroughUnrecognized = <bool>::sse_decode(deserializer);
+        let mut var_glyphNames = <bool>::sse_decode(deserializer);
+        let mut var_keepEverything = <bool>::sse_decode(deserializer);
+        let mut var_layoutFeatures = <Vec<String>>::sse_decode(deserializer);
+        let mut var_dropTables = <Vec<String>>::sse_decode(deserializer);
+        return crate::api::upstream::FontSubsetRequest {
+            code_points: var_codePoints,
+            glyph_ids: var_glyphIds,
+            retain_glyph_ids: var_retainGlyphIds,
+            no_hinting: var_noHinting,
+            passthrough_unrecognized: var_passthroughUnrecognized,
+            glyph_names: var_glyphNames,
+            keep_everything: var_keepEverything,
+            layout_features: var_layoutFeatures,
+            drop_tables: var_dropTables,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::GaspRangeInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_maxPpem = <u32>::sse_decode(deserializer);
+        let mut var_behavior = <String>::sse_decode(deserializer);
+        return crate::api::upstream::GaspRangeInfo {
+            max_ppem: var_maxPpem,
+            behavior: var_behavior,
+        };
+    }
+}
+
 impl SseDecode for crate::api::build::GlyphColorLayer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3444,6 +5543,7 @@ impl SseDecode for crate::api::fontations::GlyphOutline {
         let mut var_format = <Option<String>>::sse_decode(deserializer);
         let mut var_hasHinting = <bool>::sse_decode(deserializer);
         let mut var_hasOverlaps = <bool>::sse_decode(deserializer);
+        let mut var_scaler = <crate::api::fontations::ScalerInfo>::sse_decode(deserializer);
         return crate::api::fontations::GlyphOutline {
             elements: var_elements,
             bounds: var_bounds,
@@ -3451,6 +5551,7 @@ impl SseDecode for crate::api::fontations::GlyphOutline {
             format: var_format,
             has_hinting: var_hasHinting,
             has_overlaps: var_hasOverlaps,
+            scaler: var_scaler,
         };
     }
 }
@@ -3481,6 +5582,41 @@ impl SseDecode for crate::api::build::GlyphSpec {
             instructions: var_instructions,
             vertical_advance: var_verticalAdvance,
             vertical_origin: var_verticalOrigin,
+        };
+    }
+}
+
+impl SseDecode for crate::api::fontations::HintEngineKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::fontations::HintEngineKind::AutoFallback,
+            1 => crate::api::fontations::HintEngineKind::Interpreter,
+            2 => crate::api::fontations::HintEngineKind::Auto,
+            _ => unreachable!("Invalid variant for HintEngineKind: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::api::fontations::HintingSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_engine =
+            <Option<crate::api::fontations::HintEngineKind>>::sse_decode(deserializer);
+        let mut var_target =
+            <Option<crate::api::fontations::RasterTargetKind>>::sse_decode(deserializer);
+        let mut var_classicCleartype = <Option<bool>>::sse_decode(deserializer);
+        let mut var_symmetricRendering = <Option<bool>>::sse_decode(deserializer);
+        let mut var_preserveLinearMetrics = <Option<bool>>::sse_decode(deserializer);
+        let mut var_pedantic = <Option<bool>>::sse_decode(deserializer);
+        return crate::api::fontations::HintingSpec {
+            engine: var_engine,
+            target: var_target,
+            classic_cleartype: var_classicCleartype,
+            symmetric_rendering: var_symmetricRendering,
+            preserve_linear_metrics: var_preserveLinearMetrics,
+            pedantic: var_pedantic,
         };
     }
 }
@@ -3569,6 +5705,18 @@ impl SseDecode for Vec<String> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::AlternateSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::AlternateSubstitutionSpec>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::AxisSegmentMapsInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3611,6 +5759,20 @@ impl SseDecode for Vec<crate::api::build::AxisValueMapSpec> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::BitmapGlyphSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::BitmapGlyphSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::BitmapStrikeInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3618,6 +5780,20 @@ impl SseDecode for Vec<crate::api::fontations::BitmapStrikeInfo> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::fontations::BitmapStrikeInfo>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::BitmapStrikeSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::BitmapStrikeSpec>::sse_decode(
                 deserializer,
             ));
         }
@@ -3646,6 +5822,20 @@ impl SseDecode for Vec<crate::api::build::CodePointVariant> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::build::CodePointVariant>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::ColorGlyphPaintSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::ColorGlyphPaintSpec>::sse_decode(
                 deserializer,
             ));
         }
@@ -3695,6 +5885,32 @@ impl SseDecode for Vec<crate::api::fontations::ColorStop> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::ColorStopSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::ColorStopSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::ContextualSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::ContextualSubstitutionSpec>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::build::ContourPoint> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3728,6 +5944,60 @@ impl SseDecode for Vec<crate::api::build::ExistingLigatureSpec> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::build::ExistingLigatureSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::FeatureConditionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::FeatureConditionSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::FeatureSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::FeatureSubstitutionSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::FeatureVariationRecordSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::FeatureVariationRecordSpec>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::GaspRangeInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::GaspRangeInfo>::sse_decode(
                 deserializer,
             ));
         }
@@ -3770,6 +6040,20 @@ impl SseDecode for Vec<crate::api::build::GlyphContour> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::build::GlyphContour>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::fontations::GlyphOutline> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::fontations::GlyphOutline>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -3867,6 +6151,48 @@ impl SseDecode for Vec<crate::api::fontations::MathConstantInfo> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::MathConstantSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathConstantSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::MathConstructionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathConstructionSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::MathGlyphValueSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathGlyphValueSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::MathKernEntryInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3895,6 +6221,34 @@ impl SseDecode for Vec<crate::api::fontations::MathKernInfo> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::MathKernSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathKernSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::MathPartSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathPartSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::MathVariantRecordInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3909,6 +6263,34 @@ impl SseDecode for Vec<crate::api::fontations::MathVariantRecordInfo> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::MathVariantSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MathVariantSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::MetaEntryInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MetaEntryInfo>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::build::MetricValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3916,6 +6298,18 @@ impl SseDecode for Vec<crate::api::build::MetricValue> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::build::MetricValue>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::MultipleSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::MultipleSubstitutionSpec>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3963,6 +6357,34 @@ impl SseDecode for Vec<crate::api::build::NamedInstanceSpec> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::PaintNodeSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::PaintNodeSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::PatchRawTableSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::PatchRawTableSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::PathElement> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3984,6 +6406,18 @@ impl SseDecode for Vec<f64> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<f64>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<i32>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -4037,6 +6471,20 @@ impl SseDecode for Vec<crate::api::build::RawTableSpec> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::ReverseChainSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::api::upstream::ReverseChainSubstitutionSpec>::sse_decode(deserializer),
+            );
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::ShapedGlyph> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4065,6 +6513,34 @@ impl SseDecode for Vec<crate::api::build::StylisticAlternate> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::SvgDocumentInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::SvgDocumentInfo>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::SvgDocumentSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::SvgDocumentSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::fontations::VarcComponentInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4072,6 +6548,76 @@ impl SseDecode for Vec<crate::api::fontations::VarcComponentInfo> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::fontations::VarcComponentInfo>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::VarcComponentSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VarcComponentSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::VarcDeltaSetSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VarcDeltaSetSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::VarcDeltaSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VarcDeltaSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::VarcGlyphSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VarcGlyphSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::upstream::VarcRegionAxisSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VarcRegionAxisSpec>::sse_decode(
                 deserializer,
             ));
         }
@@ -4163,6 +6709,20 @@ impl SseDecode for Vec<crate::api::fontations::VariationSetting> {
     }
 }
 
+impl SseDecode for Vec<crate::api::upstream::VerticalOriginSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::upstream::VerticalOriginSpec>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for crate::api::fontations::MathAssemblyPartInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4212,6 +6772,41 @@ impl SseDecode for crate::api::fontations::MathConstantInfo {
     }
 }
 
+impl SseDecode for crate::api::upstream::MathConstantSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_value = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::MathConstantSpec {
+            name: var_name,
+            value: var_value,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MathConstructionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_axis = <String>::sse_decode(deserializer);
+        let mut var_variants =
+            <Vec<crate::api::upstream::MathVariantSpec>>::sse_decode(deserializer);
+        let mut var_parts = <Vec<crate::api::upstream::MathPartSpec>>::sse_decode(deserializer);
+        let mut var_italicsCorrection = <f64>::sse_decode(deserializer);
+        let mut var_italicsDeviceStartPpem = <Option<u32>>::sse_decode(deserializer);
+        let mut var_italicsDeviceDeltas = <Vec<i32>>::sse_decode(deserializer);
+        return crate::api::upstream::MathConstructionSpec {
+            code_point: var_codePoint,
+            axis: var_axis,
+            variants: var_variants,
+            parts: var_parts,
+            italics_correction: var_italicsCorrection,
+            italics_device_start_ppem: var_italicsDeviceStartPpem,
+            italics_device_deltas: var_italicsDeviceDeltas,
+        };
+    }
+}
+
 impl SseDecode for crate::api::fontations::MathGlyphInfoInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4228,6 +6823,18 @@ impl SseDecode for crate::api::fontations::MathGlyphInfoInfo {
             top_accent_attachment_delta_px: var_topAccentAttachmentDeltaPx,
             is_extended_shape: var_isExtendedShape,
             kerns: var_kerns,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MathGlyphValueSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_value = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::MathGlyphValueSpec {
+            code_point: var_codePoint,
+            value: var_value,
         };
     }
 }
@@ -4261,6 +6868,66 @@ impl SseDecode for crate::api::fontations::MathKernInfo {
     }
 }
 
+impl SseDecode for crate::api::upstream::MathKernSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_corner = <String>::sse_decode(deserializer);
+        let mut var_heights = <Vec<f64>>::sse_decode(deserializer);
+        let mut var_kerns = <Vec<f64>>::sse_decode(deserializer);
+        return crate::api::upstream::MathKernSpec {
+            code_point: var_codePoint,
+            corner: var_corner,
+            heights: var_heights,
+            kerns: var_kerns,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MathPartSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_partCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_startConnectorLength = <f64>::sse_decode(deserializer);
+        let mut var_endConnectorLength = <f64>::sse_decode(deserializer);
+        let mut var_fullAdvance = <f64>::sse_decode(deserializer);
+        let mut var_isExtender = <bool>::sse_decode(deserializer);
+        return crate::api::upstream::MathPartSpec {
+            part_code_point: var_partCodePoint,
+            start_connector_length: var_startConnectorLength,
+            end_connector_length: var_endConnectorLength,
+            full_advance: var_fullAdvance,
+            is_extender: var_isExtender,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MathTableRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_constants =
+            <Vec<crate::api::upstream::MathConstantSpec>>::sse_decode(deserializer);
+        let mut var_minConnectorOverlap = <f64>::sse_decode(deserializer);
+        let mut var_italicsCorrections =
+            <Vec<crate::api::upstream::MathGlyphValueSpec>>::sse_decode(deserializer);
+        let mut var_topAccentAttachments =
+            <Vec<crate::api::upstream::MathGlyphValueSpec>>::sse_decode(deserializer);
+        let mut var_extendedShapes = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_kerns = <Vec<crate::api::upstream::MathKernSpec>>::sse_decode(deserializer);
+        let mut var_constructions =
+            <Vec<crate::api::upstream::MathConstructionSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::MathTableRequest {
+            constants: var_constants,
+            min_connector_overlap: var_minConnectorOverlap,
+            italics_corrections: var_italicsCorrections,
+            top_accent_attachments: var_topAccentAttachments,
+            extended_shapes: var_extendedShapes,
+            kerns: var_kerns,
+            constructions: var_constructions,
+        };
+    }
+}
+
 impl SseDecode for crate::api::fontations::MathVariantRecordInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4268,6 +6935,18 @@ impl SseDecode for crate::api::fontations::MathVariantRecordInfo {
         let mut var_advance = <f64>::sse_decode(deserializer);
         return crate::api::fontations::MathVariantRecordInfo {
             glyph_id: var_glyphId,
+            advance: var_advance,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MathVariantSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_variantCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_advance = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::MathVariantSpec {
+            variant_code_point: var_variantCodePoint,
             advance: var_advance,
         };
     }
@@ -4289,6 +6968,20 @@ impl SseDecode for crate::api::fontations::MathVariantsInfo {
     }
 }
 
+impl SseDecode for crate::api::upstream::MetaEntryInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_tag = <String>::sse_decode(deserializer);
+        let mut var_length = <u32>::sse_decode(deserializer);
+        let mut var_value = <String>::sse_decode(deserializer);
+        return crate::api::upstream::MetaEntryInfo {
+            tag: var_tag,
+            length: var_length,
+            value: var_value,
+        };
+    }
+}
+
 impl SseDecode for crate::api::build::MetricValue {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4297,6 +6990,20 @@ impl SseDecode for crate::api::build::MetricValue {
         return crate::api::build::MetricValue {
             tag: var_tag,
             value: var_value,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::MultipleSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_featureTag = <String>::sse_decode(deserializer);
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_replacementCodePoints = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::MultipleSubstitutionSpec {
+            feature_tag: var_featureTag,
+            code_point: var_codePoint,
+            replacement_code_points: var_replacementCodePoints,
         };
     }
 }
@@ -4419,6 +7126,32 @@ impl SseDecode for Option<f64> {
     }
 }
 
+impl SseDecode for Option<crate::api::fontations::HintEngineKind> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::fontations::HintEngineKind>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::fontations::HintingSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::fontations::HintingSpec>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::api::fontations::MathAssemblyPartListInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4450,6 +7183,19 @@ impl SseDecode for Option<crate::api::fontations::MathVariantsInfo> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::api::fontations::MathVariantsInfo>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::fontations::RasterTargetKind> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::fontations::RasterTargetKind>::sse_decode(
                 deserializer,
             ));
         } else {
@@ -4592,6 +7338,58 @@ impl SseDecode for crate::api::fontations::PaintKind {
     }
 }
 
+impl SseDecode for crate::api::upstream::PaintNodeSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_kind = <String>::sse_decode(deserializer);
+        let mut var_paletteIndex = <u32>::sse_decode(deserializer);
+        let mut var_alpha = <f64>::sse_decode(deserializer);
+        let mut var_x0 = <f64>::sse_decode(deserializer);
+        let mut var_y0 = <f64>::sse_decode(deserializer);
+        let mut var_x1 = <f64>::sse_decode(deserializer);
+        let mut var_y1 = <f64>::sse_decode(deserializer);
+        let mut var_r0 = <f64>::sse_decode(deserializer);
+        let mut var_r1 = <f64>::sse_decode(deserializer);
+        let mut var_startAngle = <f64>::sse_decode(deserializer);
+        let mut var_endAngle = <f64>::sse_decode(deserializer);
+        let mut var_glyphId = <u32>::sse_decode(deserializer);
+        let mut var_extend = <String>::sse_decode(deserializer);
+        let mut var_compositeMode = <String>::sse_decode(deserializer);
+        let mut var_stops = <Vec<crate::api::upstream::ColorStopSpec>>::sse_decode(deserializer);
+        let mut var_children = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::PaintNodeSpec {
+            kind: var_kind,
+            palette_index: var_paletteIndex,
+            alpha: var_alpha,
+            x0: var_x0,
+            y0: var_y0,
+            x1: var_x1,
+            y1: var_y1,
+            r0: var_r0,
+            r1: var_r1,
+            start_angle: var_startAngle,
+            end_angle: var_endAngle,
+            glyph_id: var_glyphId,
+            extend: var_extend,
+            composite_mode: var_compositeMode,
+            stops: var_stops,
+            children: var_children,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::PatchRawTableSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_tag = <String>::sse_decode(deserializer);
+        let mut var_data = <Vec<u8>>::sse_decode(deserializer);
+        return crate::api::upstream::PatchRawTableSpec {
+            tag: var_tag,
+            data: var_data,
+        };
+    }
+}
+
 impl SseDecode for crate::api::fontations::PathElement {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4615,6 +7413,21 @@ impl SseDecode for crate::api::fontations::PathVerb {
             3 => crate::api::fontations::PathVerb::CubicTo,
             4 => crate::api::fontations::PathVerb::Close,
             _ => unreachable!("Invalid variant for PathVerb: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::api::fontations::RasterTargetKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::fontations::RasterTargetKind::Mono,
+            1 => crate::api::fontations::RasterTargetKind::Normal,
+            2 => crate::api::fontations::RasterTargetKind::Light,
+            3 => crate::api::fontations::RasterTargetKind::Lcd,
+            4 => crate::api::fontations::RasterTargetKind::VerticalLcd,
+            _ => unreachable!("Invalid variant for RasterTargetKind: {}", inner),
         };
     }
 }
@@ -4643,6 +7456,52 @@ impl SseDecode for crate::api::fontations::RectF {
             y_min: var_yMin,
             x_max: var_xMax,
             y_max: var_yMax,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::ReverseChainSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_featureTag = <String>::sse_decode(deserializer);
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_replacementCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_backtrack = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_lookahead = <Vec<u32>>::sse_decode(deserializer);
+        return crate::api::upstream::ReverseChainSubstitutionSpec {
+            feature_tag: var_featureTag,
+            code_point: var_codePoint,
+            replacement_code_point: var_replacementCodePoint,
+            backtrack: var_backtrack,
+            lookahead: var_lookahead,
+        };
+    }
+}
+
+impl SseDecode for crate::api::fontations::ScalerInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_hintEngine = <Option<String>>::sse_decode(deserializer);
+        let mut var_isHinted = <bool>::sse_decode(deserializer);
+        let mut var_hintedPpem = <Option<f64>>::sse_decode(deserializer);
+        let mut var_outlineSource = <Option<String>>::sse_decode(deserializer);
+        let mut var_underlyingOutlineSource = <Option<String>>::sse_decode(deserializer);
+        let mut var_symmetricSmoothing = <Option<bool>>::sse_decode(deserializer);
+        let mut var_gridFit = <Option<bool>>::sse_decode(deserializer);
+        let mut var_dropoutControl = <String>::sse_decode(deserializer);
+        let mut var_drawnAdvance = <Option<f64>>::sse_decode(deserializer);
+        let mut var_drawnLeftSideBearing = <Option<f64>>::sse_decode(deserializer);
+        return crate::api::fontations::ScalerInfo {
+            hint_engine: var_hintEngine,
+            is_hinted: var_isHinted,
+            hinted_ppem: var_hintedPpem,
+            outline_source: var_outlineSource,
+            underlying_outline_source: var_underlyingOutlineSource,
+            symmetric_smoothing: var_symmetricSmoothing,
+            grid_fit: var_gridFit,
+            dropout_control: var_dropoutControl,
+            drawn_advance: var_drawnAdvance,
+            drawn_left_side_bearing: var_drawnLeftSideBearing,
         };
     }
 }
@@ -4708,6 +7567,58 @@ impl SseDecode for crate::api::build::StylisticAlternate {
     }
 }
 
+impl SseDecode for crate::api::upstream::SubstitutionPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_multiple =
+            <Vec<crate::api::upstream::MultipleSubstitutionSpec>>::sse_decode(deserializer);
+        let mut var_alternate =
+            <Vec<crate::api::upstream::AlternateSubstitutionSpec>>::sse_decode(deserializer);
+        let mut var_contextual =
+            <Vec<crate::api::upstream::ContextualSubstitutionSpec>>::sse_decode(deserializer);
+        let mut var_reverseChain =
+            <Vec<crate::api::upstream::ReverseChainSubstitutionSpec>>::sse_decode(deserializer);
+        let mut var_useV2 = <bool>::sse_decode(deserializer);
+        return crate::api::upstream::SubstitutionPatchRequest {
+            multiple: var_multiple,
+            alternate: var_alternate,
+            contextual: var_contextual,
+            reverse_chain: var_reverseChain,
+            use_v2: var_useV2,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::SvgDocumentInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_startGlyphId = <u32>::sse_decode(deserializer);
+        let mut var_endGlyphId = <u32>::sse_decode(deserializer);
+        let mut var_length = <u32>::sse_decode(deserializer);
+        let mut var_preview = <String>::sse_decode(deserializer);
+        return crate::api::upstream::SvgDocumentInfo {
+            start_glyph_id: var_startGlyphId,
+            end_glyph_id: var_endGlyphId,
+            length: var_length,
+            preview: var_preview,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::SvgDocumentSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_startCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_endCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_data = <Vec<u8>>::sse_decode(deserializer);
+        return crate::api::upstream::SvgDocumentSpec {
+            start_code_point: var_startCodePoint,
+            end_code_point: var_endCodePoint,
+            data: var_data,
+        };
+    }
+}
+
 impl SseDecode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4759,6 +7670,67 @@ impl SseDecode for crate::api::fontations::VarcComponentInfo {
     }
 }
 
+impl SseDecode for crate::api::upstream::VarcComponentSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_componentCodePoint = <u32>::sse_decode(deserializer);
+        let mut var_conditionIndex = <Option<u32>>::sse_decode(deserializer);
+        let mut var_axisIndices = <Vec<u32>>::sse_decode(deserializer);
+        let mut var_axisValues = <Vec<f64>>::sse_decode(deserializer);
+        let mut var_axisValuesDeltaSet = <Option<u32>>::sse_decode(deserializer);
+        let mut var_transformDeltaSet = <Option<u32>>::sse_decode(deserializer);
+        let mut var_translateX = <Option<f64>>::sse_decode(deserializer);
+        let mut var_translateY = <Option<f64>>::sse_decode(deserializer);
+        let mut var_rotation = <Option<f64>>::sse_decode(deserializer);
+        let mut var_scaleX = <Option<f64>>::sse_decode(deserializer);
+        let mut var_scaleY = <Option<f64>>::sse_decode(deserializer);
+        let mut var_skewX = <Option<f64>>::sse_decode(deserializer);
+        let mut var_skewY = <Option<f64>>::sse_decode(deserializer);
+        let mut var_centerX = <Option<f64>>::sse_decode(deserializer);
+        let mut var_centerY = <Option<f64>>::sse_decode(deserializer);
+        return crate::api::upstream::VarcComponentSpec {
+            component_code_point: var_componentCodePoint,
+            condition_index: var_conditionIndex,
+            axis_indices: var_axisIndices,
+            axis_values: var_axisValues,
+            axis_values_delta_set: var_axisValuesDeltaSet,
+            transform_delta_set: var_transformDeltaSet,
+            translate_x: var_translateX,
+            translate_y: var_translateY,
+            rotation: var_rotation,
+            scale_x: var_scaleX,
+            scale_y: var_scaleY,
+            skew_x: var_skewX,
+            skew_y: var_skewY,
+            center_x: var_centerX,
+            center_y: var_centerY,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VarcDeltaSetSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_entries = <Vec<crate::api::upstream::VarcDeltaSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::VarcDeltaSetSpec {
+            entries: var_entries,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VarcDeltaSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_axes =
+            <Vec<crate::api::upstream::VarcRegionAxisSpec>>::sse_decode(deserializer);
+        let mut var_deltas = <Vec<i32>>::sse_decode(deserializer);
+        return crate::api::upstream::VarcDeltaSpec {
+            axes: var_axes,
+            deltas: var_deltas,
+        };
+    }
+}
+
 impl SseDecode for crate::api::fontations::VarcGlyphInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4766,6 +7738,51 @@ impl SseDecode for crate::api::fontations::VarcGlyphInfo {
             <Vec<crate::api::fontations::VarcComponentInfo>>::sse_decode(deserializer);
         return crate::api::fontations::VarcGlyphInfo {
             components: var_components,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VarcGlyphSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_components =
+            <Vec<crate::api::upstream::VarcComponentSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::VarcGlyphSpec {
+            code_point: var_codePoint,
+            components: var_components,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VarcPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_conditions =
+            <Vec<crate::api::upstream::FeatureConditionSpec>>::sse_decode(deserializer);
+        let mut var_deltaSets =
+            <Vec<crate::api::upstream::VarcDeltaSetSpec>>::sse_decode(deserializer);
+        let mut var_glyphs = <Vec<crate::api::upstream::VarcGlyphSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::VarcPatchRequest {
+            conditions: var_conditions,
+            delta_sets: var_deltaSets,
+            glyphs: var_glyphs,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VarcRegionAxisSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_axisIndex = <u32>::sse_decode(deserializer);
+        let mut var_start = <f64>::sse_decode(deserializer);
+        let mut var_peak = <f64>::sse_decode(deserializer);
+        let mut var_end = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::VarcRegionAxisSpec {
+            axis_index: var_axisIndex,
+            start: var_start,
+            peak: var_peak,
+            end: var_end,
         };
     }
 }
@@ -4896,6 +7913,31 @@ impl SseDecode for crate::api::build::VerticalMetricsSpec {
     }
 }
 
+impl SseDecode for crate::api::upstream::VerticalOriginRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_defaultOriginY = <f64>::sse_decode(deserializer);
+        let mut var_origins =
+            <Vec<crate::api::upstream::VerticalOriginSpec>>::sse_decode(deserializer);
+        return crate::api::upstream::VerticalOriginRequest {
+            default_origin_y: var_defaultOriginY,
+            origins: var_origins,
+        };
+    }
+}
+
+impl SseDecode for crate::api::upstream::VerticalOriginSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_codePoint = <u32>::sse_decode(deserializer);
+        let mut var_originY = <f64>::sse_decode(deserializer);
+        return crate::api::upstream::VerticalOriginSpec {
+            code_point: var_codePoint,
+            origin_y: var_originY,
+        };
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -4905,75 +7947,329 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        33 => wire__crate__api__fontations__Font_outline_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__build__build_font_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__build__existing_alternate_spec_default_impl(
+        34 => wire__crate__api__fontations__Font_outline_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__fontations__Font_outlines_impl(port, ptr, rust_vec_len, data_len),
+        48 => {
+            wire__crate__api__upstream__add_bitmap_strikes_impl(port, ptr, rust_vec_len, data_len)
+        }
+        49 => wire__crate__api__upstream__add_color_paints_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__api__upstream__add_feature_variations_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        47 => wire__crate__api__build__existing_ligature_spec_default_impl(
+        51 => wire__crate__api__upstream__add_math_table_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__api__upstream__add_raw_tables_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__api__upstream__add_substitutions_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__api__upstream__add_svg_documents_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__api__upstream__add_varc_glyphs_impl(port, ptr, rust_vec_len, data_len),
+        56 => {
+            wire__crate__api__upstream__add_vertical_origins_impl(port, ptr, rust_vec_len, data_len)
+        }
+        57 => wire__crate__api__upstream__alternate_substitution_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        48 => wire__crate__api__build__font_build_request_default_impl(
+        58 => wire__crate__api__upstream__bitmap_glyph_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        49 => wire__crate__api__build__font_modification_request_default_impl(
+        59 => wire__crate__api__upstream__bitmap_strike_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        50 => {
+        60 => wire__crate__api__build__build_font_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__api__upstream__color_glyph_paint_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        62 => wire__crate__api__upstream__color_stop_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        63 => wire__crate__api__upstream__contextual_substitution_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        65 => wire__crate__api__build__existing_alternate_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        66 => wire__crate__api__build__existing_ligature_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        67 => wire__crate__api__upstream__extended_table_info_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        68 => wire__crate__api__upstream__feature_condition_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        69 => wire__crate__api__upstream__feature_substitution_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        70 => wire__crate__api__upstream__feature_variation_patch_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        71 => wire__crate__api__upstream__feature_variation_record_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        72 => wire__crate__api__build__font_build_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        73 => wire__crate__api__build__font_modification_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        74 => {
             wire__crate__api__fontations__font_names_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        52 => {
+        75 => wire__crate__api__upstream__font_subset_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        77 => wire__crate__api__upstream__gasp_range_info_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        78 => {
             wire__crate__api__build__glyph_component_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        53 => wire__crate__api__build__glyph_spec_default_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__api__fontations__init_app_impl(port, ptr, rust_vec_len, data_len),
-        55 => {
+        79 => wire__crate__api__build__glyph_spec_default_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__api__fontations__hint_engine_kind_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        81 => wire__crate__api__fontations__hinting_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        82 => wire__crate__api__fontations__init_app_impl(port, ptr, rust_vec_len, data_len),
+        83 => {
             wire__crate__api__build__ligature_spec_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        56 => wire__crate__api__build__modify_font_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__api__build__named_instance_spec_default_impl(
+        84 => wire__crate__api__upstream__math_constant_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        59 => wire__crate__api__build__stylistic_alternate_default_impl(
+        85 => wire__crate__api__upstream__math_construction_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        60 => wire__crate__api__build__variation_axis_spec_default_impl(
+        86 => wire__crate__api__upstream__math_glyph_value_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        61 => wire__crate__api__build__variation_master_default_impl(
+        87 => wire__crate__api__upstream__math_kern_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        62 => wire__crate__api__build__variation_selector_spec_default_impl(
+        88 => wire__crate__api__upstream__math_part_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        63 => wire__crate__api__build__vertical_metrics_spec_default_impl(
+        89 => wire__crate__api__upstream__math_table_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        90 => wire__crate__api__upstream__math_variant_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        91 => wire__crate__api__upstream__meta_entry_info_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        92 => wire__crate__api__build__modify_font_impl(port, ptr, rust_vec_len, data_len),
+        93 => wire__crate__api__upstream__multiple_substitution_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        94 => wire__crate__api__build__named_instance_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        95 => wire__crate__api__upstream__paint_node_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        96 => wire__crate__api__upstream__patch_raw_table_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        97 => wire__crate__api__fontations__raster_target_kind_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        99 => wire__crate__api__upstream__reverse_chain_substitution_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        100 => wire__crate__api__build__stylistic_alternate_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        101 => wire__crate__api__upstream__subset_font_impl(port, ptr, rust_vec_len, data_len),
+        102 => wire__crate__api__upstream__substitution_patch_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        103 => wire__crate__api__upstream__svg_document_info_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        104 => wire__crate__api__upstream__svg_document_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        105 => wire__crate__api__upstream__varc_component_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        106 => wire__crate__api__upstream__varc_delta_set_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        107 => wire__crate__api__upstream__varc_delta_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        108 => wire__crate__api__upstream__varc_glyph_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        109 => wire__crate__api__upstream__varc_patch_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        110 => wire__crate__api__upstream__varc_region_axis_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        111 => wire__crate__api__build__variation_axis_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        112 => wire__crate__api__build__variation_master_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        113 => wire__crate__api__build__variation_selector_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        114 => wire__crate__api__build__vertical_metrics_spec_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        115 => wire__crate__api__upstream__vertical_origin_request_default_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        116 => wire__crate__api__upstream__vertical_origin_spec_default_impl(
             port,
             ptr,
             rust_vec_len,
@@ -5003,43 +8299,48 @@ fn pde_ffi_dispatcher_sync_impl(
         10 => wire__crate__api__fontations__Font_color_glyph_impl(ptr, rust_vec_len, data_len),
         11 => wire__crate__api__fontations__Font_color_palettes_impl(ptr, rust_vec_len, data_len),
         12 => wire__crate__api__fontations__Font_count_fonts_impl(ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__fontations__Font_from_bytes_impl(ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__fontations__Font_glyph_metrics_impl(ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__fontations__Font_glyph_name_impl(ptr, rust_vec_len, data_len),
-        16 => {
+        13 => wire__crate__api__fontations__Font_extended_tables_impl(ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__fontations__Font_from_bytes_impl(ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__fontations__Font_glyph_metrics_impl(ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__fontations__Font_glyph_name_impl(ptr, rust_vec_len, data_len),
+        17 => {
             wire__crate__api__fontations__Font_glyph_name_source_impl(ptr, rust_vec_len, data_len)
         }
-        17 => wire__crate__api__fontations__Font_glyph_to_char_impl(ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__fontations__Font_has_color_glyph_impl(ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__fontations__Font_has_math_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__fontations__Font_has_table_impl(ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__fontations__Font_has_varc_impl(ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__fontations__Font_info_impl(ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__fontations__Font_layout_impl(ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__fontations__Font_map_variant_impl(ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__fontations__Font_math_constants_impl(ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__fontations__Font_math_glyph_info_impl(ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__fontations__Font_math_variants_impl(ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__fontations__Font_metrics_impl(ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__fontations__Font_name_records_impl(ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__fontations__Font_named_instances_impl(ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__fontations__Font_names_impl(ptr, rust_vec_len, data_len),
-        32 => {
+        18 => wire__crate__api__fontations__Font_glyph_to_char_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__fontations__Font_has_color_glyph_impl(ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__fontations__Font_has_math_impl(ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__fontations__Font_has_table_impl(ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__fontations__Font_has_varc_impl(ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__fontations__Font_info_impl(ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__fontations__Font_layout_impl(ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__fontations__Font_map_variant_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__fontations__Font_math_constants_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__fontations__Font_math_glyph_info_impl(ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__fontations__Font_math_variants_impl(ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__fontations__Font_metrics_impl(ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__fontations__Font_name_records_impl(ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__fontations__Font_named_instances_impl(ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__fontations__Font_names_impl(ptr, rust_vec_len, data_len),
+        33 => {
             wire__crate__api__fontations__Font_normalized_coords_impl(ptr, rust_vec_len, data_len)
         }
-        34 => wire__crate__api__fontations__Font_outline_format_impl(ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__fontations__Font_shape_impl(ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__fontations__Font_table_data_impl(ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__fontations__Font_table_length_impl(ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__fontations__Font_tables_impl(ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__fontations__Font_varc_components_impl(ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__fontations__Font_variant_mappings_impl(ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__fontations__Font_vertical_advance_impl(ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__fontations__Font_vertical_metrics_impl(ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__fontations__Font_vertical_origin_impl(ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__fontations__count_fonts_impl(ptr, rust_vec_len, data_len),
-        51 => wire__crate__api__fontations__fontations_version_impl(ptr, rust_vec_len, data_len),
-        58 => wire__crate__api__fontations__read_font_info_impl(ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__fontations__Font_outline_format_impl(ptr, rust_vec_len, data_len),
+        37 => {
+            wire__crate__api__fontations__Font_pinned_variations_impl(ptr, rust_vec_len, data_len)
+        }
+        38 => wire__crate__api__fontations__Font_shape_impl(ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__fontations__Font_table_data_impl(ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__fontations__Font_table_length_impl(ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__fontations__Font_tables_impl(ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__fontations__Font_varc_components_impl(ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__fontations__Font_variant_mappings_impl(ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__fontations__Font_vertical_advance_impl(ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__fontations__Font_vertical_metrics_impl(ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__fontations__Font_vertical_origin_impl(ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__fontations__Font_with_variations_impl(ptr, rust_vec_len, data_len),
+        64 => wire__crate__api__fontations__count_fonts_impl(ptr, rust_vec_len, data_len),
+        76 => wire__crate__api__fontations__fontations_version_impl(ptr, rust_vec_len, data_len),
+        98 => wire__crate__api__fontations__read_font_info_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -5061,6 +8362,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Font>> for Font {
     }
 }
 
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::AlternateSubstitutionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.feature_tag.into_into_dart().into_dart(),
+            self.code_point.into_into_dart().into_dart(),
+            self.replacement_code_points.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::AlternateSubstitutionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::AlternateSubstitutionSpec>
+    for crate::api::upstream::AlternateSubstitutionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::AlternateSubstitutionSpec {
+        self
+    }
+}
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::AvarInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
@@ -5178,6 +8501,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::BitmapGlyphInfo>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::BitmapGlyphSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.format.into_into_dart().into_dart(),
+            self.data.into_into_dart().into_dart(),
+            self.origin_offset_x.into_into_dart().into_dart(),
+            self.origin_offset_y.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::BitmapGlyphSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::BitmapGlyphSpec>
+    for crate::api::upstream::BitmapGlyphSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::BitmapGlyphSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::BitmapStrikeInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5197,6 +8544,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::BitmapStrikeInfo>
     for crate::api::fontations::BitmapStrikeInfo
 {
     fn into_into_dart(self) -> crate::api::fontations::BitmapStrikeInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::BitmapStrikeSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ppem.into_into_dart().into_dart(),
+            self.ppi.into_into_dart().into_dart(),
+            self.glyphs.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::BitmapStrikeSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::BitmapStrikeSpec>
+    for crate::api::upstream::BitmapStrikeSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::BitmapStrikeSpec {
         self
     }
 }
@@ -5284,6 +8653,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::ColorGlyphInfo>
     for crate::api::fontations::ColorGlyphInfo
 {
     fn into_into_dart(self) -> crate::api::fontations::ColorGlyphInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::ColorGlyphPaintSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.root.into_into_dart().into_dart(),
+            self.nodes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::ColorGlyphPaintSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::ColorGlyphPaintSpec>
+    for crate::api::upstream::ColorGlyphPaintSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::ColorGlyphPaintSpec {
         self
     }
 }
@@ -5385,6 +8776,52 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::ColorStop>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::ColorStopSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.offset.into_into_dart().into_dart(),
+            self.palette_index.into_into_dart().into_dart(),
+            self.alpha.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::ColorStopSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::ColorStopSpec>
+    for crate::api::upstream::ColorStopSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::ColorStopSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::ContextualSubstitutionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.feature_tag.into_into_dart().into_dart(),
+            self.backtrack.into_into_dart().into_dart(),
+            self.input.into_into_dart().into_dart(),
+            self.lookahead.into_into_dart().into_dart(),
+            self.replacement_code_point.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::ContextualSubstitutionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::ContextualSubstitutionSpec>
+    for crate::api::upstream::ContextualSubstitutionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::ContextualSubstitutionSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::build::ContourPoint {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5448,6 +8885,126 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::build::ExistingLigatureSpec>
     for crate::api::build::ExistingLigatureSpec
 {
     fn into_into_dart(self) -> crate::api::build::ExistingLigatureSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::ExtendedTableInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.tables.into_into_dart().into_dart(),
+            self.svg_documents.into_into_dart().into_dart(),
+            self.gasp_ranges.into_into_dart().into_dart(),
+            self.meta_entries.into_into_dart().into_dart(),
+            self.aat_tables.into_into_dart().into_dart(),
+            self.has_base.into_into_dart().into_dart(),
+            self.has_cvar.into_into_dart().into_dart(),
+            self.has_vvar.into_into_dart().into_dart(),
+            self.has_mvar.into_into_dart().into_dart(),
+            self.has_dsig.into_into_dart().into_dart(),
+            self.has_hdmx.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::ExtendedTableInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::ExtendedTableInfo>
+    for crate::api::upstream::ExtendedTableInfo
+{
+    fn into_into_dart(self) -> crate::api::upstream::ExtendedTableInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::FeatureConditionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.kind.into_into_dart().into_dart(),
+            self.axis_index.into_into_dart().into_dart(),
+            self.min_value.into_into_dart().into_dart(),
+            self.max_value.into_into_dart().into_dart(),
+            self.default_value.into_into_dart().into_dart(),
+            self.var_index.into_into_dart().into_dart(),
+            self.children.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::FeatureConditionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::FeatureConditionSpec>
+    for crate::api::upstream::FeatureConditionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::FeatureConditionSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::FeatureSubstitutionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.feature_tag.into_into_dart().into_dart(),
+            self.lookup_indices.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::FeatureSubstitutionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::FeatureSubstitutionSpec>
+    for crate::api::upstream::FeatureSubstitutionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::FeatureSubstitutionSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::FeatureVariationPatchRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.table.into_into_dart().into_dart(),
+            self.conditions.into_into_dart().into_dart(),
+            self.records.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::FeatureVariationPatchRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::FeatureVariationPatchRequest>
+    for crate::api::upstream::FeatureVariationPatchRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::FeatureVariationPatchRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::FeatureVariationRecordSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.condition_indices.into_into_dart().into_dart(),
+            self.substitutions.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::FeatureVariationRecordSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::FeatureVariationRecordSpec>
+    for crate::api::upstream::FeatureVariationRecordSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::FeatureVariationRecordSpec {
         self
     }
 }
@@ -5631,6 +9188,55 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::FontNames>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::FontSubsetRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_points.into_into_dart().into_dart(),
+            self.glyph_ids.into_into_dart().into_dart(),
+            self.retain_glyph_ids.into_into_dart().into_dart(),
+            self.no_hinting.into_into_dart().into_dart(),
+            self.passthrough_unrecognized.into_into_dart().into_dart(),
+            self.glyph_names.into_into_dart().into_dart(),
+            self.keep_everything.into_into_dart().into_dart(),
+            self.layout_features.into_into_dart().into_dart(),
+            self.drop_tables.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::FontSubsetRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::FontSubsetRequest>
+    for crate::api::upstream::FontSubsetRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::FontSubsetRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::GaspRangeInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.max_ppem.into_into_dart().into_dart(),
+            self.behavior.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::GaspRangeInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::GaspRangeInfo>
+    for crate::api::upstream::GaspRangeInfo
+{
+    fn into_into_dart(self) -> crate::api::upstream::GaspRangeInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::build::GlyphColorLayer {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5724,6 +9330,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::fontations::GlyphOutline {
             self.format.into_into_dart().into_dart(),
             self.has_hinting.into_into_dart().into_dart(),
             self.has_overlaps.into_into_dart().into_dart(),
+            self.scaler.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5762,6 +9369,53 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::build::GlyphSpec>
     for crate::api::build::GlyphSpec
 {
     fn into_into_dart(self) -> crate::api::build::GlyphSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::fontations::HintEngineKind {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::AutoFallback => 0.into_dart(),
+            Self::Interpreter => 1.into_dart(),
+            Self::Auto => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::fontations::HintEngineKind
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::HintEngineKind>
+    for crate::api::fontations::HintEngineKind
+{
+    fn into_into_dart(self) -> crate::api::fontations::HintEngineKind {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::fontations::HintingSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.engine.into_into_dart().into_dart(),
+            self.target.into_into_dart().into_dart(),
+            self.classic_cleartype.into_into_dart().into_dart(),
+            self.symmetric_rendering.into_into_dart().into_dart(),
+            self.preserve_linear_metrics.into_into_dart().into_dart(),
+            self.pedantic.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::fontations::HintingSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::HintingSpec>
+    for crate::api::fontations::HintingSpec
+{
+    fn into_into_dart(self) -> crate::api::fontations::HintingSpec {
         self
     }
 }
@@ -5926,6 +9580,53 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::MathConstantInfo>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathConstantSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.name.into_into_dart().into_dart(),
+            self.value.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathConstantSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathConstantSpec>
+    for crate::api::upstream::MathConstantSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathConstantSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathConstructionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.axis.into_into_dart().into_dart(),
+            self.variants.into_into_dart().into_dart(),
+            self.parts.into_into_dart().into_dart(),
+            self.italics_correction.into_into_dart().into_dart(),
+            self.italics_device_start_ppem.into_into_dart().into_dart(),
+            self.italics_device_deltas.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathConstructionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathConstructionSpec>
+    for crate::api::upstream::MathConstructionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathConstructionSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::MathGlyphInfoInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5951,6 +9652,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::MathGlyphInfoInfo
     for crate::api::fontations::MathGlyphInfoInfo
 {
     fn into_into_dart(self) -> crate::api::fontations::MathGlyphInfoInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathGlyphValueSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.value.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathGlyphValueSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathGlyphValueSpec>
+    for crate::api::upstream::MathGlyphValueSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathGlyphValueSpec {
         self
     }
 }
@@ -5999,6 +9721,79 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::MathKernInfo>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathKernSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.corner.into_into_dart().into_dart(),
+            self.heights.into_into_dart().into_dart(),
+            self.kerns.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathKernSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathKernSpec>
+    for crate::api::upstream::MathKernSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathKernSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathPartSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.part_code_point.into_into_dart().into_dart(),
+            self.start_connector_length.into_into_dart().into_dart(),
+            self.end_connector_length.into_into_dart().into_dart(),
+            self.full_advance.into_into_dart().into_dart(),
+            self.is_extender.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathPartSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathPartSpec>
+    for crate::api::upstream::MathPartSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathPartSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathTableRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.constants.into_into_dart().into_dart(),
+            self.min_connector_overlap.into_into_dart().into_dart(),
+            self.italics_corrections.into_into_dart().into_dart(),
+            self.top_accent_attachments.into_into_dart().into_dart(),
+            self.extended_shapes.into_into_dart().into_dart(),
+            self.kerns.into_into_dart().into_dart(),
+            self.constructions.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathTableRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathTableRequest>
+    for crate::api::upstream::MathTableRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathTableRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::MathVariantRecordInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6016,6 +9811,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::MathVariantRecord
     for crate::api::fontations::MathVariantRecordInfo
 {
     fn into_into_dart(self) -> crate::api::fontations::MathVariantRecordInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MathVariantSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.variant_code_point.into_into_dart().into_dart(),
+            self.advance.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MathVariantSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MathVariantSpec>
+    for crate::api::upstream::MathVariantSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MathVariantSpec {
         self
     }
 }
@@ -6042,6 +9858,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::MathVariantsInfo>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MetaEntryInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.tag.into_into_dart().into_dart(),
+            self.length.into_into_dart().into_dart(),
+            self.value.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MetaEntryInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MetaEntryInfo>
+    for crate::api::upstream::MetaEntryInfo
+{
+    fn into_into_dart(self) -> crate::api::upstream::MetaEntryInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::build::MetricValue {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6059,6 +9897,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::build::MetricValue>
     for crate::api::build::MetricValue
 {
     fn into_into_dart(self) -> crate::api::build::MetricValue {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::MultipleSubstitutionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.feature_tag.into_into_dart().into_dart(),
+            self.code_point.into_into_dart().into_dart(),
+            self.replacement_code_points.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::MultipleSubstitutionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::MultipleSubstitutionSpec>
+    for crate::api::upstream::MultipleSubstitutionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::MultipleSubstitutionSpec {
         self
     }
 }
@@ -6155,6 +10015,62 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::PaintKind>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::PaintNodeSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.kind.into_into_dart().into_dart(),
+            self.palette_index.into_into_dart().into_dart(),
+            self.alpha.into_into_dart().into_dart(),
+            self.x0.into_into_dart().into_dart(),
+            self.y0.into_into_dart().into_dart(),
+            self.x1.into_into_dart().into_dart(),
+            self.y1.into_into_dart().into_dart(),
+            self.r0.into_into_dart().into_dart(),
+            self.r1.into_into_dart().into_dart(),
+            self.start_angle.into_into_dart().into_dart(),
+            self.end_angle.into_into_dart().into_dart(),
+            self.glyph_id.into_into_dart().into_dart(),
+            self.extend.into_into_dart().into_dart(),
+            self.composite_mode.into_into_dart().into_dart(),
+            self.stops.into_into_dart().into_dart(),
+            self.children.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::PaintNodeSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::PaintNodeSpec>
+    for crate::api::upstream::PaintNodeSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::PaintNodeSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::PatchRawTableSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.tag.into_into_dart().into_dart(),
+            self.data.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::PatchRawTableSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::PatchRawTableSpec>
+    for crate::api::upstream::PatchRawTableSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::PatchRawTableSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::PathElement {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6200,6 +10116,30 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::PathVerb>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::fontations::RasterTargetKind {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Mono => 0.into_dart(),
+            Self::Normal => 1.into_dart(),
+            Self::Light => 2.into_dart(),
+            Self::Lcd => 3.into_dart(),
+            Self::VerticalLcd => 4.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::fontations::RasterTargetKind
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::RasterTargetKind>
+    for crate::api::fontations::RasterTargetKind
+{
+    fn into_into_dart(self) -> crate::api::fontations::RasterTargetKind {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::build::RawTableSpec {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6237,6 +10177,59 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::RectF>
     for crate::api::fontations::RectF
 {
     fn into_into_dart(self) -> crate::api::fontations::RectF {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::ReverseChainSubstitutionSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.feature_tag.into_into_dart().into_dart(),
+            self.code_point.into_into_dart().into_dart(),
+            self.replacement_code_point.into_into_dart().into_dart(),
+            self.backtrack.into_into_dart().into_dart(),
+            self.lookahead.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::ReverseChainSubstitutionSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::ReverseChainSubstitutionSpec>
+    for crate::api::upstream::ReverseChainSubstitutionSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::ReverseChainSubstitutionSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::fontations::ScalerInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.hint_engine.into_into_dart().into_dart(),
+            self.is_hinted.into_into_dart().into_dart(),
+            self.hinted_ppem.into_into_dart().into_dart(),
+            self.outline_source.into_into_dart().into_dart(),
+            self.underlying_outline_source.into_into_dart().into_dart(),
+            self.symmetric_smoothing.into_into_dart().into_dart(),
+            self.grid_fit.into_into_dart().into_dart(),
+            self.dropout_control.into_into_dart().into_dart(),
+            self.drawn_advance.into_into_dart().into_dart(),
+            self.drawn_left_side_bearing.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::fontations::ScalerInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::ScalerInfo>
+    for crate::api::fontations::ScalerInfo
+{
+    fn into_into_dart(self) -> crate::api::fontations::ScalerInfo {
         self
     }
 }
@@ -6332,6 +10325,75 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::build::StylisticAlternate>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::SubstitutionPatchRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.multiple.into_into_dart().into_dart(),
+            self.alternate.into_into_dart().into_dart(),
+            self.contextual.into_into_dart().into_dart(),
+            self.reverse_chain.into_into_dart().into_dart(),
+            self.use_v2.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::SubstitutionPatchRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::SubstitutionPatchRequest>
+    for crate::api::upstream::SubstitutionPatchRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::SubstitutionPatchRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::SvgDocumentInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.start_glyph_id.into_into_dart().into_dart(),
+            self.end_glyph_id.into_into_dart().into_dart(),
+            self.length.into_into_dart().into_dart(),
+            self.preview.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::SvgDocumentInfo
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::SvgDocumentInfo>
+    for crate::api::upstream::SvgDocumentInfo
+{
+    fn into_into_dart(self) -> crate::api::upstream::SvgDocumentInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::SvgDocumentSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.start_code_point.into_into_dart().into_dart(),
+            self.end_code_point.into_into_dart().into_dart(),
+            self.data.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::SvgDocumentSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::SvgDocumentSpec>
+    for crate::api::upstream::SvgDocumentSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::SvgDocumentSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::VarcComponentInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -6356,6 +10418,78 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::VarcComponentInfo
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcComponentSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.component_code_point.into_into_dart().into_dart(),
+            self.condition_index.into_into_dart().into_dart(),
+            self.axis_indices.into_into_dart().into_dart(),
+            self.axis_values.into_into_dart().into_dart(),
+            self.axis_values_delta_set.into_into_dart().into_dart(),
+            self.transform_delta_set.into_into_dart().into_dart(),
+            self.translate_x.into_into_dart().into_dart(),
+            self.translate_y.into_into_dart().into_dart(),
+            self.rotation.into_into_dart().into_dart(),
+            self.scale_x.into_into_dart().into_dart(),
+            self.scale_y.into_into_dart().into_dart(),
+            self.skew_x.into_into_dart().into_dart(),
+            self.skew_y.into_into_dart().into_dart(),
+            self.center_x.into_into_dart().into_dart(),
+            self.center_y.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcComponentSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcComponentSpec>
+    for crate::api::upstream::VarcComponentSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcComponentSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcDeltaSetSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.entries.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcDeltaSetSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcDeltaSetSpec>
+    for crate::api::upstream::VarcDeltaSetSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcDeltaSetSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcDeltaSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.axes.into_into_dart().into_dart(),
+            self.deltas.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcDeltaSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcDeltaSpec>
+    for crate::api::upstream::VarcDeltaSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcDeltaSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::fontations::VarcGlyphInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.components.into_into_dart().into_dart()].into_dart()
@@ -6369,6 +10503,72 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::fontations::VarcGlyphInfo>
     for crate::api::fontations::VarcGlyphInfo
 {
     fn into_into_dart(self) -> crate::api::fontations::VarcGlyphInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcGlyphSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.components.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcGlyphSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcGlyphSpec>
+    for crate::api::upstream::VarcGlyphSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcGlyphSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcPatchRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.conditions.into_into_dart().into_dart(),
+            self.delta_sets.into_into_dart().into_dart(),
+            self.glyphs.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcPatchRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcPatchRequest>
+    for crate::api::upstream::VarcPatchRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcPatchRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VarcRegionAxisSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.axis_index.into_into_dart().into_dart(),
+            self.start.into_into_dart().into_dart(),
+            self.peak.into_into_dart().into_dart(),
+            self.end.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VarcRegionAxisSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VarcRegionAxisSpec>
+    for crate::api::upstream::VarcRegionAxisSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VarcRegionAxisSpec {
         self
     }
 }
@@ -6555,6 +10755,48 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::build::VerticalMetricsSpec>
         self
     }
 }
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VerticalOriginRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.default_origin_y.into_into_dart().into_dart(),
+            self.origins.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VerticalOriginRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VerticalOriginRequest>
+    for crate::api::upstream::VerticalOriginRequest
+{
+    fn into_into_dart(self) -> crate::api::upstream::VerticalOriginRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::upstream::VerticalOriginSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code_point.into_into_dart().into_dart(),
+            self.origin_y.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::upstream::VerticalOriginSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::upstream::VerticalOriginSpec>
+    for crate::api::upstream::VerticalOriginSpec
+{
+    fn into_into_dart(self) -> crate::api::upstream::VerticalOriginSpec {
+        self
+    }
+}
 
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -6586,6 +10828,15 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::AlternateSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.feature_tag, serializer);
+        <u32>::sse_encode(self.code_point, serializer);
+        <Vec<u32>>::sse_encode(self.replacement_code_points, serializer);
     }
 }
 
@@ -6640,6 +10891,17 @@ impl SseEncode for crate::api::fontations::BitmapGlyphInfo {
     }
 }
 
+impl SseEncode for crate::api::upstream::BitmapGlyphSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <String>::sse_encode(self.format, serializer);
+        <Vec<u8>>::sse_encode(self.data, serializer);
+        <i32>::sse_encode(self.origin_offset_x, serializer);
+        <i32>::sse_encode(self.origin_offset_y, serializer);
+    }
+}
+
 impl SseEncode for crate::api::fontations::BitmapStrikeInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6647,6 +10909,15 @@ impl SseEncode for crate::api::fontations::BitmapStrikeInfo {
         <f64>::sse_encode(self.ppem_x, serializer);
         <f64>::sse_encode(self.ppem_y, serializer);
         <String>::sse_encode(self.format, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::BitmapStrikeSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.ppem, serializer);
+        <u32>::sse_encode(self.ppi, serializer);
+        <Vec<crate::api::upstream::BitmapGlyphSpec>>::sse_encode(self.glyphs, serializer);
     }
 }
 
@@ -6689,6 +10960,15 @@ impl SseEncode for crate::api::fontations::ColorGlyphInfo {
         <String>::sse_encode(self.format, serializer);
         <Option<crate::api::fontations::RectF>>::sse_encode(self.bounds, serializer);
         <Vec<crate::api::fontations::ColorLayer>>::sse_encode(self.layers, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::ColorGlyphPaintSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <u32>::sse_encode(self.root, serializer);
+        <Vec<crate::api::upstream::PaintNodeSpec>>::sse_encode(self.nodes, serializer);
     }
 }
 
@@ -6737,6 +11017,26 @@ impl SseEncode for crate::api::fontations::ColorStop {
     }
 }
 
+impl SseEncode for crate::api::upstream::ColorStopSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.offset, serializer);
+        <u32>::sse_encode(self.palette_index, serializer);
+        <f64>::sse_encode(self.alpha, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::ContextualSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.feature_tag, serializer);
+        <Vec<u32>>::sse_encode(self.backtrack, serializer);
+        <Vec<u32>>::sse_encode(self.input, serializer);
+        <Vec<u32>>::sse_encode(self.lookahead, serializer);
+        <u32>::sse_encode(self.replacement_code_point, serializer);
+    }
+}
+
 impl SseEncode for crate::api::build::ContourPoint {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6765,10 +11065,71 @@ impl SseEncode for crate::api::build::ExistingLigatureSpec {
     }
 }
 
+impl SseEncode for crate::api::upstream::ExtendedTableInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<String>>::sse_encode(self.tables, serializer);
+        <Vec<crate::api::upstream::SvgDocumentInfo>>::sse_encode(self.svg_documents, serializer);
+        <Vec<crate::api::upstream::GaspRangeInfo>>::sse_encode(self.gasp_ranges, serializer);
+        <Vec<crate::api::upstream::MetaEntryInfo>>::sse_encode(self.meta_entries, serializer);
+        <Vec<String>>::sse_encode(self.aat_tables, serializer);
+        <bool>::sse_encode(self.has_base, serializer);
+        <bool>::sse_encode(self.has_cvar, serializer);
+        <bool>::sse_encode(self.has_vvar, serializer);
+        <bool>::sse_encode(self.has_mvar, serializer);
+        <bool>::sse_encode(self.has_dsig, serializer);
+        <bool>::sse_encode(self.has_hdmx, serializer);
+    }
+}
+
 impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::api::upstream::FeatureConditionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.kind, serializer);
+        <u32>::sse_encode(self.axis_index, serializer);
+        <f64>::sse_encode(self.min_value, serializer);
+        <f64>::sse_encode(self.max_value, serializer);
+        <i32>::sse_encode(self.default_value, serializer);
+        <u32>::sse_encode(self.var_index, serializer);
+        <Vec<u32>>::sse_encode(self.children, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::FeatureSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.feature_tag, serializer);
+        <Vec<u32>>::sse_encode(self.lookup_indices, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::FeatureVariationPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.table, serializer);
+        <Vec<crate::api::upstream::FeatureConditionSpec>>::sse_encode(self.conditions, serializer);
+        <Vec<crate::api::upstream::FeatureVariationRecordSpec>>::sse_encode(
+            self.records,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::upstream::FeatureVariationRecordSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<u32>>::sse_encode(self.condition_indices, serializer);
+        <Vec<crate::api::upstream::FeatureSubstitutionSpec>>::sse_encode(
+            self.substitutions,
+            serializer,
+        );
     }
 }
 
@@ -6879,6 +11240,29 @@ impl SseEncode for crate::api::fontations::FontNames {
     }
 }
 
+impl SseEncode for crate::api::upstream::FontSubsetRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<u32>>::sse_encode(self.code_points, serializer);
+        <Vec<u32>>::sse_encode(self.glyph_ids, serializer);
+        <bool>::sse_encode(self.retain_glyph_ids, serializer);
+        <bool>::sse_encode(self.no_hinting, serializer);
+        <bool>::sse_encode(self.passthrough_unrecognized, serializer);
+        <bool>::sse_encode(self.glyph_names, serializer);
+        <bool>::sse_encode(self.keep_everything, serializer);
+        <Vec<String>>::sse_encode(self.layout_features, serializer);
+        <Vec<String>>::sse_encode(self.drop_tables, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::GaspRangeInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.max_ppem, serializer);
+        <String>::sse_encode(self.behavior, serializer);
+    }
+}
+
 impl SseEncode for crate::api::build::GlyphColorLayer {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6923,6 +11307,7 @@ impl SseEncode for crate::api::fontations::GlyphOutline {
         <Option<String>>::sse_encode(self.format, serializer);
         <bool>::sse_encode(self.has_hinting, serializer);
         <bool>::sse_encode(self.has_overlaps, serializer);
+        <crate::api::fontations::ScalerInfo>::sse_encode(self.scaler, serializer);
     }
 }
 
@@ -6939,6 +11324,35 @@ impl SseEncode for crate::api::build::GlyphSpec {
         <Option<Vec<u8>>>::sse_encode(self.instructions, serializer);
         <Option<f64>>::sse_encode(self.vertical_advance, serializer);
         <Option<f64>>::sse_encode(self.vertical_origin, serializer);
+    }
+}
+
+impl SseEncode for crate::api::fontations::HintEngineKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::fontations::HintEngineKind::AutoFallback => 0,
+                crate::api::fontations::HintEngineKind::Interpreter => 1,
+                crate::api::fontations::HintEngineKind::Auto => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::fontations::HintingSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<crate::api::fontations::HintEngineKind>>::sse_encode(self.engine, serializer);
+        <Option<crate::api::fontations::RasterTargetKind>>::sse_encode(self.target, serializer);
+        <Option<bool>>::sse_encode(self.classic_cleartype, serializer);
+        <Option<bool>>::sse_encode(self.symmetric_rendering, serializer);
+        <Option<bool>>::sse_encode(self.preserve_linear_metrics, serializer);
+        <Option<bool>>::sse_encode(self.pedantic, serializer);
     }
 }
 
@@ -6999,6 +11413,16 @@ impl SseEncode for Vec<String> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::AlternateSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::AlternateSubstitutionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::AxisSegmentMapsInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7029,12 +11453,32 @@ impl SseEncode for Vec<crate::api::build::AxisValueMapSpec> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::BitmapGlyphSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::BitmapGlyphSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::BitmapStrikeInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::fontations::BitmapStrikeInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::BitmapStrikeSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::BitmapStrikeSpec>::sse_encode(item, serializer);
         }
     }
 }
@@ -7055,6 +11499,16 @@ impl SseEncode for Vec<crate::api::build::CodePointVariant> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::build::CodePointVariant>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::ColorGlyphPaintSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::ColorGlyphPaintSpec>::sse_encode(item, serializer);
         }
     }
 }
@@ -7089,6 +11543,26 @@ impl SseEncode for Vec<crate::api::fontations::ColorStop> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::ColorStopSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::ColorStopSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::ContextualSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::ContextualSubstitutionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::build::ContourPoint> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7119,6 +11593,46 @@ impl SseEncode for Vec<crate::api::build::ExistingLigatureSpec> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::FeatureConditionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::FeatureConditionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::FeatureSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::FeatureSubstitutionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::FeatureVariationRecordSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::FeatureVariationRecordSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::GaspRangeInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::GaspRangeInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::build::GlyphColorLayer> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7145,6 +11659,16 @@ impl SseEncode for Vec<crate::api::build::GlyphContour> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::build::GlyphContour>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::fontations::GlyphOutline> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::fontations::GlyphOutline>::sse_encode(item, serializer);
         }
     }
 }
@@ -7219,6 +11743,36 @@ impl SseEncode for Vec<crate::api::fontations::MathConstantInfo> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::MathConstantSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathConstantSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::MathConstructionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathConstructionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::MathGlyphValueSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathGlyphValueSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::MathKernEntryInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7239,6 +11793,26 @@ impl SseEncode for Vec<crate::api::fontations::MathKernInfo> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::MathKernSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathKernSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::MathPartSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathPartSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::MathVariantRecordInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7249,12 +11823,42 @@ impl SseEncode for Vec<crate::api::fontations::MathVariantRecordInfo> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::MathVariantSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MathVariantSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::MetaEntryInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MetaEntryInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::build::MetricValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::build::MetricValue>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::MultipleSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::MultipleSubstitutionSpec>::sse_encode(item, serializer);
         }
     }
 }
@@ -7289,6 +11893,26 @@ impl SseEncode for Vec<crate::api::build::NamedInstanceSpec> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::PaintNodeSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::PaintNodeSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::PatchRawTableSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::PatchRawTableSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::PathElement> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7305,6 +11929,16 @@ impl SseEncode for Vec<f64> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <f64>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <i32>::sse_encode(item, serializer);
         }
     }
 }
@@ -7349,6 +11983,16 @@ impl SseEncode for Vec<crate::api::build::RawTableSpec> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::ReverseChainSubstitutionSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::ReverseChainSubstitutionSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::ShapedGlyph> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7369,12 +12013,82 @@ impl SseEncode for Vec<crate::api::build::StylisticAlternate> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::SvgDocumentInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::SvgDocumentInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::SvgDocumentSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::SvgDocumentSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::fontations::VarcComponentInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::fontations::VarcComponentInfo>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::VarcComponentSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VarcComponentSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::VarcDeltaSetSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VarcDeltaSetSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::VarcDeltaSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VarcDeltaSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::VarcGlyphSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VarcGlyphSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::upstream::VarcRegionAxisSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VarcRegionAxisSpec>::sse_encode(item, serializer);
         }
     }
 }
@@ -7439,6 +12153,16 @@ impl SseEncode for Vec<crate::api::fontations::VariationSetting> {
     }
 }
 
+impl SseEncode for Vec<crate::api::upstream::VerticalOriginSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::upstream::VerticalOriginSpec>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for crate::api::fontations::MathAssemblyPartInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7469,6 +12193,27 @@ impl SseEncode for crate::api::fontations::MathConstantInfo {
     }
 }
 
+impl SseEncode for crate::api::upstream::MathConstantSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.name, serializer);
+        <f64>::sse_encode(self.value, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MathConstructionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <String>::sse_encode(self.axis, serializer);
+        <Vec<crate::api::upstream::MathVariantSpec>>::sse_encode(self.variants, serializer);
+        <Vec<crate::api::upstream::MathPartSpec>>::sse_encode(self.parts, serializer);
+        <f64>::sse_encode(self.italics_correction, serializer);
+        <Option<u32>>::sse_encode(self.italics_device_start_ppem, serializer);
+        <Vec<i32>>::sse_encode(self.italics_device_deltas, serializer);
+    }
+}
+
 impl SseEncode for crate::api::fontations::MathGlyphInfoInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7478,6 +12223,14 @@ impl SseEncode for crate::api::fontations::MathGlyphInfoInfo {
         <f64>::sse_encode(self.top_accent_attachment_delta_px, serializer);
         <bool>::sse_encode(self.is_extended_shape, serializer);
         <Vec<crate::api::fontations::MathKernInfo>>::sse_encode(self.kerns, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MathGlyphValueSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <f64>::sse_encode(self.value, serializer);
     }
 }
 
@@ -7499,10 +12252,61 @@ impl SseEncode for crate::api::fontations::MathKernInfo {
     }
 }
 
+impl SseEncode for crate::api::upstream::MathKernSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <String>::sse_encode(self.corner, serializer);
+        <Vec<f64>>::sse_encode(self.heights, serializer);
+        <Vec<f64>>::sse_encode(self.kerns, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MathPartSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.part_code_point, serializer);
+        <f64>::sse_encode(self.start_connector_length, serializer);
+        <f64>::sse_encode(self.end_connector_length, serializer);
+        <f64>::sse_encode(self.full_advance, serializer);
+        <bool>::sse_encode(self.is_extender, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MathTableRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::upstream::MathConstantSpec>>::sse_encode(self.constants, serializer);
+        <f64>::sse_encode(self.min_connector_overlap, serializer);
+        <Vec<crate::api::upstream::MathGlyphValueSpec>>::sse_encode(
+            self.italics_corrections,
+            serializer,
+        );
+        <Vec<crate::api::upstream::MathGlyphValueSpec>>::sse_encode(
+            self.top_accent_attachments,
+            serializer,
+        );
+        <Vec<u32>>::sse_encode(self.extended_shapes, serializer);
+        <Vec<crate::api::upstream::MathKernSpec>>::sse_encode(self.kerns, serializer);
+        <Vec<crate::api::upstream::MathConstructionSpec>>::sse_encode(
+            self.constructions,
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::api::fontations::MathVariantRecordInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.glyph_id, serializer);
+        <f64>::sse_encode(self.advance, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MathVariantSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.variant_code_point, serializer);
         <f64>::sse_encode(self.advance, serializer);
     }
 }
@@ -7519,11 +12323,29 @@ impl SseEncode for crate::api::fontations::MathVariantsInfo {
     }
 }
 
+impl SseEncode for crate::api::upstream::MetaEntryInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.tag, serializer);
+        <u32>::sse_encode(self.length, serializer);
+        <String>::sse_encode(self.value, serializer);
+    }
+}
+
 impl SseEncode for crate::api::build::MetricValue {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.tag, serializer);
         <f64>::sse_encode(self.value, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::MultipleSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.feature_tag, serializer);
+        <u32>::sse_encode(self.code_point, serializer);
+        <Vec<u32>>::sse_encode(self.replacement_code_points, serializer);
     }
 }
 
@@ -7617,6 +12439,26 @@ impl SseEncode for Option<f64> {
     }
 }
 
+impl SseEncode for Option<crate::api::fontations::HintEngineKind> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::fontations::HintEngineKind>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::fontations::HintingSpec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::fontations::HintingSpec>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::api::fontations::MathAssemblyPartListInfo> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7643,6 +12485,16 @@ impl SseEncode for Option<crate::api::fontations::MathVariantsInfo> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::fontations::MathVariantsInfo>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::fontations::RasterTargetKind> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::fontations::RasterTargetKind>::sse_encode(value, serializer);
         }
     }
 }
@@ -7765,6 +12617,36 @@ impl SseEncode for crate::api::fontations::PaintKind {
     }
 }
 
+impl SseEncode for crate::api::upstream::PaintNodeSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.kind, serializer);
+        <u32>::sse_encode(self.palette_index, serializer);
+        <f64>::sse_encode(self.alpha, serializer);
+        <f64>::sse_encode(self.x0, serializer);
+        <f64>::sse_encode(self.y0, serializer);
+        <f64>::sse_encode(self.x1, serializer);
+        <f64>::sse_encode(self.y1, serializer);
+        <f64>::sse_encode(self.r0, serializer);
+        <f64>::sse_encode(self.r1, serializer);
+        <f64>::sse_encode(self.start_angle, serializer);
+        <f64>::sse_encode(self.end_angle, serializer);
+        <u32>::sse_encode(self.glyph_id, serializer);
+        <String>::sse_encode(self.extend, serializer);
+        <String>::sse_encode(self.composite_mode, serializer);
+        <Vec<crate::api::upstream::ColorStopSpec>>::sse_encode(self.stops, serializer);
+        <Vec<u32>>::sse_encode(self.children, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::PatchRawTableSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.tag, serializer);
+        <Vec<u8>>::sse_encode(self.data, serializer);
+    }
+}
+
 impl SseEncode for crate::api::fontations::PathElement {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7792,6 +12674,25 @@ impl SseEncode for crate::api::fontations::PathVerb {
     }
 }
 
+impl SseEncode for crate::api::fontations::RasterTargetKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::fontations::RasterTargetKind::Mono => 0,
+                crate::api::fontations::RasterTargetKind::Normal => 1,
+                crate::api::fontations::RasterTargetKind::Light => 2,
+                crate::api::fontations::RasterTargetKind::Lcd => 3,
+                crate::api::fontations::RasterTargetKind::VerticalLcd => 4,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::api::build::RawTableSpec {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7807,6 +12708,33 @@ impl SseEncode for crate::api::fontations::RectF {
         <f64>::sse_encode(self.y_min, serializer);
         <f64>::sse_encode(self.x_max, serializer);
         <f64>::sse_encode(self.y_max, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::ReverseChainSubstitutionSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.feature_tag, serializer);
+        <u32>::sse_encode(self.code_point, serializer);
+        <u32>::sse_encode(self.replacement_code_point, serializer);
+        <Vec<u32>>::sse_encode(self.backtrack, serializer);
+        <Vec<u32>>::sse_encode(self.lookahead, serializer);
+    }
+}
+
+impl SseEncode for crate::api::fontations::ScalerInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.hint_engine, serializer);
+        <bool>::sse_encode(self.is_hinted, serializer);
+        <Option<f64>>::sse_encode(self.hinted_ppem, serializer);
+        <Option<String>>::sse_encode(self.outline_source, serializer);
+        <Option<String>>::sse_encode(self.underlying_outline_source, serializer);
+        <Option<bool>>::sse_encode(self.symmetric_smoothing, serializer);
+        <Option<bool>>::sse_encode(self.grid_fit, serializer);
+        <String>::sse_encode(self.dropout_control, serializer);
+        <Option<f64>>::sse_encode(self.drawn_advance, serializer);
+        <Option<f64>>::sse_encode(self.drawn_left_side_bearing, serializer);
     }
 }
 
@@ -7857,6 +12785,48 @@ impl SseEncode for crate::api::build::StylisticAlternate {
     }
 }
 
+impl SseEncode for crate::api::upstream::SubstitutionPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::upstream::MultipleSubstitutionSpec>>::sse_encode(
+            self.multiple,
+            serializer,
+        );
+        <Vec<crate::api::upstream::AlternateSubstitutionSpec>>::sse_encode(
+            self.alternate,
+            serializer,
+        );
+        <Vec<crate::api::upstream::ContextualSubstitutionSpec>>::sse_encode(
+            self.contextual,
+            serializer,
+        );
+        <Vec<crate::api::upstream::ReverseChainSubstitutionSpec>>::sse_encode(
+            self.reverse_chain,
+            serializer,
+        );
+        <bool>::sse_encode(self.use_v2, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::SvgDocumentInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.start_glyph_id, serializer);
+        <u32>::sse_encode(self.end_glyph_id, serializer);
+        <u32>::sse_encode(self.length, serializer);
+        <String>::sse_encode(self.preview, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::SvgDocumentSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.start_code_point, serializer);
+        <u32>::sse_encode(self.end_code_point, serializer);
+        <Vec<u8>>::sse_encode(self.data, serializer);
+    }
+}
+
 impl SseEncode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7904,10 +12874,73 @@ impl SseEncode for crate::api::fontations::VarcComponentInfo {
     }
 }
 
+impl SseEncode for crate::api::upstream::VarcComponentSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.component_code_point, serializer);
+        <Option<u32>>::sse_encode(self.condition_index, serializer);
+        <Vec<u32>>::sse_encode(self.axis_indices, serializer);
+        <Vec<f64>>::sse_encode(self.axis_values, serializer);
+        <Option<u32>>::sse_encode(self.axis_values_delta_set, serializer);
+        <Option<u32>>::sse_encode(self.transform_delta_set, serializer);
+        <Option<f64>>::sse_encode(self.translate_x, serializer);
+        <Option<f64>>::sse_encode(self.translate_y, serializer);
+        <Option<f64>>::sse_encode(self.rotation, serializer);
+        <Option<f64>>::sse_encode(self.scale_x, serializer);
+        <Option<f64>>::sse_encode(self.scale_y, serializer);
+        <Option<f64>>::sse_encode(self.skew_x, serializer);
+        <Option<f64>>::sse_encode(self.skew_y, serializer);
+        <Option<f64>>::sse_encode(self.center_x, serializer);
+        <Option<f64>>::sse_encode(self.center_y, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VarcDeltaSetSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::upstream::VarcDeltaSpec>>::sse_encode(self.entries, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VarcDeltaSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::upstream::VarcRegionAxisSpec>>::sse_encode(self.axes, serializer);
+        <Vec<i32>>::sse_encode(self.deltas, serializer);
+    }
+}
+
 impl SseEncode for crate::api::fontations::VarcGlyphInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<crate::api::fontations::VarcComponentInfo>>::sse_encode(self.components, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VarcGlyphSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <Vec<crate::api::upstream::VarcComponentSpec>>::sse_encode(self.components, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VarcPatchRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::upstream::FeatureConditionSpec>>::sse_encode(self.conditions, serializer);
+        <Vec<crate::api::upstream::VarcDeltaSetSpec>>::sse_encode(self.delta_sets, serializer);
+        <Vec<crate::api::upstream::VarcGlyphSpec>>::sse_encode(self.glyphs, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VarcRegionAxisSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.axis_index, serializer);
+        <f64>::sse_encode(self.start, serializer);
+        <f64>::sse_encode(self.peak, serializer);
+        <f64>::sse_encode(self.end, serializer);
     }
 }
 
@@ -7987,6 +13020,22 @@ impl SseEncode for crate::api::build::VerticalMetricsSpec {
         <f64>::sse_encode(self.ascender, serializer);
         <f64>::sse_encode(self.descender, serializer);
         <Option<f64>>::sse_encode(self.line_gap, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VerticalOriginRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <f64>::sse_encode(self.default_origin_y, serializer);
+        <Vec<crate::api::upstream::VerticalOriginSpec>>::sse_encode(self.origins, serializer);
+    }
+}
+
+impl SseEncode for crate::api::upstream::VerticalOriginSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.code_point, serializer);
+        <f64>::sse_encode(self.origin_y, serializer);
     }
 }
 

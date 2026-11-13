@@ -1,9 +1,8 @@
-// This is the io implementation of the native library lookup.
-// See lib/src/native_library.dart.
 library;
 
 import 'dart:io' as io;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart'
     show loadExternalLibrary;
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart'
@@ -11,46 +10,51 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart'
 
 import 'rust/frb_generated.dart';
 
-/// Rust library inside a prebuilt framework, see `scripts/build_xcframework.sh`.
+/// Rust library inside a prebuilt framework.
 const String _framework = 'fontations.framework/fontations';
 
-/// Same thing as a plain dynamic library, the shape used on macOS.
+/// Rust library as a plain dynamic library (macOS).
 const String _dylib = 'libfontations.dylib';
 
-/// Resolves the Rust library on Apple platforms, `null` anywhere else - there
-/// flutter_rust_bridge's own lookup already does the right thing.
-///
-/// An Apple app can contain the Rust library in two very different shapes:
-/// * SwiftPM cannot run cargo, so it links the prebuilt binary built by
-///   `scripts/build_xcframework.sh` (a framework on iOS, a dylib on macOS) - it
-///   has to be opened from the app bundle.
-/// * CocoaPods compiles Rust from source and statically links it (see the
-///   `-force_load` in the podspecs), so its symbols are part of the app binary
-///   and can only be reached with `DynamicLibrary.process()`.
+final List<Object> _libraryLoadErrors = <Object>[];
+
+/// Failures from the last library lookup, for diagnosing a missing library.
+List<Object> get fontationsLibraryLoadErrors =>
+    List<Object>.unmodifiable(_libraryLoadErrors);
+
+/// Resolves the Rust library on Apple platforms; `null` elsewhere, where
+/// flutter_rust_bridge's own lookup applies.
 Future<ExternalLibrary?> loadFontationsExternalLibrary() async {
   if (!io.Platform.isIOS && !io.Platform.isMacOS) {
     return null;
   }
+  _libraryLoadErrors.clear();
 
-  // Non-packaged runs (`flutter test`, `dart run`): the dylib next to the
-  // sources.
+  // Unpackaged runs: the dylib next to the sources.
   try {
     return await loadExternalLibrary(
       RustLib.kDefaultExternalLibraryLoaderConfig,
     );
-  } on Object {
-    // Try the packaged locations below.
+  } on Object catch (error) {
+    _libraryLoadErrors.add(error);
   }
 
   for (final String candidate in _bundleCandidates()) {
     try {
       return ExternalLibrary.open(candidate);
-    } on Object {
-      // Try the next location.
+    } on Object catch (error) {
+      _libraryLoadErrors.add(error);
     }
   }
 
   // Statically linked Rust library, i.e. the CocoaPods integration.
+  if (_libraryLoadErrors.isNotEmpty) {
+    debugPrint(
+      'fontations: falling back to the statically linked Rust library after '
+      '${_libraryLoadErrors.length} failed dynamic load(s). First failure: '
+      '${_libraryLoadErrors.first}',
+    );
+  }
   return ExternalLibrary.process(iKnowHowToUseIt: true);
 }
 

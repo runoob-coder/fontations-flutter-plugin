@@ -10,43 +10,46 @@
 //! exactly like it does for `Font.outline`.
 
 use kurbo::Affine;
-use read_fonts::model::glyph::outline::PathElement as RawElement;
+use read_fonts::model::glyph::outline::{DrawMemory, PathElement as RawElement};
 use read_fonts::types::GlyphId;
 use skrifa::color::{Brush, ColorPainter, CompositeMode, Extend, Transform};
-use skrifa::instance::{LocationRef, Size};
-use skrifa::outline::DrawSettings;
-use skrifa::{FontRef, MetadataProvider};
+use skrifa::ScalerFont;
 
 use crate::api::fontations::{
     ColorLayer, ColorPaint, ColorStop, PaintKind, PathElement, PathVerb, RectF,
 };
+use crate::limits::{MAX_COLOR_LAYERS, MAX_TRANSFORM_DEPTH};
 
 /// Records the paint callbacks of one color glyph.
-pub struct RecordingPainter<'f, 'a> {
-    font: &'f FontRef<'a>,
+pub struct RecordingPainter {
+    /// Font-unit scaler used to outline the glyphs a `COLR` graph clips to.
+    scaler: ScalerFont,
     /// Resolved palette, as `0xAARRGGBB`.
     palette: Vec<u32>,
     /// Currently pushed transforms, innermost last.
     transforms: Vec<Affine>,
-    /// Glyph whose outline clips the next `fill`.
-    clip_glyph: Option<GlyphId>,
-    /// Rectangle that clips the next `fill`.
-    clip_box: Option<RectF>,
-    /// Composite mode of the layer that is currently open.
-    composite: String,
+    /// `push_transform` calls dropped once the graph exceeds
+    /// `MAX_TRANSFORM_DEPTH`. Counted so `pop_transform` keeps the stack
+    /// balanced while the graph unwinds.
+    dropped_transforms: usize,
+    /// Nested clips, innermost last. A `COLRv1` paint graph can push a glyph
+    /// clip inside a box clip, and `pop_clip` has to restore the outer one.
+    clips: Vec<(Option<GlyphId>, Option<RectF>)>,
+    /// Composite modes of the open layers, innermost last.
+    composites: Vec<String>,
     /// Collected layers, in paint order.
     pub layers: Vec<ColorLayer>,
 }
 
-impl<'f, 'a> RecordingPainter<'f, 'a> {
-    pub fn new(font: &'f FontRef<'a>, palette: Vec<u32>) -> Self {
+impl RecordingPainter {
+    pub fn new(scaler: ScalerFont, palette: Vec<u32>) -> Self {
         Self {
-            font,
+            scaler,
             palette,
             transforms: Vec::new(),
-            clip_glyph: None,
-            clip_box: None,
-            composite: "SrcOver".to_string(),
+            dropped_transforms: 0,
+            clips: Vec::new(),
+            composites: vec!["SrcOver".to_string()],
             layers: Vec::new(),
         }
     }
@@ -191,17 +194,11 @@ impl<'f, 'a> RecordingPainter<'f, 'a> {
 
     /// Outline of `glyph_id` in font units, with the current transform applied.
     fn glyph_elements(&self, glyph_id: GlyphId) -> Vec<PathElement> {
-        let Some(glyph) = self.font.outline_glyphs().get(glyph_id) else {
+        let Some(outline) = self.scaler.outline(glyph_id) else {
             return Vec::new();
         };
         let mut raw: Vec<RawElement> = Vec::new();
-        if glyph
-            .draw(
-                DrawSettings::unhinted(Size::unscaled(), LocationRef::default()),
-                &mut raw,
-            )
-            .is_err()
-        {
+        if outline.draw(DrawMemory::Scratch, &mut raw).is_err() {
             return Vec::new();
         }
         let affine = self.current_transform();
@@ -285,8 +282,12 @@ impl<'f, 'a> RecordingPainter<'f, 'a> {
     }
 }
 
-impl ColorPainter for RecordingPainter<'_, '_> {
+impl ColorPainter for RecordingPainter {
     fn push_transform(&mut self, transform: Transform) {
+        if self.transforms.len() >= MAX_TRANSFORM_DEPTH {
+            self.dropped_transforms += 1;
+            return;
+        }
         self.transforms.push(Affine::new([
             transform.xx as f64,
             transform.yx as f64,
@@ -298,29 +299,42 @@ impl ColorPainter for RecordingPainter<'_, '_> {
     }
 
     fn pop_transform(&mut self) {
+        // Unwind the pushes we dropped before touching the real stack.
+        if self.dropped_transforms > 0 {
+            self.dropped_transforms -= 1;
+            return;
+        }
         self.transforms.pop();
     }
 
     fn push_clip_glyph(&mut self, glyph_id: GlyphId) {
-        self.clip_glyph = Some(glyph_id);
+        self.clips.push((Some(glyph_id), None));
     }
 
     fn push_clip_box(&mut self, clip_box: read_fonts::types::BoundingBox<f32>) {
-        self.clip_box = Some(RectF {
-            x_min: clip_box.x_min as f64,
-            y_min: clip_box.y_min as f64,
-            x_max: clip_box.x_max as f64,
-            y_max: clip_box.y_max as f64,
-        });
+        self.clips.push((
+            None,
+            Some(RectF {
+                x_min: clip_box.x_min as f64,
+                y_min: clip_box.y_min as f64,
+                x_max: clip_box.x_max as f64,
+                y_max: clip_box.y_max as f64,
+            }),
+        ));
     }
 
     fn pop_clip(&mut self) {
-        self.clip_glyph = None;
-        self.clip_box = None;
+        self.clips.pop();
     }
 
     fn fill(&mut self, brush: Brush<'_>) {
-        let elements = match (self.clip_glyph, self.clip_box.as_ref()) {
+        if self.layers.len() >= MAX_COLOR_LAYERS {
+            return;
+        }
+        let Some(&(clip_glyph, clip_box)) = self.clips.last() else {
+            return;
+        };
+        let elements = match (clip_glyph, clip_box.as_ref()) {
             (Some(glyph_id), _) => self.glyph_elements(glyph_id),
             (None, Some(rect)) => Self::rect_elements(rect),
             (None, None) => return,
@@ -331,7 +345,11 @@ impl ColorPainter for RecordingPainter<'_, '_> {
         self.layers.push(ColorLayer {
             elements,
             paint: self.paint(brush),
-            composite: self.composite.clone(),
+            composite: self
+                .composites
+                .last()
+                .cloned()
+                .unwrap_or_else(|| "SrcOver".to_string()),
         });
     }
 
@@ -341,8 +359,7 @@ impl ColorPainter for RecordingPainter<'_, '_> {
         brush_transform: Option<Transform>,
         brush: Brush<'_>,
     ) {
-        // The default implementation pushes the clip glyph and fills; doing it
-        // directly avoids a redundant outline lookup.
+        // Avoid the default implementation's redundant outline lookup.
         if let Some(transform) = brush_transform {
             self.push_transform(transform);
             self.push_clip_glyph(glyph_id);
@@ -357,6 +374,103 @@ impl ColorPainter for RecordingPainter<'_, '_> {
     }
 
     fn push_layer(&mut self, composite_mode: CompositeMode) {
-        self.composite = format!("{composite_mode:?}");
+        self.composites.push(format!("{composite_mode:?}"));
+    }
+
+    fn pop_layer(&mut self) {
+        // The trait default would leak the innermost layer's composite mode.
+        if self.composites.len() > 1 {
+            self.composites.pop();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::limits::{MAX_COLOR_LAYERS, MAX_TRANSFORM_DEPTH};
+    use read_fonts::model::Font as ModelFont;
+    use read_fonts::types::BoundingBox;
+
+    /// A real font is only needed to build the scaler; the painter never
+    /// reads its outlines in these tests because the clip is a rectangle.
+    fn font_bytes() -> &'static [u8] {
+        include_bytes!("../../example/assets/fonts/Inter.ttf")
+    }
+
+    fn recording_painter(palette: Vec<u32>) -> RecordingPainter {
+        let model = ModelFont::new(font_bytes(), 0).expect("font model");
+        RecordingPainter::new(ScalerFont::unhinted(model, None), palette)
+    }
+
+    #[test]
+    fn color_layers_are_capped() {
+        let mut painter = recording_painter(vec![0xFF00_0000]);
+        let clip = BoundingBox::<f32> {
+            x_min: 0.0,
+            y_min: 0.0,
+            x_max: 10.0,
+            y_max: 10.0,
+        };
+        for _ in 0..MAX_COLOR_LAYERS + 32 {
+            painter.push_clip_box(clip);
+            painter.fill(Brush::Solid {
+                palette_index: 0,
+                alpha: 1.0,
+            });
+            painter.pop_clip();
+        }
+        assert_eq!(painter.layers.len(), MAX_COLOR_LAYERS);
+    }
+
+    #[test]
+    fn nested_clips_and_layers_restore_their_outer_state() {
+        let mut painter = recording_painter(vec![0xFF00_0000]);
+        let outer = BoundingBox::<f32> {
+            x_min: 0.0,
+            y_min: 0.0,
+            x_max: 10.0,
+            y_max: 10.0,
+        };
+        let inner = BoundingBox::<f32> {
+            x_min: 2.0,
+            y_min: 2.0,
+            x_max: 4.0,
+            y_max: 4.0,
+        };
+        let solid = Brush::Solid {
+            palette_index: 0,
+            alpha: 1.0,
+        };
+        painter.push_clip_box(outer);
+        painter.fill(solid.clone());
+        painter.push_layer(CompositeMode::SrcIn);
+        painter.push_clip_box(inner);
+        painter.fill(solid.clone());
+        painter.pop_clip();
+        painter.pop_layer();
+        painter.fill(solid);
+
+        assert_eq!(painter.layers.len(), 3);
+        assert_eq!(painter.layers[0].elements[0].points, vec![0.0, 0.0]);
+        assert_eq!(painter.layers[1].elements[0].points, vec![2.0, 2.0]);
+        assert_eq!(painter.layers[2].elements[0].points, vec![0.0, 0.0]);
+        assert_eq!(painter.layers[0].composite, "SrcOver");
+        assert_eq!(painter.layers[1].composite, "SrcIn");
+        assert_eq!(painter.layers[2].composite, "SrcOver");
+    }
+
+    #[test]
+    fn deep_transform_stacks_stay_balanced() {
+        let mut painter = recording_painter(Vec::new());
+        for _ in 0..MAX_TRANSFORM_DEPTH + 32 {
+            painter.push_transform(Transform::default());
+        }
+        assert_eq!(painter.transforms.len(), MAX_TRANSFORM_DEPTH);
+        for _ in 0..MAX_TRANSFORM_DEPTH + 32 {
+            painter.pop_transform();
+        }
+        assert!(painter.transforms.is_empty());
+        assert_eq!(painter.dropped_transforms, 0);
     }
 }

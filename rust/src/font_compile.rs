@@ -29,8 +29,8 @@ use write_fonts::tables::gpos::{
     Gpos, PairPos, PairSet, PairValueRecord, PositionLookup, PositionLookupList, ValueRecord,
 };
 use write_fonts::tables::gsub::{
-    Gsub, Ligature, LigatureSet, LigatureSubstFormat1, SingleSubst, SubstitutionLookup,
-    SubstitutionLookupList,
+    AlternateSet, AlternateSubstFormat1, Gsub, Ligature, LigatureSet, LigatureSubstFormat1,
+    MultipleSubstFormat1, Sequence, SingleSubst, SubstitutionLookup, SubstitutionLookupList,
 };
 use write_fonts::tables::gvar::{GlyphDelta, GlyphDeltas, GlyphVariations, Gvar};
 use write_fonts::tables::head::Head;
@@ -106,12 +106,7 @@ pub fn build_ttf(request: &FontBuildRequest) -> Result<Vec<u8>> {
     // Glyph 0 is always `.notdef`, then one glyph per requested character, and
     // finally the glyphs no `cmap` entry points at: stylistic alternates,
     // ligature glyphs and `COLR` layers.
-    // Two glyphs claiming the same code point used to be resolved in two
-    // different places: `gid_of` below keeps the *last* one (HashMap::collect),
-    // while the cmap keeps the *first* one (`Cmap::from_mappings` sorts and
-    // dedups before it checks for conflicts, so its conflict detection never
-    // fires). The result compiles but references glyphs the cmap never points
-    // at, so reject it here instead.
+    // Keep the first glyph for a duplicate code point, matching `cmap`.
     let mut seen: HashMap<u32, usize> = HashMap::new();
     for (index, spec) in request.glyphs.iter().enumerate() {
         if let Some(&previous) = seen.get(&spec.code_point) {
@@ -580,7 +575,7 @@ pub fn build_ttf(request: &FontBuildRequest) -> Result<Vec<u8>> {
     // --- substitutions and ligatures ---------------------------------------
     let feature_names = build_feature_names(request, &mut name_records, &mut next_name_id);
     if !substitutions.is_empty() || !ligature_specs.is_empty() {
-        let gsub = build_gsub(&substitutions, &ligature_specs, &feature_names)?;
+        let gsub = build_gsub(&substitutions, &ligature_specs, &[], &[], &feature_names)?;
         builder.add_table(&gsub)?;
     }
 
@@ -737,6 +732,8 @@ fn build_fvar(request: &FontBuildRequest, axes: &[Axis], instance_base: u16) -> 
 pub(crate) fn build_gsub(
     substitutions: &[(Tag, u32, u32)],
     ligatures: &[(Tag, Vec<u32>, u32)],
+    multiple_substs: &[(Tag, u32, Vec<u32>)],
+    alternate_substs: &[(Tag, u32, Vec<u32>)],
     feature_names: &BTreeMap<Tag, NameId>,
 ) -> Result<Gsub> {
     // `BTreeMap` keeps the tags sorted, which the `FeatureList` requires.
@@ -757,7 +754,34 @@ pub(crate) fn build_gsub(
         ));
     }
 
-    let mut tags: Vec<Tag> = singles.keys().chain(ligas.keys()).copied().collect();
+    let mut multiples: BTreeMap<Tag, Vec<(GlyphId16, Vec<GlyphId16>)>> = BTreeMap::new();
+    for (tag, from, replacements) in multiple_substs {
+        multiples.entry(*tag).or_default().push((
+            GlyphId16::new(to_u16(*from)),
+            replacements
+                .iter()
+                .map(|gid| GlyphId16::new(to_u16(*gid)))
+                .collect(),
+        ));
+    }
+    let mut alternates: BTreeMap<Tag, Vec<(GlyphId16, Vec<GlyphId16>)>> = BTreeMap::new();
+    for (tag, from, replacements) in alternate_substs {
+        alternates.entry(*tag).or_default().push((
+            GlyphId16::new(to_u16(*from)),
+            replacements
+                .iter()
+                .map(|gid| GlyphId16::new(to_u16(*gid)))
+                .collect(),
+        ));
+    }
+
+    let mut tags: Vec<Tag> = singles
+        .keys()
+        .chain(ligas.keys())
+        .chain(multiples.keys())
+        .chain(alternates.keys())
+        .copied()
+        .collect();
     tags.sort_by_key(|tag| tag.to_string());
     tags.dedup();
 
@@ -813,7 +837,42 @@ pub(crate) fn build_gsub(
                 vec![LigatureSubstFormat1::new(
                     CoverageTable::Format1(CoverageFormat1::new(coverage)),
                     sets,
-                )],
+                )
+                .into()],
+            )));
+        }
+
+        if let Some(entries) = multiples.get(&tag) {
+            let coverage: Vec<GlyphId16> = entries.iter().map(|(from, _)| *from).collect();
+            let sequences: Vec<Sequence> = entries
+                .iter()
+                .map(|(_, ids)| Sequence::new(ids.clone()))
+                .collect();
+            indices.push(lookups.len() as u16);
+            lookups.push(SubstitutionLookup::Multiple(Lookup::new(
+                LookupFlag::empty(),
+                vec![MultipleSubstFormat1::new(
+                    CoverageTable::Format1(CoverageFormat1::new(coverage)),
+                    sequences,
+                )
+                .into()],
+            )));
+        }
+
+        if let Some(entries) = alternates.get(&tag) {
+            let coverage: Vec<GlyphId16> = entries.iter().map(|(from, _)| *from).collect();
+            let sets: Vec<AlternateSet> = entries
+                .iter()
+                .map(|(_, ids)| AlternateSet::new(ids.clone()))
+                .collect();
+            indices.push(lookups.len() as u16);
+            lookups.push(SubstitutionLookup::Alternate(Lookup::new(
+                LookupFlag::empty(),
+                vec![AlternateSubstFormat1::new(
+                    CoverageTable::Format1(CoverageFormat1::new(coverage)),
+                    sets,
+                )
+                .into()],
             )));
         }
 
@@ -851,12 +910,13 @@ pub(crate) fn build_gsub(
         })
         .collect();
 
-    Ok(Gsub {
-        script_list: OffsetMarker::new(ScriptList::new(scripts)),
-        feature_list: OffsetMarker::new(FeatureList::new(feature_records)),
-        lookup_list: OffsetMarker::new(SubstitutionLookupList::new(lookups)),
-        feature_variations: None.into(),
-    })
+    // `Gsub::new` writes the original 16-bit header; the 2026 32-bit header
+    // fields it gained in write-fonts 0.56 stay null.
+    Ok(Gsub::new(
+        ScriptList::new(scripts),
+        FeatureList::new(feature_records),
+        SubstitutionLookupList::new(lookups),
+    ))
 }
 
 /// A readable name for a glyph index, used in error messages.
@@ -1028,10 +1088,7 @@ fn advance_rows(
     // Without a `DeltaSetIndexMap` the row index *is* the glyph id, so rows have
     // to be laid out in glyph id order:
     //   [.notdef, base glyphs..., alternates..., ligatures..., color layers...]
-    // Padding a base glyph with zeros right after its own row (rather than at
-    // the end) shifted every later row onto the wrong glyph, which silently
-    // interpolated the wrong advance widths as soon as the font had a single
-    // stylistic alternate.
+    // Padding out of order shifts every later row onto the wrong glyph.
     let mut rows: Vec<Vec<i32>> = vec![vec![0; region_coords.len()]];
     for (index, spec) in request.glyphs.iter().enumerate() {
         let default_advance = advances.get(index + 1).copied().unwrap_or(0.0);
@@ -1373,12 +1430,8 @@ pub(crate) fn build_kern_gpos(
     glyph_for: impl Fn(u32) -> Result<GlyphId16>,
 ) -> Result<Gpos> {
     // `PairPos` format 1 is one coverage entry (the left glyph) per pair set.
-    //
-    // Both the coverage array and the records inside a pair set are looked up
-    // with a binary search (`read_fonts`: `CoverageTable::get` and
-    // `PairSet::find_pair_value_record`), so they must be sorted by glyph id.
-    // Collecting into `BTreeMap`s keeps them in order and drops the linear
-    // scan per pair that an unsorted `Vec` needed.
+    // Both the coverage array and each pair set's records are binary searched,
+    // so `BTreeMap` keeps them sorted by glyph id.
     let mut by_left: BTreeMap<GlyphId16, BTreeMap<GlyphId16, i16>> = BTreeMap::new();
     for pair in pairs {
         let left = glyph_for(pair.left)?;
@@ -1570,11 +1623,8 @@ fn build_gvar(
         variations.push(GlyphVariations::new(gid, deltas));
     }
 
-    // `gvar` stores one offset per glyph id, so it needs an entry for every
-    // glyph in the font - not just the ones the `cmap` points at. Stylistic
-    // alternates, ligatures and `COLR` layers come after the base glyphs and
-    // never vary, but they still need a (empty) record, otherwise the table is
-    // shorter than `maxp.numGlyphs` and readers index past its end.
+    // `gvar` needs an entry for every glyph id, even ones that never vary;
+    // otherwise the table is shorter than `maxp.numGlyphs`.
     while variations.len() < num_glyphs as usize {
         let gid = GlyphId::new(variations.len() as u32);
         variations.push(GlyphVariations::new(gid, Vec::new()));
@@ -1630,10 +1680,8 @@ fn build_deltas(
         ));
     }
 
-    // `gvar` deltas cover the glyph points plus four phantom points (left side
-    // bearing, advance width and the vertical pair). They stay zero here, but
-    // they have to be present: readers size their delta buffer as
-    // `num_points + 4` and ignore a shorter array.
+    // `gvar` deltas cover the points plus four phantom points, which must be
+    // present even when zero: readers size the buffer as `num_points + 4`.
     let deltas = default_flat
         .iter()
         .zip(master_flat.iter())
@@ -1739,7 +1787,7 @@ fn build_composite(parts: &[CompositePart], glyphs: &[Glyph]) -> Result<Glyph> {
             yy: F2Dot14::from_f32(part.scale as f32),
         };
         let component = Component::new(
-            GlyphId16::new(to_u16(part.gid)),
+            GlyphId16::new(to_u16(part.gid)).into(),
             Anchor::Offset {
                 x: part.dx.round() as i16,
                 y: part.dy.round() as i16,
@@ -1969,7 +2017,9 @@ mod tests {
     use crate::api::build::{
         FontBuildRequest, GlyphSpec, NamedInstanceSpec, StylisticAlternate, VariationAxisSpec,
     };
-    use skrifa::{instance::Size, MetadataProvider};
+    use read_fonts::model::glyph::outline::DrawMemory;
+    use read_fonts::model::Font as ModelFont;
+    use skrifa::{instance::Size, MetadataProvider, ScalerFont};
 
     fn bar(y_min: f64, y_max: f64, half_height: f64) -> GlyphContour {
         let y0 = y_min - half_height;
@@ -2031,13 +2081,12 @@ mod tests {
         assert_eq!(glyph.to_u32(), 1);
 
         let mut elements = Vec::new();
-        font.outline_glyphs()
-            .get(glyph)
+        let scaler =
+            ScalerFont::unhinted(ModelFont::new(bytes.clone(), 0).expect("font model"), None);
+        scaler
+            .outline(glyph)
             .expect("outline")
-            .draw(
-                Size::unscaled(),
-                &mut elements as &mut Vec<read_fonts::model::glyph::outline::PathElement>,
-            )
+            .draw(DrawMemory::Scratch, &mut elements)
             .expect("draw");
         assert!(!elements.is_empty());
     }
@@ -2556,10 +2605,8 @@ mod tests {
     fn kern_pairs_are_sorted_whatever_order_they_are_declared_in() {
         use read_fonts::TableProvider;
 
-        // 'V' is glyph 2 and 'A' is glyph 1, and the pairs are declared V->A
-        // first. A coverage table built in declaration order is not ascending,
-        // and `read_fonts` looks it up with a binary search, so nothing would
-        // ever match and every kern would silently do nothing.
+        // Coverage must ascend by glyph id: `read_fonts` binary searches it,
+        // so declaration order would make every kern silently do nothing.
         let bytes = build_ttf(&FontBuildRequest {
             glyphs: vec![
                 GlyphSpec {
@@ -2663,20 +2710,18 @@ mod tests {
 
         // gvar stores one offset per glyph id, so a table that stops at the
         // cmap glyphs is shorter than maxp.numGlyphs and breaks every reader.
+        // skrifa now reports glyph counts as u32; gvar still stores a u16.
         assert_eq!(
             font.gvar().expect("gvar").glyph_count(),
-            num_glyphs,
+            u16::try_from(num_glyphs).expect("fixture fits in u16"),
             "gvar must cover every glyph id"
         );
     }
 
     #[test]
     fn hvar_rows_stay_aligned_with_glyph_ids_when_alternates_exist() {
-        // 一 (glyph 1) owns an alternate, so the alternate ends up as glyph 3
-        // while 二 stays glyph 2. Without a DeltaSetIndexMap the row index *is*
-        // the glyph id, so the padding for the alternate belongs at the end;
-        // putting it next to its own base glyph moves every later row onto the
-        // wrong glyph and interpolates the wrong advance widths.
+        // Without a DeltaSetIndexMap the row index *is* the glyph id, so the
+        // alternate's padding belongs at the end, not next to its base glyph.
         let bytes = build_ttf(&FontBuildRequest {
             glyphs: vec![
                 GlyphSpec {
@@ -2823,10 +2868,12 @@ mod tests {
         // Drawing the composite has to place both copies of the component, so
         // the outline reaches past the first one.
         let mut elements: Vec<read_fonts::model::glyph::outline::PathElement> = Vec::new();
-        font.outline_glyphs()
-            .get(gid_b)
+        let scaler =
+            ScalerFont::unhinted(ModelFont::new(bytes.clone(), 0).expect("font model"), None);
+        scaler
+            .outline(gid_b)
             .expect("outline")
-            .draw(Size::unscaled(), &mut elements)
+            .draw(DrawMemory::Scratch, &mut elements)
             .expect("draw");
         let mut y_max = f32::MIN;
         for element in &elements {
@@ -2930,6 +2977,11 @@ mod tests {
             panic!("expected a ligature subtable");
         };
         let lig = subtables.get(0).expect("subtable");
+        // read-fonts 0.47 wraps each lookup subtable in an enum: format 1 is
+        // the original layout, format 2 is the 2026 24-bit glyph id variant.
+        let read_fonts::tables::gsub::LigatureSubst::Format1(lig) = lig else {
+            panic!("expected an original format 1 ligature subtable");
+        };
         // 'f' (glyph 1) is the first glyph of the sequence.
         assert_eq!(lig.coverage().expect("coverage").get(1u32), Some(0));
         let ligature_set = lig.ligature_sets().get(0).expect("ligature set");

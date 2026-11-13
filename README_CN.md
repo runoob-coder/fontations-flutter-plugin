@@ -1,7 +1,9 @@
 # fontations
 
 <div align="center">
-   <img src="https://github.com/runoob-coder/fontations-flutter-plugin/blob/main/googlefonts.svg" width="200" style="width: 200px;" alt="fontations">
+   <a href="https://runoob-coder.github.io/fontations-flutter-plugin/">
+      <img src="https://github.com/runoob-coder/fontations-flutter-plugin/blob/main/googlefonts.svg" width="200" style="width: 200px;" alt="fontations">
+   </a>
 </div>
 
 为 Flutter 提供 [fontations](https://github.com/googlefonts/fontations) Rust 字体库的绑定，绑定代码由 [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 自动生成。

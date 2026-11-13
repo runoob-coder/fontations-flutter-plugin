@@ -1,23 +1,5 @@
-// Unit tests for the package itself.
-//
-// They run on the Dart VM, which means the Rust library has to be built for the
-// host first:
-//
+// Requires the host Rust library:
 //   (cd rust && cargo build --release) && flutter test
-//
-// They are *not* run in a browser. The web build of the crate needs the
-// `pkg/fontations.js` and `pkg/fontations_bg.wasm` files to be served next to
-// the page *and* the two cross origin isolation headers (see
-// `scripts/coop_server.py`); the `flutter test --platform chrome` harness does
-// neither, so `initFontations()` there never resolves. The browser path is
-// checked by hand instead:
-//
-//   ./scripts/build_web.sh
-//   cd example && flutter build web --no-web-resources-cdn
-//   python3 ../scripts/coop_server.py build/web 8080
-//
-// `example/integration_test/` covers the same ground on native platforms, since
-// integration tests cannot run on a web device at all.
 @TestOn('vm')
 library;
 
@@ -36,17 +18,11 @@ GlyphContour bar(double y) => GlyphContour(
   ],
 );
 
-void main() {
-  setUpAll(initFontations);
-
-  test('reports the versions it was built against', () {
-    expect(fontationsVersion(), contains('skrifa'));
-  });
-
-  test('builds a font and reads it back', () async {
-    final bytes = await buildFont(
+/// A minimal font with one 'A' glyph, used by the reader tests below.
+Future<Uint8List> oneGlyphFont(String family, {double? advanceWidth}) =>
+    buildFont(
       request: FontBuildRequest(
-        familyName: 'UnitTest',
+        familyName: family,
         unitsPerEm: 1000,
         ascender: 800,
         descender: -200,
@@ -54,7 +30,7 @@ void main() {
           GlyphSpec(
             codePoint: 0x41,
             contours: [bar(430)],
-            advanceWidth: 600,
+            advanceWidth: advanceWidth,
             masters: const [],
             alternates: const [],
             components: const [],
@@ -70,6 +46,16 @@ void main() {
         palette: Uint32List(0),
       ),
     );
+
+void main() {
+  setUpAll(initFontations);
+
+  test('reports the versions it was built against', () {
+    expect(fontationsVersion(), contains('skrifa'));
+  });
+
+  test('builds a font and reads it back', () async {
+    final bytes = await oneGlyphFont('UnitTest', advanceWidth: 600);
 
     final info = readFontInfo(bytes: bytes);
     expect(info.names.family, 'UnitTest');
@@ -119,5 +105,66 @@ void main() {
     expect(result.glyphs.map((glyph) => glyph.glyphId), [1, 2]);
     // Two ems of advance, minus the 80 unit kern.
     expect(result.advance, 1920);
+  });
+
+  test('draws outlines through the skrifa 0.50 scaler', () async {
+    final font = Font.fromBytes(bytes: await oneGlyphFont('Scaler'));
+    final glyphId = font.charToGlyph(codePoint: 0x41)!;
+
+    final plain = await font.outline(
+      glyphId: glyphId,
+      size: 48,
+      variations: const [],
+    );
+    expect(plain.elements, isNotEmpty);
+    expect(plain.format, 'glyf');
+    expect(plain.scaler.outlineSource, 'glyf');
+    expect(plain.scaler.isHinted, isFalse);
+    expect(plain.scaler.hintEngine, isNull);
+    expect(plain.scaler.dropoutControl, 'simple');
+    expect(plain.advanceWidth, closeTo(48.0, 0.01));
+
+    const hinting = HintingSpec(
+      engine: HintEngineKind.auto,
+      target: RasterTargetKind.mono,
+      preserveLinearMetrics: true,
+    );
+    final hinted = await font.outline(
+      glyphId: glyphId,
+      size: 24,
+      variations: const [],
+      hinting: hinting,
+    );
+    expect(hinted.scaler.hintEngine, 'auto');
+    expect(hinted.scaler.isHinted, isTrue);
+    expect(hinted.scaler.hintedPpem, 24);
+    expect(hinted.scaler.drawnAdvance, isNotNull);
+    expect(hinted.scaler.symmetricSmoothing, isNull);
+
+    // A batch must agree with a single draw.
+    final batch = await font.outlines(
+      glyphIds: [glyphId, glyphId],
+      size: 24,
+      variations: const [],
+      hinting: hinting,
+    );
+    expect(batch, hasLength(2));
+    for (final outline in batch) {
+      expect(outline.scaler, hinted.scaler);
+      expect(outline.advanceWidth, hinted.advanceWidth);
+      expect(
+        outline.elements.map((e) => e.points.toList()).toList(),
+        hinted.elements.map((e) => e.points.toList()).toList(),
+      );
+    }
+
+    // Hinting needs a size: font units stay unhinted even with a spec.
+    final unscaled = await font.outline(
+      glyphId: glyphId,
+      variations: const [],
+      hinting: hinting,
+    );
+    expect(unscaled.scaler.isHinted, isFalse);
+    expect(unscaled.scaler.hintEngine, isNull);
   });
 }

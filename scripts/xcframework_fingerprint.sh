@@ -9,8 +9,10 @@
 # that whoever changed `rust/` also reran the packaging script.
 #
 # The fingerprint deliberately covers the whole crate (sources, `Cargo.toml`,
-# `Cargo.lock`, `build.rs`, `.cargo/config.toml`) and excludes `target/`, which
-# is 2 GB of intermediate artifacts that must not affect the result.
+# `Cargo.lock`, `build.rs`, `.cargo/config.toml`) and excludes build output:
+# `target/` (2 GB of intermediate artifacts) plus the gitignored fuzz
+# `corpus/`, `artifacts/` and `coverage/`. A local fuzz smoke run must not make
+# a correctly packaged XCFramework look stale.
 
 set -euo pipefail
 
@@ -31,7 +33,12 @@ fontations_sha256() {
 fontations_rust_fingerprint() {
   local rust_dir=$1
 
-  find "$rust_dir" -type f -not -path '*/target/*' -print |
+  find "$rust_dir" -type f \
+    -not -path '*/target/*' \
+    -not -path '*/corpus/*' \
+    -not -path '*/artifacts/*' \
+    -not -path '*/coverage/*' \
+    -print |
     LC_ALL=C sort |
     while IFS= read -r file; do
       printf '%s ' "${file#"$rust_dir"/}"

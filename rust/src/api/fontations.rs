@@ -1336,13 +1336,14 @@ impl Font {
     }
 
     /// Maps a Unicode code point to a glyph id, if the font covers it.
+    /// Non-scalars must not fall back to U+0000 (often a real glyph).
     #[frb(sync)]
     pub fn char_to_glyph(&self, code_point: u32) -> Result<Option<u32>> {
+        let Some(ch) = char::from_u32(code_point) else {
+            return Ok(None);
+        };
         let font = self.font_ref()?;
-        Ok(font
-            .charmap()
-            .map(char::from_u32(code_point).unwrap_or('\u{0}'))
-            .map(|id| id.to_u32()))
+        Ok(font.charmap().map(ch).map(|id| id.to_u32()))
     }
 
     /// Advance width of a glyph, in the requested size (or font units).
@@ -2241,6 +2242,21 @@ mod tests {
 
         assert_eq!(font.char_to_glyph('A' as u32).unwrap(), Some(1));
         assert_eq!(font.glyph_to_char(2).unwrap(), Some('V' as u32));
+    }
+
+    #[test]
+    fn invalid_code_points_do_not_fall_back_to_a_glyph() {
+        let font = sample_font();
+        // Surrogates, >U+10FFFF and negative Dart ints (large u32s).
+        for code_point in [0xD800, 0x110000, 0x7FFF_FFFF, u32::MAX] {
+            assert_eq!(
+                font.char_to_glyph(code_point).unwrap(),
+                None,
+                "{code_point:#x}"
+            );
+        }
+        assert_eq!(font.char_to_glyph(0x10FFFF).unwrap(), None);
+        assert_eq!(font.char_to_glyph(0x41).unwrap(), Some(1));
     }
 
     #[test]

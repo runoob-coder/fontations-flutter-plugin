@@ -1,8 +1,17 @@
 name: fontations
-description: "Flutter bindings for the fontations font stack (read-fonts / skrifa), powered by flutter_rust_bridge."
-version: 0.0.1
-homepage: https://github.com/runoob-coder/fontations-flutter-plugin
+description: "Dart bindings for the Rust-based fontations font stack (read-fonts, skrifa, write-fonts) — read, shape and write OpenType fonts."
+version: 0.1.0
+homepage: https://runoob-coder.github.io/fontations-flutter-plugin
 repository: https://github.com/runoob-coder/fontations-flutter-plugin
+topics:
+  - font
+  - opentype
+  - typography
+  - variable-fonts
+  - font-subsetting
+screenshots:
+  - description: fontations
+    path: googlefonts.png
 
 environment:
   sdk: ^3.13.5
@@ -15,7 +24,7 @@ dependencies:
   # plugin that declares the web platform.
   flutter_web_plugins:
     sdk: flutter
-  flutter_rust_bridge: 2.13.0
+  flutter_rust_bridge: ^2.13.0
 
 dev_dependencies:
   flutter_test:

@@ -15,12 +15,6 @@ import 'theme_switcher.dart';
 enum _PreviewMode { outline, color, bitmap }
 
 /// Browses the character map and inspects one glyph at a time.
-///
-/// This is the reading-side companion to the info page: instead of listing
-/// font-wide metadata it answers "what does glyph N look like, how wide is it,
-/// and which optional tables describe it?". It also demonstrates the readers
-/// that need a canvas: `ColorGlyphInfo.paint` for `COLR` layers and the RGBA /
-/// PNG bytes of embedded bitmap strikes.
 class GlyphBrowserPage extends StatefulWidget {
   const GlyphBrowserPage({super.key});
 

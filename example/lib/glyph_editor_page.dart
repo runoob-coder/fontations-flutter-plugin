@@ -465,9 +465,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= wideBreakpoint;
 
-          // Kept apart from the `Expanded` that wraps it: the stacked layout
-          // needs its own `Expanded`, and nesting two of them around one child
-          // is what "competing ParentDataWidgets" complains about.
+          // Keep this `Expanded` separate to avoid competing ParentDataWidgets.
           final boardContent = Center(
             child: LayoutBuilder(
               builder: (context, box) {
@@ -490,9 +488,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
           );
           final board = Expanded(flex: 5, child: boardContent);
 
-          // A control panel stretched across a wide monitor is unreadable, but
-          // the width has to stay tight: loose constraints would let the panel
-          // size itself to its widest child and overflow on a phone.
+          // Cap the panel width for wide screens and phones.
           const maxControlWidth = 560.0;
           final controls = Expanded(
             flex: 4,
@@ -648,10 +644,7 @@ extension on List<List<Offset>> {
   List<List<Offset>> copy() => map((s) => List<Offset>.from(s)).toList();
 }
 
-/// Resamples a stroke to exactly [count] points, evenly spaced by arc length.
-///
-/// This is what makes two drawings of the same character point compatible,
-/// which `gvar` requires.
+/// Resamples a stroke to [count] evenly spaced points, as `gvar` requires.
 List<Offset> _resample(List<Offset> points, int count) {
   if (points.isEmpty || count < 2) return const <Offset>[];
   if (points.length == 1) return List<Offset>.filled(count, points.first);
@@ -682,10 +675,7 @@ List<Offset> _resample(List<Offset> points, int count) {
   return result;
 }
 
-/// Converts a polyline into a closed "thick stroke" outline.
-///
-/// Strokes are open, but a `glyf` contour is always filled, so each stroke is
-/// inflated to `2 * half` width with round caps.
+/// Converts a polyline into a closed thick-stroke outline with round caps.
 List<Offset> _strokeOutline(List<Offset> points, double half) {
   const capSegments = 10;
   if (points.isEmpty) return const <Offset>[];

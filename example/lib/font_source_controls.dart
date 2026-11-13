@@ -4,12 +4,7 @@ import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'l10n/app_localizations.dart';
 
-/// The one place every demo offers the question "which font am I looking at?".
-///
-/// The reading, shaping, glyph and tools pages all follow [fontSource], so all
-/// of them need to be able to open a file without a trip back to the first tab.
-/// Listening here (rather than in each page's state) keeps the picker spinner
-/// and the most recent failure in sync everywhere.
+/// Shared font picker for every page.
 class FontSourceControls extends StatelessWidget {
   const FontSourceControls({super.key, this.compact = false});
 
@@ -74,8 +69,7 @@ class FontSourceControls extends StatelessWidget {
               SizedBox(width: 110, child: Text(l.sourceCollection)),
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  // The face index lives on `LoadedFont`, so a rebuilt page
-                  // must not keep the previous file's selection.
+                  // Rebuild when the file or face changes.
                   key: ValueKey('${current.name}:${current.index}'),
                   initialValue: current.index,
                   isDense: true,
@@ -134,8 +128,7 @@ class FontSourceControls extends StatelessWidget {
   }
 }
 
-/// `FontSource.error` used to be write-only: a failed pick changed nothing on
-/// screen, so it looked like the button simply did not work.
+/// Banner for a failed font pick.
 class _OpenError extends StatelessWidget {
   const _OpenError({required this.error});
 

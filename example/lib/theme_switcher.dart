@@ -2,12 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import 'l10n/app_localizations.dart';
 
-/// Shared by [ThemeMenu] and `MaterialApp` so an AppBar selection takes effect
-/// without any page knowing about the app widget.
-///
-/// `ThemeMode.system` is the default: with both `theme` and `darkTheme`
-/// supplied, Flutter picks one from `MediaQuery.platformBrightness` and also
-/// follows changes made in the OS settings while the app is running.
+/// Shared by [ThemeMenu] and `MaterialApp`; follows the system brightness by
+/// default.
 final ValueNotifier<ThemeMode> appThemeMode = ValueNotifier<ThemeMode>(
   ThemeMode.system,
 );

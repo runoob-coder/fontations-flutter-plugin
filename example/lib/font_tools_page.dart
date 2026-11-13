@@ -11,9 +11,7 @@ import 'l10n/app_localizations.dart';
 import 'locale_switcher.dart';
 import 'theme_switcher.dart';
 
-/// The parts of the API that are neither "read metadata" nor "shape a string":
-/// raw table bytes, the less common structured tables, and the upstream
-/// write/patch entry points `subsetFont` / `modifyFont` / `withVariations`.
+/// Raw tables, structured tables and the upstream write/patch entry points.
 class FontToolsPage extends StatefulWidget {
   const FontToolsPage({super.key});
 
@@ -181,9 +179,7 @@ class _FontToolsPageState extends State<FontToolsPage> {
 
   void _selectTable(String tag) => _readTable(tag);
 
-  /// A pinned handle is a *view* of the same bytes at a fixed location, not a
-  /// compiled static instance: `pinnedVariations()` reports what it holds and
-  /// an empty `variations` list still uses the pinned settings.
+  /// A pinned handle is a view of the same bytes at a fixed location.
   void _computePin() {
     final font = _font;
     final info = _info;

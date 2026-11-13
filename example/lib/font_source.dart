@@ -43,10 +43,7 @@ class LoadedFont {
   int get hashCode => Object.hash(name, index, identityHashCode(bytes));
 }
 
-/// The font every reading page shares.
-///
-/// Besides the file bytes this owns the single [Font] handle, so switching
-/// pages (or opening a file) does not parse the same bytes four times.
+/// The font shared by every reading page.
 class FontSource extends ChangeNotifier {
   LoadedFont? _current;
   final List<LoadedFont> _opened = <LoadedFont>[];
@@ -54,19 +51,14 @@ class FontSource extends ChangeNotifier {
   Font? _cachedFont;
   LoadedFont? _cachedFor;
 
-  /// Kept apart from [notifyListeners]: showing the picker spinner must not
-  /// make four pages re-read a font that has not changed.
+  /// Separate from [notifyListeners] so the spinner does not reload pages.
   final ValueNotifier<bool> picking = ValueNotifier<bool>(false);
 
   LoadedFont? get current => _current;
   List<LoadedFont> get opened => List.unmodifiable(_opened);
   Object? get error => _error;
 
-  /// One `Font` per open file/face, shared by all pages.
-  ///
-  /// `Font` is an immutable Rust handle with no dispose API; `withVariations`
-  /// returns a new handle instead of mutating it. The getter is lazy so a parse
-  /// failure is reported by the page that can show it rather than at startup.
+  /// Lazily parsed, shared [Font] handle.
   Font get font {
     final loaded = _current;
     if (loaded == null) throw StateError('No font is open');
@@ -98,9 +90,6 @@ class FontSource extends ChangeNotifier {
   }
 
   /// Shows the system open panel and reads whatever the user picks.
-  ///
-  /// [dialogTitle] comes from the caller because this notifier has no
-  /// BuildContext and therefore cannot look up the active locale itself.
   Future<void> openFile({String dialogTitle = 'Select a font file'}) async {
     if (picking.value) return;
     picking.value = true;
@@ -119,8 +108,7 @@ class FontSource extends ChangeNotifier {
         return;
       }
 
-      // `PlatformFile` knows how to read itself on every platform, so this
-      // works whether the picker hands back a path, a blob or a stream.
+      // `PlatformFile` reads itself on every platform.
       final bytes = await picked.readAsBytes();
       _add(
         LoadedFont(
@@ -136,10 +124,7 @@ class FontSource extends ChangeNotifier {
     }
   }
 
-  /// Shows [font]: a face of the current file, or a file opened before.
-  ///
-  /// It also joins the list of open files, so switching back later does not
-  /// need the picker again.
+  /// Shows [font] and adds it to the list of open files.
   void select(LoadedFont font) => _add(font);
 
   void selectFace(int index) {
@@ -149,8 +134,7 @@ class FontSource extends ChangeNotifier {
   }
 
   void _add(LoadedFont font) {
-    // [LoadedFont.] compares name, face index and byte identity, so re-picking
-    // the same face is a no-op instead of four page reloads.
+    // Re-picking the same face is a no-op.
     if (_current == font) return;
     _opened.removeWhere((existing) => existing.name == font.name);
     _opened.insert(0, font);

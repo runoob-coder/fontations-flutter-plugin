@@ -12,15 +12,8 @@ import 'locale_switcher.dart';
 import 'shaping_page.dart';
 import 'theme_switcher.dart';
 
-/// Localizations for the whole app: the generated catalog plus the Material,
-/// Cupertino and Widgets delegates that now ship in `package:material_ui`.
-///
-/// `GlobalMaterialLocalizations.delegates` is the post-3.50 replacement for
-/// `AppLocalizations.localizationsDelegates`. The latter still points at
-/// `package:flutter_localizations`, which supplies the *legacy*
-/// `MaterialLocalizations` type; mixing it with material_ui widgets makes
-/// AppBar/Tooltip/etc. fail with "No MaterialLocalizations found".
-/// See the "Decoupled localizations" section of the migration guide.
+/// Localizations for the app; `GlobalMaterialLocalizations.delegates` matches
+/// `package:material_ui`'s widgets.
 const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates = [
   AppLocalizations.delegate,
   ...GlobalMaterialLocalizations.delegates,
@@ -29,7 +22,6 @@ const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates = [
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initFontations();
-  // Start on the bundled font; the pages can open any other file afterwards.
   await fontSource.loadBundled();
   runApp(const FontationsExampleApp());
 }
@@ -39,13 +31,9 @@ class FontationsExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Both settings live outside the widget tree so the AppBar menus can
-    // change them; rebuild MaterialApp whenever either one changes.
     return ListenableBuilder(
       listenable: Listenable.merge([appLanguage, appThemeMode]),
       builder: (context, _) => MaterialApp(
-        // The device locale / brightness win unless the user picked an
-        // override in LanguageMenu or ThemeMenu.
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -99,11 +87,7 @@ List<({IconData icon, IconData selected, String label})> _destinations(
   (icon: Icons.brush_outlined, selected: Icons.brush, label: l.navEditor),
 ];
 
-/// Shell with the five demos: reading a font, shaping a run of text,
-/// inspecting glyphs, patching/subsetting a font, and writing a new one.
-///
-/// On a wide window the navigation becomes a rail and the pages lay their
-/// content out in columns, which is what a desktop window expects.
+/// Shell with the five demos; wide windows use a navigation rail.
 class ExampleShell extends StatefulWidget {
   const ExampleShell({super.key});
 
@@ -150,8 +134,6 @@ class _ExampleShellState extends State<ExampleShell> {
                 NavigationRail(
                   selectedIndex: _index,
                   onDestinationSelected: _select,
-                  // Labels come back once there is room for them, so a
-                  // maximized window does not waste the strip.
                   extended: constraints.maxWidth >= 1240,
                   minExtendedWidth: 180,
                   groupAlignment: -0.9,

@@ -30,10 +30,6 @@ const Set<String> _defaultOnFeatures = {
 };
 
 /// Applies `GSUB` and `GPOS` to a run of text and draws the result.
-///
-/// `Font.layout` describes the layout tables; this page runs them. Every glyph
-/// comes back with an advance and an offset, so a `CustomPainter` can place
-/// them the same way a text engine would.
 class ShapingPage extends StatefulWidget {
   const ShapingPage({super.key});
 
@@ -178,17 +174,14 @@ class _ShapingPageState extends State<ShapingPage> {
       .map((entry) => VariationSetting(tag: entry.key, value: entry.value))
       .toList(growable: false);
 
-  /// An OpenType tag is exactly four characters, often with a trailing space
-  /// (e.g. `TRK `), so trimming it would silently discard a valid tag.
-  /// A half-typed one means "let the font pick its default language system".
+  /// An OpenType tag is exactly four characters (trailing space included);
+  /// a half-typed one falls back to the font's default language system.
   String? _tag(TextEditingController controller) {
     final tag = controller.text;
     return tag.length == 4 && tag.trim().isNotEmpty ? tag : null;
   }
 
-  /// `shape()` and `outlines()` are native calls that can fail on a malformed
-  /// font. Keep the last good drawing on screen and report the failure instead
-  /// of letting an unhandled async error leave the page silently stale.
+  /// Keeps the last good drawing on screen when a native call fails.
   Future<void> _reshape() async {
     try {
       await _reshapeNow();

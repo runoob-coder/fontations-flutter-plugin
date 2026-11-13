@@ -2,11 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'l10n/app_localizations.dart';
 
-/// Which language the demo uses.
-///
-/// `system` leaves `MaterialApp.locale` as `null`, which is the official
-/// default: Flutter then resolves the device locale against
-/// `AppLocalizations.supportedLocales`.
+/// Which language the demo uses; `system` follows the device locale.
 enum AppLanguage { system, chinese, english }
 
 /// `null` means "follow the system locale".
@@ -23,9 +19,6 @@ final ValueNotifier<AppLanguage> appLanguage = ValueNotifier<AppLanguage>(
 );
 
 /// A compact language picker, placed in every page's AppBar.
-///
-/// Language names are written in their own language on purpose; only the
-/// "follow system" entry needs a translation.
 class LanguageMenu extends StatelessWidget {
   const LanguageMenu({super.key});
 

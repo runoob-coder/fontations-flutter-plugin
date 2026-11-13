@@ -108,21 +108,14 @@ class TagChips extends StatelessWidget {
   }
 }
 
-/// A readable version of a failure.
-///
-/// The Rust side reports through `anyhow`, whose message carries a full stack
-/// backtrace in debug builds. Only the first line says anything a user needs.
+/// A readable version of a failure (first line of an `anyhow` message).
 String describeError(Object error) {
   final firstLine = error.toString().trim().split('\n').first.trim();
   if (firstLine.length <= 200) return firstLine;
   return '${firstLine.substring(0, 200)}…';
 }
 
-/// Saves generated font bytes through a platform save dialog.
-///
-/// `dart:io` is unavailable on the web, where `saveFile` triggers a download;
-/// on desktop/mobile it writes to the path the user picked. Returns a display
-/// string for the result, or `null` when the dialog was cancelled.
+/// Saves font bytes; returns the chosen path, or `null` when cancelled.
 Future<String?> saveFontBytes({
   required String fileName,
   required Uint8List bytes,
@@ -139,22 +132,16 @@ Future<String?> saveFontBytes({
   return uri?.toString();
 }
 
-/// The one breakpoint the shell and all five pages agree on. Below it the
-/// shell uses a bottom navigation bar and pages stack their columns; at or
-/// above it pages use side-by-side columns.
+/// Breakpoint shared by the shell and all pages.
 const double wideBreakpoint = 900.0;
 
 /// A compact strip describing the most recent failure.
-///
-/// Shared so every page reports errors in the same place, including pages
-/// whose controls live in a second column on wide screens.
 class ErrorBanner extends StatelessWidget {
   const ErrorBanner(this.error, {super.key, this.message});
 
   final Object error;
 
-  /// Optional localized context in front of the raw error, e.g. "showing the
-  /// previous font". Falls back to the readable error text.
+  /// Optional localized context in front of the raw error.
   final String? message;
 
   @override
@@ -191,8 +178,7 @@ class ErrorBanner extends StatelessWidget {
   }
 }
 
-/// Shown when no font could be loaded. Keeping the picker here means a failed
-/// parse is never a dead end on any page.
+/// Shown when no font could be loaded.
 class EmptyFontHint extends StatelessWidget {
   const EmptyFontHint({
     super.key,

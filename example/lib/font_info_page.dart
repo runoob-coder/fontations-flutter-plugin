@@ -31,9 +31,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
 
   static const double _fontSize = 72.0;
 
-  /// `fontationsVersion()` is a synchronous FFI call whose result never
-  /// changes while the process runs. Lazy `static final` keeps it out of
-  /// every rebuild (slider drags, theme/locale switches, ...).
+  /// Cached: the version never changes during the process.
   static final String _version = fontationsVersion();
 
   final TextEditingController _sampleController = TextEditingController(

@@ -51,7 +51,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rustfmt
+          # -Zbuild-std needs the std sources.
+          components: rustfmt, rust-src
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: rust
@@ -70,9 +71,12 @@ jobs:
       - name: deterministic fuzz tests
         working-directory: rust/fuzz
         run: cargo test
+      # Prebuilt cargo-fuzz defaults to musl; ASan needs the GNU host.
+      - name: resolve host target triple
+        run: echo "FUZZ_TARGET=$(rustc --print host-tuple)" >> "$GITHUB_ENV"
       - name: build all fuzz targets
         working-directory: rust
-        run: cargo fuzz build
+        run: cargo fuzz build --target "$FUZZ_TARGET"
       # A short, deterministic smoke run per target. Longer campaigns belong
       # on OSS-Fuzz / a scheduled job; this catches panics, aborts, stack
       # overflows and hangs introduced by the current diff.
@@ -84,7 +88,7 @@ jobs:
             mkdir -p "fuzz/corpus/$target"
             cp fuzz/seeds/* "fuzz/corpus/$target/"
             echo "::group::$target"
-            cargo fuzz run "$target" -- \
+            cargo fuzz run --target "$FUZZ_TARGET" "$target" -- \
               -runs=5000 -max_len=8192 -timeout=5 -dict=fuzz/font.dict
             echo "::endgroup::"
           done
@@ -252,6 +256,12 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      # GTK dev files + xvfb for headless tests; sync with build_apps.yml.
+      - name: Linux build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libsecret-1-dev xvfb
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -266,8 +276,6 @@ jobs:
       - name: example dependencies
         working-directory: example
         run: flutter pub get
-      - name: install xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
       - name: integration tests
         working-directory: example
         run: xvfb-run -a flutter test integration_test/simple_test.dart -d linux

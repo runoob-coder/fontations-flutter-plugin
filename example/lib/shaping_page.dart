@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
+import 'github_button.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_switcher.dart';
 import 'theme_switcher.dart';
@@ -293,7 +294,7 @@ class _ShapingPageState extends State<ShapingPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.shapingTitle),
-        actions: const [ThemeMenu(), LanguageMenu()],
+        actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: info == null ? _buildNoFont(context) : _buildBody(context, info),
     );

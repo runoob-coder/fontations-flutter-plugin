@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'fontations demo';
 
   @override
+  String get githubTooltip => 'View on GitHub';
+
+  @override
   String get languageMenuTooltip => 'Language';
 
   @override

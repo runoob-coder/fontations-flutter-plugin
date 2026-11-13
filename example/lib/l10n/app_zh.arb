@@ -2,6 +2,7 @@
   "@@locale": "zh",
 
   "appTitle": "fontations 示例",
+  "githubTooltip": "在 GitHub 上查看",
   "languageMenuTooltip": "语言",
   "languageSystem": "跟随系统",
   "themeMenuTooltip": "主题模式",

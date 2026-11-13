@@ -105,6 +105,12 @@ abstract class AppLocalizations {
   /// **'fontations demo'**
   String get appTitle;
 
+  /// No description provided for @githubTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'View on GitHub'**
+  String get githubTooltip;
+
   /// No description provided for @languageMenuTooltip.
   ///
   /// In en, this message translates to:

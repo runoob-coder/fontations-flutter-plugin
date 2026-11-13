@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
+import 'github_button.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_switcher.dart';
 import 'theme_switcher.dart';
@@ -365,7 +366,7 @@ class _FontToolsPageState extends State<FontToolsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.toolsTitle),
-        actions: const [ThemeMenu(), LanguageMenu()],
+        actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: _error != null && info == null
           ? Message(l.fontReadError(describeError(_error!)))

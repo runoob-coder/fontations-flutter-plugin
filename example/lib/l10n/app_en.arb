@@ -2,6 +2,7 @@
   "@@locale": "en",
 
   "appTitle": "fontations demo",
+  "githubTooltip": "View on GitHub",
   "languageMenuTooltip": "Language",
   "languageSystem": "Follow system",
   "themeMenuTooltip": "Theme mode",

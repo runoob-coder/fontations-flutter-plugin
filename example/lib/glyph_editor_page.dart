@@ -6,6 +6,7 @@ import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'demo_widgets.dart';
+import 'github_button.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_switcher.dart';
 import 'theme_switcher.dart';
@@ -459,7 +460,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.editorTitle),
-        actions: const [ThemeMenu(), LanguageMenu()],
+        actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {

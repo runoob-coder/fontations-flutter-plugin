@@ -15,6 +15,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'fontations 示例';
 
   @override
+  String get githubTooltip => '在 GitHub 上查看';
+
+  @override
   String get languageMenuTooltip => '语言';
 
   @override

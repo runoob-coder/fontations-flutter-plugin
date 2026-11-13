@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
+import 'github_button.dart';
 import 'l10n/app_localizations.dart';
 import 'locale_switcher.dart';
 import 'theme_switcher.dart';
@@ -202,6 +203,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
       appBar: AppBar(
         title: const Text('fontations'),
         actions: [
+          const GitHubButton(),
           const ThemeMenu(),
           const LanguageMenu(),
           Padding(

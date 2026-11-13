@@ -1,10 +1,14 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fontations/fontations.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'demo_widgets.dart';
+import 'l10n/app_localizations.dart';
+import 'locale_switcher.dart';
+import 'theme_switcher.dart';
 
 /// The em square used for the generated font.
 const int _unitsPerEm = 1000;
@@ -57,6 +61,14 @@ class GlyphEditorPage extends StatefulWidget {
 }
 
 class _GlyphEditorPageState extends State<GlyphEditorPage> {
+  late AppLocalizations l;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    l = AppLocalizations.of(context);
+  }
+
   final TextEditingController _charController = TextEditingController(
     text: '一',
   );
@@ -86,6 +98,10 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
   String? _error;
   bool _busy = false;
   int _familyCounter = 0;
+
+  /// Dragging the interpolation slider must not let a slow outline overwrite
+  /// the position the user has since moved to.
+  int _previewToken = 0;
 
   /// Board edge length in pixels; kept in sync by the layout.
   double _boardSize = 320.0;
@@ -159,7 +175,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
   /// Saves the current strokes either as the default outline or as a master.
   void _saveShape() {
     if (_strokes.isEmpty) {
-      _showSnack('先在画板上写下「$_char」');
+      _showSnack(l.editorDrawFirst(_char));
       return;
     }
     final entry = _glyphs[_char] ?? _GlyphEntry(strokeWidth: _strokeWidth);
@@ -188,15 +204,15 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
     });
     _showSnack(
       isDefault
-          ? '已设为 $_char 的默认字形'
-          : '已保存 $_char 在 $_axisTag ${_masterValue.toInt()} 的母版',
+          ? l.editorSetDefault(_char)
+          : l.editorSavedMaster(_char, _axisTag, '${_masterValue.toInt()}'),
     );
   }
 
   /// Saves the current strokes as a discrete alternate under `ss01`..`ss20`.
   void _saveVariant() {
     if (_strokes.isEmpty) {
-      _showSnack('先在画板上写下「$_char」');
+      _showSnack(l.editorDrawFirst(_char));
       return;
     }
     final entry = _glyphs[_char] ?? const _GlyphEntry();
@@ -214,7 +230,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
       _strokes = <List<Offset>>[];
       _current = null;
     });
-    _showSnack('已把当前笔画存为 $_char 的 $_selectedSet');
+    _showSnack(l.editorSavedVariant(_char, _selectedSet));
   }
 
   // --- font building ------------------------------------------------------
@@ -222,13 +238,14 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
   Future<void> _buildFont() async {
     final entries = _collectEntries();
     if (entries.isEmpty) {
-      _showSnack('还没有任何字形，先画一笔再生成');
+      _showSnack(l.editorNoGlyphs);
       return;
     }
 
     setState(() {
       _busy = true;
       _error = null;
+      _previewToken++;
     });
 
     try {
@@ -336,9 +353,9 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
         await _renderPreview(_axisDefault);
       }
     } catch (error) {
-      setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -361,16 +378,23 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
     final font = _builtFont;
     final glyphId = _builtGlyphId;
     if (font == null || glyphId == null) return;
-    final outline = await font.outline(
-      glyphId: glyphId,
-      size: 100,
-      variations: [VariationSetting(tag: _axisTag, value: value)],
-    );
-    if (!mounted) return;
-    setState(() {
-      _previewValue = value;
-      _previewPath = outline.toPath();
-    });
+    final token = ++_previewToken;
+    try {
+      final outline = await font.outline(
+        glyphId: glyphId,
+        size: 100,
+        variations: [VariationSetting(tag: _axisTag, value: value)],
+      );
+      if (!mounted || token != _previewToken) return;
+      setState(() {
+        _previewValue = value;
+        _previewPath = outline.toPath();
+      });
+    } catch (error) {
+      if (mounted && token == _previewToken) {
+        setState(() => _error = describeError(error));
+      }
+    }
   }
 
   Future<void> _export() async {
@@ -380,12 +404,18 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
       final name = _familyController.text.trim().isEmpty
           ? 'MyHandwriting'
           : _familyController.text.trim();
-      final file = File('${Directory.systemTemp.path}/$name.ttf');
-      await file.writeAsBytes(bytes, flush: true);
-      setState(() => _exportedPath = file.path);
-      _showSnack('已导出 ${file.path}');
+      // `dart:io` is unavailable on the web, where this downloads the file
+      // instead; on desktop/mobile the user picks where to put it.
+      final path = await saveFontBytes(
+        fileName: '$name.ttf',
+        bytes: bytes,
+        dialogTitle: l.saveFontDialogTitle,
+      );
+      if (path == null || !mounted) return; // Cancelled or widget gone.
+      setState(() => _exportedPath = path);
+      _showSnack(l.savedTo(path));
     } catch (error) {
-      setState(() => _error = '$error');
+      if (mounted) setState(() => _error = describeError(error));
     }
   }
 
@@ -426,118 +456,126 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 820;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l.editorTitle),
+        actions: const [ThemeMenu(), LanguageMenu()],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= wideBreakpoint;
 
-        // Kept apart from the `Expanded` that wraps it: the stacked layout
-        // needs its own `Expanded`, and nesting two of them around one child
-        // is what "competing ParentDataWidgets" complains about.
-        final boardContent = Center(
-          child: LayoutBuilder(
-            builder: (context, box) {
-              final size = math.min(box.maxWidth, box.maxHeight);
-              _boardSize = size;
-              return SizedBox(
-                width: size,
-                height: size,
-                child: _Board(
-                  strokes: _strokes,
-                  current: _current,
-                  strokeWidth: _strokeWidth,
-                  onPanStart: _onPanStart,
-                  onPanUpdate: _onPanUpdate,
-                  onPanEnd: _onPanEnd,
-                ),
-              );
-            },
-          ),
-        );
-        final board = Expanded(flex: 5, child: boardContent);
-
-        // A control panel stretched across a wide monitor is unreadable, but
-        // the width has to stay tight: loose constraints would let the panel
-        // size itself to its widest child and overflow on a phone.
-        const maxControlWidth = 560.0;
-        final controls = Expanded(
-          flex: 4,
-          child: LayoutBuilder(
-            builder: (context, box) => Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: box.maxWidth > maxControlWidth
-                    ? maxControlWidth
-                    : box.maxWidth,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: _Controls(
-                    charController: _charController,
-                    familyController: _familyController,
+          // Kept apart from the `Expanded` that wraps it: the stacked layout
+          // needs its own `Expanded`, and nesting two of them around one child
+          // is what "competing ParentDataWidgets" complains about.
+          final boardContent = Center(
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final size = math.min(box.maxWidth, box.maxHeight);
+                _boardSize = size;
+                return SizedBox(
+                  width: size,
+                  height: size,
+                  child: _Board(
+                    strokes: _strokes,
+                    current: _current,
                     strokeWidth: _strokeWidth,
-                    onStrokeWidthChanged: (v) =>
-                        setState(() => _strokeWidth = v),
-                    masterValue: _masterValue,
-                    onMasterValueChanged: (v) =>
-                        setState(() => _masterValue = v),
-                    onUndo: _undo,
-                    onClear: _clear,
-                    onSave: _saveShape,
-                    selectedSet: _selectedSet,
-                    onSelectedSetChanged: (tag) =>
-                        setState(() => _selectedSet = tag),
-                    onSaveVariant: _saveVariant,
-                    variants: _glyphs[_char]?.variants ?? const [],
-                    onDeleteVariant: (tag) => setState(
-                      () => _glyphs[_char] =
-                          (_glyphs[_char] ?? const _GlyphEntry()).copyWith(
-                            variants: (_glyphs[_char]?.variants ?? const [])
-                                .where((v) => v.tag != tag)
-                                .toList(),
-                          ),
+                    onPanStart: _onPanStart,
+                    onPanUpdate: _onPanUpdate,
+                    onPanEnd: _onPanEnd,
+                  ),
+                );
+              },
+            ),
+          );
+          final board = Expanded(flex: 5, child: boardContent);
+
+          // A control panel stretched across a wide monitor is unreadable, but
+          // the width has to stay tight: loose constraints would let the panel
+          // size itself to its widest child and overflow on a phone.
+          const maxControlWidth = 560.0;
+          final controls = Expanded(
+            flex: 4,
+            child: LayoutBuilder(
+              builder: (context, box) => Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: box.maxWidth > maxControlWidth
+                      ? maxControlWidth
+                      : box.maxWidth,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: _Controls(
+                      charController: _charController,
+                      familyController: _familyController,
+                      strokeWidth: _strokeWidth,
+                      onStrokeWidthChanged: (v) =>
+                          setState(() => _strokeWidth = v),
+                      masterValue: _masterValue,
+                      onMasterValueChanged: (v) =>
+                          setState(() => _masterValue = v),
+                      onUndo: _undo,
+                      onClear: _clear,
+                      onSave: _saveShape,
+                      selectedSet: _selectedSet,
+                      onSelectedSetChanged: (tag) =>
+                          setState(() => _selectedSet = tag),
+                      onSaveVariant: _saveVariant,
+                      variants: _glyphs[_char]?.variants ?? const [],
+                      onDeleteVariant: (tag) => setState(
+                        () => _glyphs[_char] =
+                            (_glyphs[_char] ?? const _GlyphEntry()).copyWith(
+                              variants: (_glyphs[_char]?.variants ?? const [])
+                                  .where((v) => v.tag != tag)
+                                  .toList(),
+                            ),
+                      ),
+                      onBuild: _busy ? null : _buildFont,
+                      glyphChars: _glyphs.keys.toList(),
+                      activeChar: _char,
+                      masters: _glyphs[_char]?.masters ?? const [],
+                      hasDefault:
+                          (_glyphs[_char]?.strokes ?? const []).isNotEmpty,
+                      onDeleteChar: (char) =>
+                          setState(() => _glyphs.remove(char)),
+                      busy: _busy,
+                      error: _error,
+                      result: _builtInfo == null || _fontBytes == null
+                          ? null
+                          : _Result(
+                              bytes: _fontBytes!,
+                              info: _builtInfo!,
+                              family: _fontFamily,
+                              sample: _builtSample ?? _char,
+                              exportedPath: _exportedPath,
+                              onExport: _export,
+                              previewPath: _previewPath,
+                              previewValue: _previewValue,
+                              onPreviewDrag: (value) =>
+                                  setState(() => _previewValue = value),
+                              onPreviewChanged: _renderPreview,
+                              variants: _builtVariants,
+                            ),
                     ),
-                    onBuild: _busy ? null : _buildFont,
-                    glyphChars: _glyphs.keys.toList(),
-                    activeChar: _char,
-                    masters: _glyphs[_char]?.masters ?? const [],
-                    hasDefault:
-                        (_glyphs[_char]?.strokes ?? const []).isNotEmpty,
-                    onDeleteChar: (char) =>
-                        setState(() => _glyphs.remove(char)),
-                    busy: _busy,
-                    error: _error,
-                    result: _builtInfo == null || _fontBytes == null
-                        ? null
-                        : _Result(
-                            bytes: _fontBytes!,
-                            info: _builtInfo!,
-                            family: _fontFamily,
-                            sample: _builtSample ?? _char,
-                            exportedPath: _exportedPath,
-                            onExport: _export,
-                            previewPath: _previewPath,
-                            previewValue: _previewValue,
-                            onPreviewChanged: _renderPreview,
-                            variants: _builtVariants,
-                          ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
+          );
 
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: wide
-              ? Row(children: [board, const SizedBox(width: 20), controls])
-              : Column(
-                  children: [
-                    Expanded(child: boardContent),
-                    controls,
-                  ],
-                ),
-        );
-      },
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: wide
+                ? Row(children: [board, const SizedBox(width: 20), controls])
+                : Column(
+                    children: [
+                      Expanded(child: boardContent),
+                      controls,
+                    ],
+                  ),
+          );
+        },
+      ),
     );
   }
 }
@@ -730,11 +768,12 @@ class _Board extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -747,6 +786,9 @@ class _Board extends StatelessWidget {
               strokes: strokes,
               current: current,
               strokeWidth: strokeWidth,
+              ink: theme.colorScheme.onSurface,
+              guideColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+              accentColor: theme.colorScheme.primary,
             ),
             child: const SizedBox.expand(),
           ),
@@ -761,19 +803,25 @@ class _BoardPainter extends CustomPainter {
     required this.strokes,
     required this.current,
     required this.strokeWidth,
+    required this.ink,
+    required this.guideColor,
+    required this.accentColor,
   });
 
   final List<List<Offset>> strokes;
   final List<Offset>? current;
   final double strokeWidth;
+  final Color ink;
+  final Color guideColor;
+  final Color accentColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final guide = Paint()
-      ..color = const Color(0x26000000)
+      ..color = guideColor
       ..strokeWidth = 1;
     final baselinePaint = Paint()
-      ..color = const Color(0x806750A4)
+      ..color = accentColor.withValues(alpha: 0.5)
       ..strokeWidth = 1;
 
     // Ascender / baseline / descender, mapped into board coordinates.
@@ -795,7 +843,7 @@ class _BoardPainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color = const Color(0xFF1D1B20)
+      ..color = ink
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -824,7 +872,10 @@ class _BoardPainter extends CustomPainter {
   bool shouldRepaint(covariant _BoardPainter old) =>
       old.strokes != strokes ||
       old.current != current ||
-      old.strokeWidth != strokeWidth;
+      old.strokeWidth != strokeWidth ||
+      old.ink != ink ||
+      old.guideColor != guideColor ||
+      old.accentColor != accentColor;
 }
 
 class _Controls extends StatelessWidget {
@@ -880,30 +931,31 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
           controller: charController,
-          decoration: const InputDecoration(
-            labelText: '绑定字符',
-            helperText: '取第一个字，例如「一」',
+          decoration: InputDecoration(
+            labelText: l.editorCharLabel,
+            helperText: l.editorCharHint,
             border: OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: familyController,
-          decoration: const InputDecoration(
-            labelText: '字体家族名',
+          decoration: InputDecoration(
+            labelText: l.editorFamilyLabel,
             border: OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            const SizedBox(width: 96, child: Text('笔画粗细')),
+            SizedBox(width: 96, child: Text(l.editorStrokeWidth)),
             Expanded(
               child: Slider(
                 min: 6,
@@ -922,11 +974,11 @@ class _Controls extends StatelessWidget {
           ],
         ),
         const Divider(height: 20),
-        Text('可变字体母版（$_axisTag）', style: theme.textTheme.labelLarge),
+        Text(l.editorMastersTitle(_axisTag), style: theme.textTheme.labelLarge),
         const SizedBox(height: 4),
         Row(
           children: [
-            const SizedBox(width: 96, child: Text('保存到位置')),
+            SizedBox(width: 96, child: Text(l.editorSaveToPosition)),
             Expanded(
               child: Slider(
                 min: _axisMin,
@@ -953,18 +1005,20 @@ class _Controls extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onUndo,
               icon: const Icon(Icons.undo),
-              label: const Text('撤销'),
+              label: Text(l.editorUndo),
             ),
             OutlinedButton.icon(
               onPressed: onClear,
               icon: const Icon(Icons.clear),
-              label: const Text('清空'),
+              label: Text(l.editorClear),
             ),
             FilledButton.icon(
               onPressed: onSave,
               icon: const Icon(Icons.save),
               label: Text(
-                (masterValue - _axisDefault).abs() < 1 ? '设为默认字形' : '存为母版',
+                (masterValue - _axisDefault).abs() < 1
+                    ? l.editorSetDefaultGlyph
+                    : l.editorSaveAsMaster,
               ),
             ),
           ],
@@ -977,7 +1031,7 @@ class _Controls extends StatelessWidget {
               if (hasDefault)
                 Chip(
                   avatar: const Icon(Icons.star, size: 16),
-                  label: Text('默认 ${_axisDefault.toInt()}'),
+                  label: Text(l.editorDefaultValue('${_axisDefault.toInt()}')),
                 ),
               for (final master in masters)
                 Chip(label: Text('$_axisTag ${master.value.toInt()}')),
@@ -985,11 +1039,11 @@ class _Controls extends StatelessWidget {
           ),
         ],
         const Divider(height: 20),
-        Text('字符变体（ss01–ss20，GSUB 离散替换）', style: theme.textTheme.labelLarge),
+        Text(l.editorVariantsTitle, style: theme.textTheme.labelLarge),
         const SizedBox(height: 4),
         Row(
           children: [
-            const SizedBox(width: 72, child: Text('特性标签')),
+            SizedBox(width: 72, child: Text(l.editorFeatureTag)),
             Expanded(
               child: DropdownButtonFormField<String>(
                 initialValue: selectedSet,
@@ -1007,7 +1061,7 @@ class _Controls extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: onSaveVariant,
               icon: const Icon(Icons.swap_horiz),
-              label: const Text('存为变体'),
+              label: Text(l.editorSaveVariant),
             ),
           ],
         ),
@@ -1027,7 +1081,7 @@ class _Controls extends StatelessWidget {
         if (glyphChars.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            '已加入 ${glyphChars.length} 个字符',
+            l.editorCharsAdded('${glyphChars.length}'),
             style: theme.textTheme.labelLarge,
           ),
           const SizedBox(height: 6),
@@ -1053,7 +1107,7 @@ class _Controls extends StatelessWidget {
                   width: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('生成字体'),
+              : Text(l.editorBuildButton),
         ),
         if (error != null) ...[
           const SizedBox(height: 12),
@@ -1075,6 +1129,7 @@ class _Result extends StatelessWidget {
     required this.onExport,
     required this.previewPath,
     required this.previewValue,
+    required this.onPreviewDrag,
     required this.onPreviewChanged,
     required this.variants,
   });
@@ -1087,11 +1142,13 @@ class _Result extends StatelessWidget {
   final VoidCallback onExport;
   final Path? previewPath;
   final double previewValue;
+  final ValueChanged<double> onPreviewDrag;
   final ValueChanged<double> onPreviewChanged;
   final List<String> variants;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final axes = info.axes;
     return Card(
@@ -1100,27 +1157,30 @@ class _Result extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('生成结果', style: theme.textTheme.titleSmall),
+            Text(l.editorResultTitle, style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            _Line('家族名', info.names.family),
-            _Line('字形数', '${info.metrics.glyphCount}'),
+            _Line(l.labelFamily, info.names.family),
+            _Line(l.labelGlyphCount, '${info.metrics.glyphCount}'),
             _Line('units per em', '${info.metrics.unitsPerEm}'),
             _Line(
-              '可变轴',
-              axes.isEmpty ? '无（静态字体）' : axes.map((a) => a.tag).join(' '),
+              l.labelAxes,
+              axes.isEmpty ? l.editorNoAxes : axes.map((a) => a.tag).join(' '),
             ),
-            _Line('命名实例', '${info.instances.length}'),
-            _Line('GSUB 变体', variants.isEmpty ? '无' : variants.join(' ')),
-            _Line('表', info.tables.join(' ')),
-            _Line('大小', '${bytes.lengthInBytes} bytes'),
+            _Line(l.editorResultInstances, '${info.instances.length}'),
+            _Line(
+              l.editorResultGsubVariants,
+              variants.isEmpty ? l.none : variants.join(' '),
+            ),
+            _Line(l.labelTables, info.tables.join(' ')),
+            _Line(l.labelSize, '${bytes.lengthInBytes} bytes'),
             const Divider(height: 24),
-            Text('渲染对比', style: theme.textTheme.labelLarge),
+            Text(l.editorRenderCompare, style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: _Preview(
-                    label: '自定义字体',
+                    label: l.editorCustomFont,
                     child: Text(
                       sample,
                       style: TextStyle(fontFamily: family, fontSize: 88),
@@ -1130,7 +1190,7 @@ class _Result extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _Preview(
-                    label: '系统字体',
+                    label: l.editorSystemFont,
                     child: Text(sample, style: const TextStyle(fontSize: 88)),
                   ),
                 ),
@@ -1138,7 +1198,10 @@ class _Result extends StatelessWidget {
             ),
             if (axes.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('沿 $_axisTag 插值预览', style: theme.textTheme.labelLarge),
+              Text(
+                l.editorInterpolationPreview(_axisTag),
+                style: theme.textTheme.labelLarge,
+              ),
               Row(
                 children: [
                   const SizedBox(width: 96, child: Text(_axisTag)),
@@ -1148,7 +1211,7 @@ class _Result extends StatelessWidget {
                       max: _axisMax,
                       value: previewValue,
                       label: previewValue.toInt().toString(),
-                      onChanged: (_) {},
+                      onChanged: onPreviewDrag,
                       onChangeEnd: onPreviewChanged,
                     ),
                   ),
@@ -1170,9 +1233,12 @@ class _Result extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: previewPath == null
-                      ? const Text('拖动滑块查看插值')
+                      ? Text(l.editorDragSlider)
                       : CustomPaint(
-                          painter: _GlyphPainter(previewPath!),
+                          painter: _GlyphPainter(
+                            previewPath!,
+                            ink: theme.colorScheme.onSurface,
+                          ),
                           child: const SizedBox.expand(),
                         ),
                 ),
@@ -1180,19 +1246,16 @@ class _Result extends StatelessWidget {
             ],
             if (variants.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('字符变体预览', style: theme.textTheme.labelLarge),
+              Text(l.editorVariantsPreview, style: theme.textTheme.labelLarge),
               const SizedBox(height: 4),
-              const Text(
-                '用 FontFeature 打开 ss01–ss20；若渲染无变化，说明当前平台的排版引擎不支持该特性。',
-                style: TextStyle(fontSize: 11),
-              ),
+              Text(l.editorVariantsPreviewNote, style: TextStyle(fontSize: 11)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   _Preview(
-                    label: '默认',
+                    label: l.labelDefault,
                     child: Text(
                       sample,
                       style: TextStyle(fontFamily: family, fontSize: 72),
@@ -1217,7 +1280,7 @@ class _Result extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onExport,
               icon: const Icon(Icons.save_alt),
-              label: const Text('导出 .ttf'),
+              label: Text(l.editorExport),
             ),
             if (exportedPath != null) ...[
               const SizedBox(height: 8),
@@ -1231,9 +1294,10 @@ class _Result extends StatelessWidget {
 }
 
 class _GlyphPainter extends CustomPainter {
-  const _GlyphPainter(this.path);
+  const _GlyphPainter(this.path, {required this.ink});
 
   final Path path;
+  final Color ink;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1250,14 +1314,15 @@ class _GlyphPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFF1D1B20)
+        ..color = ink
         ..style = PaintingStyle.fill,
     );
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _GlyphPainter old) => old.path != path;
+  bool shouldRepaint(covariant _GlyphPainter old) =>
+      old.path != path || old.ink != ink;
 }
 
 class _Preview extends StatelessWidget {

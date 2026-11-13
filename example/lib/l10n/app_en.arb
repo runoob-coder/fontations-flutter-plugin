@@ -1,0 +1,353 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "fontations demo",
+  "languageMenuTooltip": "Language",
+  "languageSystem": "Follow system",
+  "themeMenuTooltip": "Theme mode",
+  "themeSystem": "Follow system",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "openFontFile": "Open font file…",
+  "bundledInter": "Bundled Inter",
+  "pickFontDialogTitle": "Select a font file",
+  "saveFontDialogTitle": "Save font file",
+  "savedTo": "Saved to {path}",
+  "@savedTo": {
+    "placeholders": {"path": {"type": "String"}}
+  },
+  "openFailed": "Could not open: {error}",
+  "@openFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "none": "None",
+  "emptyValue": "(empty)",
+  "bytesUnit": "{value} bytes",
+  "@bytesUnit": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "labelGlyphCount": "Glyph count",
+  "labelAxes": "Variation axes",
+  "labelTables": "Tables",
+  "labelSize": "Size",
+  "labelDefault": "Default",
+  "labelFamily": "Family",
+  "labelLayoutFeatures": "Layout features",
+  "labelGlyphIdA": "glyphId of A",
+  "fontReadError": "Could not read this font file\n\n{error}",
+  "@fontReadError": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "fontParseError": "Could not parse this font file: {error}",
+  "@fontParseError": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "unreadableTitle": "Could not parse this font file",
+  "unreadableDetail": "This file could not be read, showing the previous one: {error}",
+  "@unreadableDetail": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "noFontOpen": "No font is open yet",
+  "chooseAnotherFont": "Choose another font file…",
+
+  "navInfo": "Font info",
+  "navShaping": "Shaping",
+  "navGlyphs": "Glyphs",
+  "navTools": "Tools",
+  "navEditor": "Draw a font",
+
+  "sourceTitle": "Font",
+  "sourceTitleCompact": "Current font",
+  "sourceCollection": "Collection",
+  "sourceFace": "Face {index}",
+  "@sourceFace": {
+    "placeholders": {"index": {"type": "String"}}
+  },
+  "sourceFaceCount": "This file holds {count} faces (.ttc collection).",
+  "@sourceFaceCount": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "sourceFormats": "Supports {extensions}. woff / woff2 are compressed and must be unpacked first.",
+  "@sourceFormats": {
+    "placeholders": {"extensions": {"type": "String"}}
+  },
+
+  "infoHintingTitle": "skrifa 0.50 ScalerFont hinting",
+  "infoNamesTitle": "Names (name table)",
+  "infoMetricsTitle": "Metrics",
+  "infoTablesTitle": "Tables ({count})",
+  "@infoTablesTitle": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoAttributesTitle": "Attributes (OS/2)",
+  "infoAxesTitle": "Variation axes ({count})",
+  "@infoAxesTitle": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoInstancesTitle": "Named instances ({count})",
+  "@infoInstancesTitle": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoLayoutTitle": "Layout tables",
+  "infoCharmapTitle": "Character map",
+  "infoPreviewTextLabel": "Preview text",
+  "infoNormalizedCoords": "Normalized coordinates",
+  "infoAvarAbsent": "Linearly normalized from fvar; this font has no avar, so gvar deltas scale by this number.",
+  "infoAvarPresent": "Normalized via fvar → avar {version}; gvar deltas scale by this number.",
+  "@infoAvarPresent": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "infoAvarPresentAvar2": "Normalized via fvar → avar {version} (including avar2 deltas); gvar deltas scale by this number.",
+  "@infoAvarPresentAvar2": {
+    "placeholders": {"version": {"type": "String"}}
+  },
+  "infoLayoutNote": "These only say what the font declares. See the Shaping page to actually apply them.",
+  "infoVariantMappings": "{count} entries",
+  "@infoVariantMappings": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoCapabilitiesTitle": "Font capabilities",
+  "infoMathConstants": "{count} constants, axisHeight = {axisHeight}",
+  "@infoMathConstants": {
+    "placeholders": {
+      "count": {"type": "String"},
+      "axisHeight": {"type": "String"}
+    }
+  },
+  "infoVarcSample": "Glyph {glyphId} is built from {components} components",
+  "@infoVarcSample": {
+    "placeholders": {
+      "glyphId": {"type": "String"},
+      "components": {"type": "String"}
+    }
+  },
+  "infoPaletteCount": "{count} palettes",
+  "@infoPaletteCount": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoEmbeddedBitmaps": "Embedded bitmaps",
+  "infoStrikeCount": "{count} strikes",
+  "@infoStrikeCount": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "infoVerticalMetrics": "Vertical metrics",
+
+  "shapingTitle": "Shaping: applying GSUB / GPOS",
+  "shapingTextLabel": "Text to shape",
+  "shapingTextHint": "Try fi / fl / ffi, or AWAY for a kern pair",
+  "shapingResultsTitle": "Results",
+  "shapingCharCount": "Characters",
+  "shapingLigatures": "Ligatures",
+  "shapingLigatureMerged": "{count} characters merged",
+  "@shapingLigatureMerged": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "shapingTotalAdvance": "Total advance",
+  "shapingAdvanceRaw": " ({value} with all features off)",
+  "@shapingAdvanceRaw": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "shapingGlyphSequence": "Glyph sequence",
+  "shapingClusterNote": "cluster→glyphId: several glyphs can share a cluster (decomposition), and one glyph can cover several (ligature).",
+  "shapingFeaturesTitle": "Features ({count})",
+  "@shapingFeaturesTitle": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "shapingModeDefault": "Defaults",
+  "shapingModeNone": "All off",
+  "shapingModeCustom": "Custom",
+  "shapingFeaturesNote": "★ marks features enabled by default. Tap any tag to switch to Custom; All off shows the text before shaping.",
+  "shapingRenderingTitle": "Rendering",
+  "shapingFontSize": "Font size",
+  "shapingShowMarkers": "Show glyph bounds and IDs",
+  "shapingScriptLabel": "script (4 characters)",
+  "shapingLanguageLabel": "language (4 characters)",
+  "shapingTagNote": "Tags must be exactly 4 characters, including trailing spaces (Turkish is 'TRK '). Leave empty to use the font's DFLT/latn default language system; only then do locale-specific substitutions such as locl apply.",
+
+  "browserTitle": "Glyph browser: cmap / COLR / bitmaps",
+  "browserSearchLabel": "Search character / glyphId / U+ codepoint",
+  "browserSearchHint": "A, U+4E00, 0x2764 or 36",
+  "browserCmapSummary": "{total} cmap mappings{truncated}. Tap a tile to inspect that glyph.",
+  "@browserCmapSummary": {
+    "placeholders": {
+      "total": {"type": "String"},
+      "truncated": {"type": "String"}
+    }
+  },
+  "browserTruncated": " (showing the first {count})",
+  "@browserTruncated": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "browserModeOutline": "Outline",
+  "browserModeBitmap": "Bitmap",
+  "browserPreviewTitle": "Glyph preview",
+  "browserGlyphTitle": "Glyph #{glyphId} · {char}",
+  "@browserGlyphTitle": {
+    "placeholders": {
+      "glyphId": {"type": "String"},
+      "char": {"type": "String"}
+    }
+  },
+  "browserPalette": "Palette {index}",
+  "@browserPalette": {
+    "placeholders": {"index": {"type": "String"}}
+  },
+  "browserPreviewNote": "Outlines use GlyphOutline.toPath(), COLR layers use ColorGlyphInfo.paint(), bitmaps are decoded from sbix/CBDT/EBDT RGBA or PNG bytes. The blue lines mark the baseline and the em box.",
+  "browserMetricsTitle": "Glyph metrics (size = {size} px)",
+  "@browserMetricsTitle": {
+    "placeholders": {"size": {"type": "String"}}
+  },
+  "browserOptionalTitle": "Optional table data",
+  "browserMath": "italic {italic}, accent {accent}, {kerns} corner kern sets",
+  "@browserMath": {
+    "placeholders": {
+      "italic": {"type": "String"},
+      "accent": {"type": "String"},
+      "kerns": {"type": "String"}
+    }
+  },
+  "browserAssemblyParts": "Stretchy parts",
+  "browserVariantsInfo": "{sizes} sizes, {parts} assembly parts",
+  "@browserVariantsInfo": {
+    "placeholders": {
+      "sizes": {"type": "String"},
+      "parts": {"type": "String"}
+    }
+  },
+  "browserVarcComponents": "{count} components",
+  "@browserVarcComponents": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "browserColorInfo": "{format}, {layers} layers, {palettes} palettes",
+  "@browserColorInfo": {
+    "placeholders": {
+      "format": {"type": "String"},
+      "layers": {"type": "String"},
+      "palettes": {"type": "String"}
+    }
+  },
+  "browserBitmapInfo": "{format} {width}×{height}, {ppem} ppem, origin {origin}",
+  "@browserBitmapInfo": {
+    "placeholders": {
+      "format": {"type": "String"},
+      "width": {"type": "String"},
+      "height": {"type": "String"},
+      "ppem": {"type": "String"},
+      "origin": {"type": "String"}
+    }
+  },
+  "browserConditionUnmet": "(condition unmet)",
+  "browserVariantsTitle": "Variation selectors (cmap format 14)",
+  "browserNoUvs": "This font has no UVS mappings.",
+
+  "toolsTitle": "Font tools: tables / subset / patch",
+  "toolsRawTablesTitle": "Raw table bytes",
+  "toolsRawTablesNote": "tableData(tag:) returns the bytes of that table. Offsets inside a table are relative to the start of this data; an absent tag returns null.",
+  "toolsTableEmpty": "This table is empty or missing.",
+  "toolsHexMore": "… {count} more bytes not shown",
+  "@toolsHexMore": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "toolsExtendedTitle": "Extended tables (SVG / gasp / meta / BASE / AAT)",
+  "toolsTableTagCount": "Table tags",
+  "toolsFlags": "Flags",
+  "toolsSvgDocs": "SVG documents",
+  "toolsGaspRanges": "gasp ranges",
+  "toolsMetaEntries": "meta entries",
+  "toolsAatTables": "AAT tables",
+  "toolsNamesTitle": "name table records (nameId = 1, every localized family name)",
+  "toolsNoNameRecords": "No name records.",
+  "toolsSubsetTitle": "Subsetting (skera / subsetFont)",
+  "toolsSubsetCharsLabel": "Characters to keep",
+  "toolsSubsetCharsHint": "The layout closure brings in glyphs needed by ligatures, variants and combining marks",
+  "toolsNoHinting": "Strip TrueType instructions (noHinting)",
+  "toolsRetainGlyphIds": "Keep original glyph ids (retainGlyphIds)",
+  "toolsSubsetButton": "Build subset",
+  "toolsSaveSubset": "Save subset .ttf",
+  "toolsModifyTitle": "Patch an existing font (modifyFont)",
+  "toolsNewFamily": "New family name",
+  "toolsSubfamily": "Subfamily (affects OS/2 weight)",
+  "toolsDesignerLabel": "Designer (nameId 9)",
+  "toolsKernPair": "Kern pair",
+  "toolsKernValue": "kern value (font units)",
+  "toolsPatchButton": "Patch and read back",
+  "toolsUnchangedOutlines": "{before} → {after} (outlines unchanged)",
+  "@toolsUnchangedOutlines": {
+    "placeholders": {
+      "before": {"type": "String"},
+      "after": {"type": "String"}
+    }
+  },
+  "toolsSavePatched": "Save patched .ttf",
+  "toolsPinnedTitle": "Pinned variation location (withVariations)",
+  "toolsPinnedNote": "This is just a handle over the same bytes with a fixed location; it does not produce a static instance. Use subsetFont above to actually make the font smaller.",
+  "toolsNoVisibleAxes": "This font has no visible variation axes.",
+  "toolsDefaultAAdvance": "Default A advance",
+  "toolsPinnedAAdvance": "Pinned A advance",
+
+  "editorTitle": "Draw a font: buildFont",
+  "editorDrawFirst": "Draw something for {char} on the board first",
+  "@editorDrawFirst": {
+    "placeholders": {"char": {"type": "String"}}
+  },
+  "editorSetDefault": "Set {char} as the default glyph",
+  "@editorSetDefault": {
+    "placeholders": {"char": {"type": "String"}}
+  },
+  "editorSavedMaster": "Saved {char} as a master at {tag} {value}",
+  "@editorSavedMaster": {
+    "placeholders": {
+      "char": {"type": "String"},
+      "tag": {"type": "String"},
+      "value": {"type": "String"}
+    }
+  },
+  "editorSavedVariant": "Saved the strokes as {set} for {char}",
+  "@editorSavedVariant": {
+    "placeholders": {
+      "char": {"type": "String"},
+      "set": {"type": "String"}
+    }
+  },
+  "editorNoGlyphs": "No glyphs yet — draw a stroke before building",
+  "editorCharLabel": "Character to bind",
+  "editorCharHint": "Only the first rune is used",
+  "editorFamilyLabel": "Font family name",
+  "editorStrokeWidth": "Stroke width",
+  "editorMastersTitle": "Variable font masters ({tag})",
+  "@editorMastersTitle": {
+    "placeholders": {"tag": {"type": "String"}}
+  },
+  "editorSaveToPosition": "Save to position",
+  "editorUndo": "Undo",
+  "editorClear": "Clear",
+  "editorSetDefaultGlyph": "Set as default glyph",
+  "editorSaveAsMaster": "Save as master",
+  "editorDefaultValue": "Default {value}",
+  "@editorDefaultValue": {
+    "placeholders": {"value": {"type": "String"}}
+  },
+  "editorVariantsTitle": "Character variants (ss01–ss20, GSUB discrete substitutions)",
+  "editorFeatureTag": "Feature tag",
+  "editorSaveVariant": "Save as variant",
+  "editorCharsAdded": "{count} characters added",
+  "@editorCharsAdded": {
+    "placeholders": {"count": {"type": "String"}}
+  },
+  "editorBuildButton": "Build font",
+  "editorResultTitle": "Build result",
+  "editorNoAxes": "None (static font)",
+  "editorResultInstances": "Named instances",
+  "editorResultGsubVariants": "GSUB variants",
+  "editorRenderCompare": "Render comparison",
+  "editorCustomFont": "Custom font",
+  "editorSystemFont": "System font",
+  "editorInterpolationPreview": "Interpolate along {tag}",
+  "@editorInterpolationPreview": {
+    "placeholders": {"tag": {"type": "String"}}
+  },
+  "editorDragSlider": "Drag the slider to interpolate",
+  "editorVariantsPreview": "Character variant preview",
+  "editorVariantsPreviewNote": "Enable ss01–ss20 with FontFeature; if nothing changes, the platform's text engine does not support the feature.",
+  "editorExport": "Export .ttf"
+}

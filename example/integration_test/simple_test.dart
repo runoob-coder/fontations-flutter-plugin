@@ -1,16 +1,19 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fontations/fontations.dart';
 import 'package:fontations_example/font_info_page.dart';
 import 'package:fontations_example/font_source.dart';
+import 'package:fontations_example/font_tools_page.dart';
+import 'package:fontations_example/glyph_browser_page.dart';
 import 'package:fontations_example/glyph_editor_page.dart';
+import 'package:fontations_example/l10n/app_localizations.dart';
 import 'package:fontations_example/main.dart';
 import 'package:fontations_example/shaping_page.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +34,15 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;
   }
+
+  /// The pages look up AppLocalizations, and the assertions below expect the
+  /// Chinese catalog (the example's default fallback locale).
+  Widget localized(Widget page) => MaterialApp(
+    locale: const Locale('zh'),
+    localizationsDelegates: appLocalizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: page),
+  );
 
   Future<List<int>> fontBytes() => rootBundle
       .load('assets/fonts/Inter.ttf')
@@ -1154,9 +1166,7 @@ void main() {
     addTearDown(fontSource.loadBundled);
 
     await fontSource.loadBundled();
-    await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: FontInfoPage())),
-    );
+    await tester.pumpWidget(localized(const FontInfoPage()));
     await tester.pumpAndSettle();
     expect(find.text('Inter'), findsWidgets);
 
@@ -1188,11 +1198,13 @@ void main() {
         const ExampleShell(),
         const FontInfoPage(),
         const ShapingPage(),
+        const GlyphBrowserPage(),
+        const FontToolsPage(),
         const GlyphEditorPage(),
       ]) {
         // The pages expect the shell's Scaffold around them: it is what
         // provides the `Material` their chips and dropdowns look for.
-        await tester.pumpWidget(MaterialApp(home: Scaffold(body: page)));
+        await tester.pumpWidget(localized(page));
         await tester.pumpAndSettle();
       }
     }

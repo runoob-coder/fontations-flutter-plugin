@@ -1,10 +1,14 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:fontations/fontations.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'demo_widgets.dart';
 import 'font_source.dart';
+import 'font_source_controls.dart';
+import 'l10n/app_localizations.dart';
+import 'locale_switcher.dart';
+import 'theme_switcher.dart';
 
 /// Reads a font the user picked: names, metrics, variation axes, the layout
 /// tables, and which optional tables (`MATH`, `VARC`, `COLR`, bitmaps, …) it
@@ -17,7 +21,20 @@ class FontInfoPage extends StatefulWidget {
 }
 
 class _FontInfoPageState extends State<FontInfoPage> {
+  late AppLocalizations l;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    l = AppLocalizations.of(context);
+  }
+
   static const double _fontSize = 72.0;
+
+  /// `fontationsVersion()` is a synchronous FFI call whose result never
+  /// changes while the process runs. Lazy `static final` keeps it out of
+  /// every rebuild (slider drags, theme/locale switches, ...).
+  static final String _version = fontationsVersion();
 
   final TextEditingController _sampleController = TextEditingController(
     text: 'fontations',
@@ -31,6 +48,12 @@ class _FontInfoPageState extends State<FontInfoPage> {
   List<_LaidOutGlyph> _glyphs = const <_LaidOutGlyph>[];
   List<double> _normalized = const [];
   _Facts? _facts;
+  bool _scalerHinting = false;
+  String _scalerStatus = 'unhinted';
+
+  /// Invalidates outlines still being drawn when the font or the text changes.
+  /// Without it a slow result can land after a newer one and overwrite it.
+  int _layoutToken = 0;
 
   @override
   void initState() {
@@ -48,10 +71,15 @@ class _FontInfoPageState extends State<FontInfoPage> {
     super.dispose();
   }
 
+  LoadedFont? _lastLoaded;
+
   void _onSourceChanged() => _load(fontSource.current);
 
   Future<void> _load(LoadedFont? loaded) async {
-    if (!mounted) return;
+    if (!mounted || loaded == _lastLoaded) return;
+    _lastLoaded = loaded;
+    // A new font makes any in-flight outline request obsolete.
+    _layoutToken++;
     if (loaded == null) {
       setState(() {
         _font = null;
@@ -63,7 +91,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
       return;
     }
     try {
-      final font = Font.fromBytes(bytes: loaded.bytes, index: loaded.index);
+      final font = fontSource.font;
       final info = font.info();
 
       _axisValues
@@ -87,42 +115,80 @@ class _FontInfoPageState extends State<FontInfoPage> {
     }
   }
 
+  /// Outline loading is a native call; keep the last good preview and show a
+  /// banner instead of letting an async error go unhandled.
   Future<void> _layoutGlyphs() async {
+    try {
+      await _layoutGlyphsNow();
+    } catch (error) {
+      if (mounted) setState(() => _error = error);
+    }
+  }
+
+  Future<void> _layoutGlyphsNow() async {
     final font = _font;
     if (font == null) return;
+    final token = ++_layoutToken;
+    final text = _sampleController.text;
 
     final variations = _axisValues.entries
         .map((entry) => VariationSetting(tag: entry.key, value: entry.value))
         .toList(growable: false);
 
+    // `hinting` selects the skrifa 0.50 scaler setup; without it outlines
+    // are unhinted. `ScalerInfo` reports the engine that actually ran.
+    final hinting = _scalerHinting
+        ? const HintingSpec(
+            engine: HintEngineKind.autoFallback,
+            target: RasterTargetKind.lcd,
+          )
+        : null;
+
+    // -1 marks a character the font does not cover; it still leaves a gap.
+    final ids = <int>[
+      for (final rune in text.runes) font.charToGlyph(codePoint: rune) ?? -1,
+    ];
+    final drawable = ids.where((id) => id > 0).toList(growable: false);
+
+    // One scaler and one reusable draw buffer for the whole run, instead of
+    // setting both up again for every character.
+    final outlines = drawable.isEmpty
+        ? <GlyphOutline>[]
+        : await font.outlines(
+            glyphIds: drawable,
+            size: _fontSize,
+            variations: variations,
+            hinting: hinting,
+          );
+    if (!mounted || token != _layoutToken) return;
+
     final glyphs = <_LaidOutGlyph>[];
+    var scalerStatus = 'unhinted';
     var penX = 0.0;
-    for (final rune in _sampleController.text.runes) {
-      final glyphId = font.charToGlyph(codePoint: rune);
-      if (glyphId == null || glyphId == 0) {
+    var next = 0;
+    for (final id in ids) {
+      if (id <= 0) {
         penX += _fontSize * 0.3;
         continue;
       }
-      final outline = await font.outline(
-        glyphId: glyphId,
-        size: _fontSize,
-        variations: variations,
-      );
+      final outline = outlines[next++];
+      final engine = outline.scaler.hintEngine;
+      scalerStatus = engine == null
+          ? 'unhinted'
+          : '$engine at ${outline.scaler.hintedPpem?.toStringAsFixed(0) ?? '?'} ppem';
+      final advance = outline.advanceWidth ?? 0;
       glyphs.add(
-        _LaidOutGlyph(
-          path: outline.toPath(),
-          offsetX: penX,
-          advance: outline.advanceWidth ?? 0,
-        ),
+        _LaidOutGlyph(path: outline.toPath(), offsetX: penX, advance: advance),
       );
-      penX += outline.advanceWidth ?? 0;
+      penX += advance;
     }
 
-    if (!mounted) return;
     setState(() {
       _glyphs = glyphs;
+      _scalerStatus = scalerStatus;
       // Where the sliders actually land after `fvar` -> `avar` -> `avar2`.
       _normalized = font.normalizedCoords(variations: variations);
+      _error = null;
     });
   }
 
@@ -130,49 +196,79 @@ class _FontInfoPageState extends State<FontInfoPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final info = _info;
+    // The version string lists several crates and is far wider than a phone
+    // AppBar. Constrain it and keep the full text in a tooltip.
+    final version = _version;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('fontations'),
         actions: [
+          const ThemeMenu(),
+          const LanguageMenu(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: Text(
-                fontationsVersion(),
-                style: theme.textTheme.labelSmall,
+              child: Tooltip(
+                message: version,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 132),
+                  child: Text(
+                    version,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall,
+                  ),
+                ),
               ),
             ),
           ),
         ],
       ),
       body: info == null
-          ? _NothingToShow(error: _error, onOpen: fontSource.openFile)
+          ? _NothingToShow(
+              error: _error,
+              onOpen: () =>
+                  fontSource.openFile(dialogTitle: l.pickFontDialogTitle),
+            )
           : _buildBody(context, info),
     );
   }
 
   Widget _buildBody(BuildContext context, FontInfo info) {
     final facts = _facts;
-    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final wide = MediaQuery.sizeOf(context).width >= wideBreakpoint;
 
     // The preview and the axes that drive it stay together; everything else is
     // reference material.
     final interactive = <Widget>[
       // The last font that read fine stays on screen, with the failure on top,
       // so a bad file is not a dead end.
-      if (_error != null) _ErrorBanner(error: _error!),
-      _buildSource(context),
+      if (_error != null)
+        ErrorBanner(
+          _error!,
+          message: l.unreadableDetail(describeError(_error!)),
+        ),
+      const FontSourceControls(),
       TextField(
         controller: _sampleController,
-        decoration: const InputDecoration(
-          labelText: '预览文本',
+        decoration: InputDecoration(
+          labelText: l.infoPreviewTextLabel,
           border: OutlineInputBorder(),
           isDense: true,
         ),
       ),
       const SizedBox(height: 12),
       _GlyphPreview(glyphs: _glyphs, fontSize: _fontSize),
+      SwitchListTile(
+        title: Text(l.infoHintingTitle),
+        subtitle: Text(_scalerStatus),
+        value: _scalerHinting,
+        onChanged: (value) {
+          setState(() => _scalerHinting = value);
+          _layoutGlyphs();
+        },
+      ),
       const SizedBox(height: 16),
       if (info.axes.isNotEmpty) _buildAxes(info),
       if (info.instances.isNotEmpty) _buildInstances(info),
@@ -180,7 +276,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
 
     final reference = <Widget>[
       SectionCard(
-        title: 'Names',
+        title: l.infoNamesTitle,
         children: [
           InfoRow('family', info.names.family),
           InfoRow('subfamily', info.names.subfamily),
@@ -192,7 +288,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
         ],
       ),
       SectionCard(
-        title: 'Metrics',
+        title: l.infoMetricsTitle,
         children: [
           InfoRow('units per em', '${info.metrics.unitsPerEm}'),
           InfoRow('glyph count', '${info.metrics.glyphCount}'),
@@ -209,7 +305,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
         _buildCapabilities(facts),
       ],
       SectionCard(
-        title: 'Tables (${info.tables.length})',
+        title: l.infoTablesTitle('${info.tables.length}'),
         children: [TagChips(info.tables)],
       ),
     ];
@@ -243,105 +339,10 @@ class _FontInfoPageState extends State<FontInfoPage> {
     );
   }
 
-  /// Opens a font file, or picks another face of the one that is open.
-  Widget _buildSource(BuildContext context) {
-    final theme = Theme.of(context);
-    final current = fontSource.current;
-    final opened = fontSource.opened;
-
-    return SectionCard(
-      title: '字体',
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            FilledButton.icon(
-              onPressed: fontSource.picking ? null : fontSource.openFile,
-              icon: fontSource.picking
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.folder_open),
-              label: const Text('打开字体文件…'),
-            ),
-            OutlinedButton.icon(
-              onPressed: fontSource.loadBundled,
-              icon: const Icon(Icons.restart_alt),
-              label: const Text('内置 Inter'),
-            ),
-            if (current != null)
-              Chip(
-                avatar: const Icon(Icons.description_outlined, size: 16),
-                label: Text(current.name),
-              ),
-          ],
-        ),
-        if (current != null && current.faceCount > 1) ...[
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const SizedBox(width: 110, child: Text('字体集合')),
-              Expanded(
-                child: DropdownButtonFormField<int>(
-                  initialValue: current.index,
-                  isDense: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  items: [
-                    for (var i = 0; i < current.faceCount; i++)
-                      DropdownMenuItem(value: i, child: Text('第 $i 个字体')),
-                  ],
-                  onChanged: (index) {
-                    if (index != null) fontSource.selectFace(index);
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '这个文件里有 ${current.faceCount} 个字体（.ttc 集合）。',
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
-        if (opened.length > 1) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final font in opened)
-                ChoiceChip(
-                  label: Text(font.name),
-                  selected: font == current,
-                  onSelected: (_) => fontSource.select(font),
-                ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          '支持 ${fontExtensions.join(' / ')}。woff / woff2 是压缩格式，需要先解压。',
-          style: theme.textTheme.bodySmall,
-        ),
-      ],
-    );
-  }
-
   Widget _buildAttributes(_Facts facts) {
     final attributes = facts.attributes;
     return SectionCard(
-      title: 'Attributes (OS/2)',
+      title: l.infoAttributesTitle,
       children: [
         InfoRow('weight', attributes.weight.toStringAsFixed(0)),
         InfoRow(
@@ -358,7 +359,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
   Widget _buildAxes(FontInfo info) {
     final axes = info.axes.where((axis) => !axis.hidden).toList();
     return SectionCard(
-      title: 'Variation axes (${info.axes.length})',
+      title: l.infoAxesTitle('${info.axes.length}'),
       children: [
         for (final axis in axes)
           LabeledSlider(
@@ -373,7 +374,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
         if (_normalized.isNotEmpty) ...[
           const SizedBox(height: 8),
           InfoRow(
-            '归一化坐标',
+            l.infoNormalizedCoords,
             _normalized.map((v) => v.toStringAsFixed(3)).join('  '),
           ),
           const SizedBox(height: 4),
@@ -389,16 +390,16 @@ class _FontInfoPageState extends State<FontInfoPage> {
   String factsAvarNote(_Facts? facts) {
     final avar = facts?.avar;
     if (avar == null) {
-      return '经 fvar 线性归一化后的坐标；该字体没有 avar，gvar 增量按这个数缩放。';
+      return l.infoAvarAbsent;
     }
-    return '经 fvar → avar ${avar.version}'
-        '${avar.hasAvar2 ? '（含 avar2 增量）' : ''} 后的坐标；'
-        'gvar 增量按这个数缩放。';
+    return avar.hasAvar2
+        ? l.infoAvarPresentAvar2(avar.version)
+        : l.infoAvarPresent(avar.version);
   }
 
   Widget _buildInstances(FontInfo info) {
     return SectionCard(
-      title: 'Named instances (${info.instances.length})',
+      title: l.infoInstancesTitle('${info.instances.length}'),
       children: [
         for (final instance in info.instances.take(12))
           InfoRow(
@@ -418,7 +419,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
 
   Widget _buildLayout(_Facts facts) {
     return SectionCard(
-      title: 'Layout tables',
+      title: l.infoLayoutTitle,
       children: [
         for (final table in facts.layout)
           Column(
@@ -435,10 +436,7 @@ class _FontInfoPageState extends State<FontInfoPage> {
               const SizedBox(height: 8),
             ],
           ),
-        Text(
-          '这些只是「字体声明了什么」。要真正应用它们，请看「塑形」页。',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        Text(l.infoLayoutNote, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -446,15 +444,15 @@ class _FontInfoPageState extends State<FontInfoPage> {
   Widget _buildCharmap(_Facts facts) {
     final charmap = facts.charmap;
     return SectionCard(
-      title: 'Character map',
+      title: l.infoCharmapTitle,
       children: [
         InfoRow('mappings', '${charmap.mappingCount}'),
         InfoRow('symbol', '${charmap.isSymbol}'),
         InfoRow(
           'format 14',
           facts.variantMappings.isEmpty
-              ? '无'
-              : '${facts.variantMappings.length} 条',
+              ? l.none
+              : l.infoVariantMappings('${facts.variantMappings.length}'),
         ),
         InfoRow('glyph name', facts.glyphName),
         InfoRow('name source', facts.glyphNameSource),
@@ -475,33 +473,42 @@ class _FontInfoPageState extends State<FontInfoPage> {
   Widget _buildCapabilities(_Facts facts) {
     final math = facts.mathConstants;
     return SectionCard(
-      title: '字体能力',
+      title: l.infoCapabilitiesTitle,
       children: [
         InfoRow(
           'MATH',
           math == null
-              ? '无'
-              : '${math.length} 个常量，axisHeight = ${_constant(math, 'axisHeight')}',
+              ? l.none
+              : l.infoMathConstants(
+                  '${math.length}',
+                  _constant(math, 'axisHeight'),
+                ),
         ),
         InfoRow(
           'VARC',
           facts.varcSample == null
-              ? '无'
-              : '字形 ${facts.varcSample!.glyphId} 由 '
-                    '${facts.varcSample!.components.length} 个部件组成',
+              ? l.none
+              : l.infoVarcSample(
+                  '${facts.varcSample!.glyphId}',
+                  '${facts.varcSample!.components.length}',
+                ),
         ),
         InfoRow(
           'COLR / CPAL',
-          facts.palettes.isEmpty ? '无' : '${facts.palettes.length} 个调色板',
+          facts.palettes.isEmpty
+              ? l.none
+              : l.infoPaletteCount('${facts.palettes.length}'),
         ),
         InfoRow(
-          '嵌入位图',
-          facts.strikes.isEmpty ? '无' : '${facts.strikes.length} 个 strike',
+          l.infoEmbeddedBitmaps,
+          facts.strikes.isEmpty
+              ? l.none
+              : l.infoStrikeCount('${facts.strikes.length}'),
         ),
         InfoRow(
-          '竖排度量',
+          l.infoVerticalMetrics,
           facts.vertical == null
-              ? '无'
+              ? l.none
               : 'ascender ${facts.vertical!.ascender.toStringAsFixed(0)}',
         ),
       ],
@@ -594,6 +601,7 @@ class _NothingToShow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (error == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -606,7 +614,7 @@ class _NothingToShow extends StatelessWidget {
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error),
             const SizedBox(height: 12),
-            Text('无法解析这个字体文件', style: theme.textTheme.titleSmall),
+            Text(l.unreadableTitle, style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             Text(
               describeError(error!),
@@ -617,50 +625,10 @@ class _NothingToShow extends StatelessWidget {
             FilledButton.icon(
               onPressed: onOpen,
               icon: const Icon(Icons.folder_open),
-              label: const Text('换一个字体文件…'),
+              label: Text(l.chooseAnotherFont),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// A one line strip reporting that the latest file could not be read.
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.error});
-
-  final Object error;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 18,
-            color: theme.colorScheme.onErrorContainer,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '这个文件读不了，仍显示上一个：${describeError(error)}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onErrorContainer,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -674,16 +642,21 @@ class _GlyphPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       height: fontSize * 2,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
       child: CustomPaint(
-        painter: _GlyphPainter(glyphs: glyphs, fontSize: fontSize),
+        painter: _GlyphPainter(
+          glyphs: glyphs,
+          fontSize: fontSize,
+          ink: theme.colorScheme.onSurface,
+        ),
         child: const SizedBox.expand(),
       ),
     );
@@ -691,16 +664,21 @@ class _GlyphPreview extends StatelessWidget {
 }
 
 class _GlyphPainter extends CustomPainter {
-  const _GlyphPainter({required this.glyphs, required this.fontSize});
+  const _GlyphPainter({
+    required this.glyphs,
+    required this.fontSize,
+    required this.ink,
+  });
 
   final List<_LaidOutGlyph> glyphs;
   final double fontSize;
+  final Color ink;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (glyphs.isEmpty) return;
     final paint = Paint()
-      ..color = const Color(0xFF1D1B20)
+      ..color = ink
       ..style = PaintingStyle.fill;
     canvas.save();
     canvas.translate(0, size.height * 0.72);
@@ -715,7 +693,9 @@ class _GlyphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GlyphPainter oldDelegate) =>
-      oldDelegate.glyphs != glyphs || oldDelegate.fontSize != fontSize;
+      oldDelegate.glyphs != glyphs ||
+      oldDelegate.fontSize != fontSize ||
+      oldDelegate.ink != ink;
 }
 
 class _LaidOutGlyph {

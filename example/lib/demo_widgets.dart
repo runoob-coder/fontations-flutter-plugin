@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A titled card holding rows of label/value pairs or arbitrary children.
 class SectionCard extends StatelessWidget {
@@ -113,6 +116,110 @@ String describeError(Object error) {
   final firstLine = error.toString().trim().split('\n').first.trim();
   if (firstLine.length <= 200) return firstLine;
   return '${firstLine.substring(0, 200)}…';
+}
+
+/// Saves generated font bytes through a platform save dialog.
+///
+/// `dart:io` is unavailable on the web, where `saveFile` triggers a download;
+/// on desktop/mobile it writes to the path the user picked. Returns a display
+/// string for the result, or `null` when the dialog was cancelled.
+Future<String?> saveFontBytes({
+  required String fileName,
+  required Uint8List bytes,
+  String dialogTitle = 'Save font file',
+}) async {
+  final uri = await FilePicker.saveFile(
+    dialogTitle: dialogTitle,
+    fileName: fileName,
+    bytes: bytes,
+    type: FileType.custom,
+    allowedExtensions: const ['ttf'],
+    mimeType: 'font/ttf',
+  );
+  return uri?.toString();
+}
+
+/// The one breakpoint the shell and all five pages agree on. Below it the
+/// shell uses a bottom navigation bar and pages stack their columns; at or
+/// above it pages use side-by-side columns.
+const double wideBreakpoint = 900.0;
+
+/// A compact strip describing the most recent failure.
+///
+/// Shared so every page reports errors in the same place, including pages
+/// whose controls live in a second column on wide screens.
+class ErrorBanner extends StatelessWidget {
+  const ErrorBanner(this.error, {super.key, this.message});
+
+  final Object error;
+
+  /// Optional localized context in front of the raw error, e.g. "showing the
+  /// previous font". Falls back to the readable error text.
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 18,
+            color: theme.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message ?? describeError(error),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown when no font could be loaded. Keeping the picker here means a failed
+/// parse is never a dead end on any page.
+class EmptyFontHint extends StatelessWidget {
+  const EmptyFontHint({
+    super.key,
+    required this.label,
+    required this.buttonLabel,
+    required this.onOpen,
+  });
+
+  final String label;
+  final String buttonLabel;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: onOpen,
+          icon: const Icon(Icons.folder_open),
+          label: Text(buttonLabel),
+        ),
+      ],
+    ),
+  );
 }
 
 /// A centred message, used for loading and error states.

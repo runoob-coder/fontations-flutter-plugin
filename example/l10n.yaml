@@ -1,0 +1,17 @@
+# Official gen-l10n setup, see https://docs.flutter.dev/ui/internationalization.
+# `flutter pub get`, `flutter run` and `flutter build` generate the
+# AppLocalizations class into a synthetic package automatically; `flutter
+# gen-l10n` can be used to regenerate it on demand.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+
+# Every page can call AppLocalizations.of(context) without a `!`.
+nullable-getter: false
+# Keep Chinese first so an unsupported device locale falls back to the
+# language this example was originally written in, not to English.
+preferred-supported-locales: [zh]
+# flutter_localizations 3.50 deprecates the Global*Localizations symbols used
+# by the generated delegates; generated files should not produce analyzer noise.
+header: "// ignore_for_file: deprecated_member_use"

@@ -14,6 +14,13 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- Localizations are handled by Flutter; this tells the App Store which
+	     languages the bundle supports (see docs.flutter.dev/ui/internationalization). -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>fontations_example</string>
 	<key>CFBundlePackageType</key>

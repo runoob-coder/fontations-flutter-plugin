@@ -30,6 +30,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Material widgets now come from the standalone package (Flutter 3.50+).
+  # See https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui
+  material_ui: ^1.11.0
+
+  # gen-l10n still emits an `import 'package:flutter_localizations/...'` in the
+  # generated AppLocalizations files. The Material/Cupertino *localization
+  # delegates* used at runtime now come from material_ui instead.
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   fontations:
     # When depending on this package from a real application you should use:
@@ -62,6 +72,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # Runs `flutter gen-l10n` automatically on pub get / build.
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

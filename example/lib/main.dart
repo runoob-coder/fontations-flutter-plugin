@@ -1,10 +1,30 @@
-import 'package:flutter/material.dart';
 import 'package:fontations/fontations.dart';
+import 'package:material_ui/material_ui.dart';
 
+import 'demo_widgets.dart';
 import 'font_info_page.dart';
 import 'font_source.dart';
+import 'font_tools_page.dart';
+import 'glyph_browser_page.dart';
 import 'glyph_editor_page.dart';
+import 'l10n/app_localizations.dart';
+import 'locale_switcher.dart';
 import 'shaping_page.dart';
+import 'theme_switcher.dart';
+
+/// Localizations for the whole app: the generated catalog plus the Material,
+/// Cupertino and Widgets delegates that now ship in `package:material_ui`.
+///
+/// `GlobalMaterialLocalizations.delegates` is the post-3.50 replacement for
+/// `AppLocalizations.localizationsDelegates`. The latter still points at
+/// `package:flutter_localizations`, which supplies the *legacy*
+/// `MaterialLocalizations` type; mixing it with material_ui widgets makes
+/// AppBar/Tooltip/etc. fail with "No MaterialLocalizations found".
+/// See the "Decoupled localizations" section of the migration guide.
+const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates = [
+  AppLocalizations.delegate,
+  ...GlobalMaterialLocalizations.delegates,
+];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,40 +39,68 @@ class FontationsExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'fontations',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4)),
-        useMaterial3: true,
+    // Both settings live outside the widget tree so the AppBar menus can
+    // change them; rebuild MaterialApp whenever either one changes.
+    return ListenableBuilder(
+      listenable: Listenable.merge([appLanguage, appThemeMode]),
+      builder: (context, _) => MaterialApp(
+        // The device locale / brightness win unless the user picked an
+        // override in LanguageMenu or ThemeMenu.
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: localeOf(appLanguage.value),
+        theme: _theme(Brightness.light),
+        darkTheme: _theme(Brightness.dark),
+        themeMode: appThemeMode.value,
+        home: const ExampleShell(),
       ),
-      home: const ExampleShell(),
     );
   }
 }
 
-/// Below this width the shell is a phone: content stacked, navigation at the
-/// bottom. At or above it there is room for a rail and side by side columns.
-const double _wideBreakpoint = 900.0;
+ThemeData _theme(Brightness brightness) => ThemeData(
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: const Color(0xFF6750A4),
+    brightness: brightness,
+  ),
+  useMaterial3: true,
+);
 
 /// The pages, in navigation order.
-const List<Widget> _pages = [FontInfoPage(), ShapingPage(), GlyphEditorPage()];
+const List<Widget> _pages = [
+  FontInfoPage(),
+  ShapingPage(),
+  GlyphBrowserPage(),
+  FontToolsPage(),
+  GlyphEditorPage(),
+];
 
-const List<({IconData icon, IconData selected, String label})> _destinations = [
+/// Labels are resolved from the active locale, so these cannot be `const`.
+List<({IconData icon, IconData selected, String label})> _destinations(
+  AppLocalizations l,
+) => [
   (
     icon: Icons.text_fields_outlined,
     selected: Icons.text_fields,
-    label: '解析字体',
+    label: l.navInfo,
   ),
   (
     icon: Icons.format_shapes_outlined,
     selected: Icons.format_shapes,
-    label: '塑形',
+    label: l.navShaping,
   ),
-  (icon: Icons.brush_outlined, selected: Icons.brush, label: '绘制造字'),
+  (
+    icon: Icons.grid_view_outlined,
+    selected: Icons.grid_view,
+    label: l.navGlyphs,
+  ),
+  (icon: Icons.build_outlined, selected: Icons.build, label: l.navTools),
+  (icon: Icons.brush_outlined, selected: Icons.brush, label: l.navEditor),
 ];
 
-/// Shell with the three demos: reading a real font, shaping a run of text,
-/// and writing a new one.
+/// Shell with the five demos: reading a font, shaping a run of text,
+/// inspecting glyphs, patching/subsetting a font, and writing a new one.
 ///
 /// On a wide window the navigation becomes a rail and the pages lay their
 /// content out in columns, which is what a desktop window expects.
@@ -70,9 +118,11 @@ class _ExampleShellState extends State<ExampleShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final items = _destinations(l);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= _wideBreakpoint;
+        final wide = constraints.maxWidth >= wideBreakpoint;
         final body = IndexedStack(index: _index, children: _pages);
 
         if (!wide) {
@@ -82,7 +132,7 @@ class _ExampleShellState extends State<ExampleShell> {
               selectedIndex: _index,
               onDestinationSelected: _select,
               destinations: [
-                for (final destination in _destinations)
+                for (final destination in items)
                   NavigationDestination(
                     icon: Icon(destination.icon),
                     selectedIcon: Icon(destination.selected),
@@ -110,7 +160,7 @@ class _ExampleShellState extends State<ExampleShell> {
                     child: FlutterLogo(size: 32),
                   ),
                   destinations: [
-                    for (final destination in _destinations)
+                    for (final destination in items)
                       NavigationRailDestination(
                         icon: Icon(destination.icon),
                         selectedIcon: Icon(destination.selected),

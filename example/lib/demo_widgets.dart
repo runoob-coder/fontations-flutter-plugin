@@ -125,8 +125,7 @@ Future<String?> saveFontBytes({
     dialogTitle: dialogTitle,
     fileName: fileName,
     bytes: bytes,
-    type: FileType.custom,
-    allowedExtensions: const ['ttf'],
+    // `type`/`allowedExtensions` are no-ops in saveFile().
     mimeType: 'font/ttf',
   );
   return uri?.toString();

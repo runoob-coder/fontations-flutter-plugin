@@ -1,0 +1,54 @@
+[package]
+name = "fontations-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# A workspace of its own: the plugin's Cargo.lock, cargo test --all-targets and
+# the Apple build scripts must never pull in libFuzzer or a nightly toolchain.
+[workspace]
+
+[dependencies]
+fontations = { path = ".." }
+libfuzzer-sys = "0.4"
+
+[[bin]]
+name = "fuzz_font_entry"
+path = "fuzz_targets/fuzz_font_entry.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_shape"
+path = "fuzz_targets/fuzz_shape.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_outline"
+path = "fuzz_targets/fuzz_outline.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_varc_color"
+path = "fuzz_targets/fuzz_varc_color.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_modify"
+path = "fuzz_targets/fuzz_modify.rs"
+test = false
+doc = false
+
+[[test]]
+name = "helpers_test"
+path = "tests/helpers_test.rs"
+
+[[test]]
+name = "targets_test"
+path = "tests/targets_test.rs"

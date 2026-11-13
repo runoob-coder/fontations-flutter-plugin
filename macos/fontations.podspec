@@ -45,6 +45,8 @@ fontations crates (read-fonts / skrifa), exposed to Dart with flutter_rust_bridg
     'DEFINES_MODULE' => 'YES',
     # Flutter.framework does not contain a i386 slice.
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
+    # macOS ships Apple Silicon (arm64) only - drop the Intel/x86_64 slice.
+    'EXCLUDED_ARCHS[sdk=macosx*]' => 'x86_64',
     'OTHER_LDFLAGS' => '-force_load ${PODS_CONFIGURATION_BUILD_DIR}/fontations/libfontations.a',
   }
 end

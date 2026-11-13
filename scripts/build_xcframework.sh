@@ -22,13 +22,13 @@
 #
 # What it does
 # ------------
-#   1. cargo build for every Apple target (macOS universal, iOS device, iOS
+#   1. cargo build for every Apple target (macOS arm64 only, iOS device, iOS
 #      simulator).
 #   2. Packages the slices: `fontations.framework` bundles for iOS, a plain
 #      `libfontations.dylib` for macOS (macOS framework bundles are deep
 #      bundles: they need Versions/Current symlinks, which `flutter pub
 #      publish` does not preserve). install_name is @rpath based in both cases.
-#   3. lipo the macOS and iOS simulator slices into fat binaries.
+#   3. lipo the iOS simulator slices into a fat binary (macOS is arm64 only).
 #   4. xcodebuild -create-xcframework, then installs one XCFramework in
 #      ios/fontations/ and one in macos/fontations/.
 #
@@ -147,8 +147,6 @@ mkdir -p "$WORK_DIR"
 
 build_slice aarch64-apple-darwin "-mmacosx-version-min=$MIN_MACOS" \
   "$WORK_DIR/macos/arm64"
-build_slice x86_64-apple-darwin "-mmacosx-version-min=$MIN_MACOS" \
-  "$WORK_DIR/macos/x86_64"
 build_slice aarch64-apple-ios "-miphoneos-version-min=$MIN_IOS" \
   "$WORK_DIR/ios/device"
 build_slice aarch64-apple-ios-sim "-miphonesimulator-version-min=$MIN_IOS" \
@@ -156,28 +154,25 @@ build_slice aarch64-apple-ios-sim "-miphonesimulator-version-min=$MIN_IOS" \
 build_slice x86_64-apple-ios "-miphoneos-version-min=$MIN_IOS" \
   "$WORK_DIR/ios/simulator/x86_64"
 
-log "creating fat macOS / iOS simulator binaries"
-mkdir -p "$WORK_DIR/macos/universal" "$WORK_DIR/ios/simulator/universal"
-lipo -create \
-  "$WORK_DIR/macos/arm64/lib$CRATE.dylib" \
-  "$WORK_DIR/macos/x86_64/lib$CRATE.dylib" \
-  -output "$WORK_DIR/macos/universal/lib$CRATE.dylib"
+# macOS ships arm64 only - no Intel/x86_64 slice (Apple Silicon only).
+log "creating fat iOS simulator binary"
+mkdir -p "$WORK_DIR/ios/simulator/universal"
 lipo -create \
   "$WORK_DIR/ios/simulator/arm64/lib$CRATE.dylib" \
   "$WORK_DIR/ios/simulator/x86_64/lib$CRATE.dylib" \
   -output "$WORK_DIR/ios/simulator/universal/lib$CRATE.dylib"
 install_name_tool -id "@rpath/lib$CRATE.dylib" \
-  "$WORK_DIR/macos/universal/lib$CRATE.dylib"
+  "$WORK_DIR/macos/arm64/lib$CRATE.dylib"
 
 log "creating iOS frameworks"
 make_framework "$WORK_DIR/ios/device" "$WORK_DIR/ios/device/$FRAMEWORK_NAME"
 make_framework "$WORK_DIR/ios/simulator/universal" \
   "$WORK_DIR/ios/simulator/universal/$FRAMEWORK_NAME"
 
-log "creating macOS XCFramework"
+log "creating macOS XCFramework (arm64 only)"
 rm -rf "$MACOS_OUT"
 xcodebuild -create-xcframework \
-  -library "$WORK_DIR/macos/universal/lib$CRATE.dylib" \
+  -library "$WORK_DIR/macos/arm64/lib$CRATE.dylib" \
   -output "$MACOS_OUT" > /dev/null
 
 log "creating iOS XCFramework"

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:fontations/fontations.dart';
@@ -344,6 +345,7 @@ class _ShapingPageState extends State<ShapingPage> {
         const SizedBox(height: 12),
         _ShapedPreview(
           glyphs: _glyphs,
+          advance: _advance,
           fontSize: _fontSize,
           showMarkers: _showMarkers,
         ),
@@ -568,37 +570,89 @@ class _ShapingPageState extends State<ShapingPage> {
   };
 }
 
-class _ShapedPreview extends StatelessWidget {
+/// A run wider than the preview scrolls horizontally instead of being clipped.
+class _ShapedPreview extends StatefulWidget {
   const _ShapedPreview({
     required this.glyphs,
+    required this.advance,
     required this.fontSize,
     required this.showMarkers,
   });
 
   final List<_PlacedGlyph> glyphs;
+  final double advance;
   final double fontSize;
   final bool showMarkers;
 
   @override
+  State<_ShapedPreview> createState() => _ShapedPreviewState();
+}
+
+class _ShapedPreviewState extends State<_ShapedPreview> {
+  final ScrollController _scroll = ScrollController();
+
+  @override
+  void didUpdateWidget(covariant _ShapedPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A new run starts at its beginning, not at the old run's scroll offset.
+    if (widget.glyphs != oldWidget.glyphs && _scroll.hasClients) {
+      _scroll.jumpTo(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    const padding = 12.0;
+    final height = widget.fontSize * 2;
+
     return Container(
-      height: fontSize * 2,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: height,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: _ShapedPainter(
-          glyphs: glyphs,
-          fontSize: fontSize,
-          showMarkers: showMarkers,
-          ink: theme.colorScheme.onSurface,
-          accent: theme.colorScheme.primary,
-        ),
-        child: const SizedBox.expand(),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewport = constraints.maxWidth - 2 * padding;
+          // Ink can overhang the last advance (italics, marks), so leave a
+          // little room at the end of the scroll range.
+          final runWidth = widget.advance + widget.fontSize * 0.25;
+          final width = math.max(viewport, runWidth);
+          return Scrollbar(
+            controller: _scroll,
+            thumbVisibility: runWidth > viewport,
+            thickness: 6,
+            radius: const Radius.circular(3),
+            child: SingleChildScrollView(
+              key: const Key('shaping-preview-scroll'),
+              controller: _scroll,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: padding),
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: CustomPaint(
+                  painter: _ShapedPainter(
+                    glyphs: widget.glyphs,
+                    fontSize: widget.fontSize,
+                    showMarkers: widget.showMarkers,
+                    ink: theme.colorScheme.onSurface,
+                    accent: theme.colorScheme.primary,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

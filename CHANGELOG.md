@@ -4,7 +4,6 @@
 - 📱 Native: Android Gradle migrated to Kotlin DSL (AGP 9.3.1, Kotlin 2.4.0); macOS XCFramework built for arm64 only (drop x86_64) with CocoaPods integration removed; iOS XCFramework lists simulator slice first.
 - 🤖 CI: GitHub Actions for CI, web preview and release builds; hardened Linux integration tests with Xvfb/software GL; cargo-fuzz and SwiftPM macOS test fixes.
 - 🔧 Misc: Cargokit runs `pub get` without `--no-precompile`; example dependency bumps.
-- ⚙️ Lower `environment` to `sdk: ^3.9.2`, `flutter: '>=3.22.0'`.
 
 ## 0.1.0
 

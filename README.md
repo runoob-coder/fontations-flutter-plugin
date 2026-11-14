@@ -2,7 +2,7 @@
 
 <div align="center">
    <a href="https://runoob-coder.github.io/fontations-flutter-plugin/" target="_blank" rel="noopener">
-      <img src="https://github.com/runoob-coder/fontations-flutter-plugin/blob/main/googlefonts.svg" width="200" style="width: 200px;" alt="fontations">
+      <img src="https://raw.githubusercontent.com/runoob-coder/fontations-flutter-plugin/main/googlefonts.svg" width="200" style="width: 200px;" alt="fontations">
    </a>
 </div>
 

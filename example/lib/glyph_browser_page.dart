@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
@@ -376,7 +377,7 @@ class _GlyphBrowserPageState extends State<GlyphBrowserPage> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: selected
-                    ? Theme.of(context).colorScheme.primaryContainer
+                    ? BrandColors.of(context).tint(context, 2)
                     : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -508,7 +509,7 @@ class _GlyphBrowserPageState extends State<GlyphBrowserPage> {
               fontSize: _fontSize,
               unitsPerEm: info.metrics.unitsPerEm,
               ink: theme.colorScheme.onSurface,
-              guide: theme.colorScheme.primary,
+              guide: BrandColors.of(context).ink(context, 2),
             ),
             child: const SizedBox.expand(),
           ),

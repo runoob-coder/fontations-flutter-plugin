@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
@@ -580,7 +581,7 @@ class _FontToolsPageState extends State<FontToolsPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: BrandColors.of(context).tint(context, 3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

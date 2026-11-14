@@ -1,6 +1,7 @@
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'font_info_page.dart';
 import 'font_source.dart';
@@ -38,8 +39,8 @@ class FontationsExampleApp extends StatelessWidget {
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: localeOf(appLanguage.value),
-        theme: _theme(Brightness.light),
-        darkTheme: _theme(Brightness.dark),
+        theme: appTheme(Brightness.light),
+        darkTheme: appTheme(Brightness.dark),
         themeMode: appThemeMode.value,
         debugShowCheckedModeBanner: false,
         home: const ExampleShell(),
@@ -47,14 +48,6 @@ class FontationsExampleApp extends StatelessWidget {
     );
   }
 }
-
-ThemeData _theme(Brightness brightness) => ThemeData(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: const Color(0xFF6750A4),
-    brightness: brightness,
-  ),
-  useMaterial3: true,
-);
 
 /// The pages, in navigation order.
 const List<Widget> _pages = [
@@ -105,6 +98,7 @@ class _ExampleShellState extends State<ExampleShell> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final items = _destinations(l);
+    final brand = BrandColors.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= wideBreakpoint;
@@ -116,12 +110,19 @@ class _ExampleShellState extends State<ExampleShell> {
             bottomNavigationBar: NavigationBar(
               selectedIndex: _index,
               onDestinationSelected: _select,
+              indicatorColor: brand.tint(context, _index),
               destinations: [
-                for (final destination in items)
+                for (var i = 0; i < items.length; i++)
                   NavigationDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selected),
-                    label: destination.label,
+                    icon: Icon(
+                      items[i].icon,
+                      color: brand.ink(context, i).withValues(alpha: 0.6),
+                    ),
+                    selectedIcon: Icon(
+                      items[i].selected,
+                      color: brand.ink(context, i),
+                    ),
+                    label: items[i].label,
                   ),
               ],
             ),
@@ -135,6 +136,7 @@ class _ExampleShellState extends State<ExampleShell> {
                 NavigationRail(
                   selectedIndex: _index,
                   onDestinationSelected: _select,
+                  indicatorColor: brand.tint(context, _index),
                   extended: constraints.maxWidth >= 1240,
                   minExtendedWidth: 180,
                   groupAlignment: -0.9,
@@ -143,11 +145,17 @@ class _ExampleShellState extends State<ExampleShell> {
                     child: Image.asset('assets/app_icon.png', width: 32),
                   ),
                   destinations: [
-                    for (final destination in items)
+                    for (var i = 0; i < items.length; i++)
                       NavigationRailDestination(
-                        icon: Icon(destination.icon),
-                        selectedIcon: Icon(destination.selected),
-                        label: Text(destination.label),
+                        icon: Icon(
+                          items[i].icon,
+                          color: brand.ink(context, i).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          items[i].selected,
+                          color: brand.ink(context, i),
+                        ),
+                        label: Text(items[i].label),
                       ),
                   ],
                 ),

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fontations/fontations.dart';
+import 'package:fontations_example/app_palette.dart';
 import 'package:fontations_example/demo_widgets.dart';
 import 'package:fontations_example/font_info_page.dart';
 import 'package:fontations_example/font_source.dart';
@@ -102,6 +103,63 @@ void main() {
       );
     }
     expect(wideBreakpoint, 900.0);
+  });
+
+  test('both themes take their identity colors from googlefonts.svg', () {
+    for (final brightness in Brightness.values) {
+      final light = brightness == Brightness.light;
+      final theme = appTheme(brightness);
+      final scheme = theme.colorScheme;
+      expect(scheme.brightness, brightness);
+      expect(
+        scheme.primary,
+        light ? GoogleFontsColors.blue : GoogleFontsColors.blueLight,
+      );
+      expect(
+        scheme.error,
+        light ? GoogleFontsColors.red : GoogleFontsColors.redLight,
+      );
+      expect(
+        theme.extension<BrandColors>()!.accents,
+        light ? BrandColors.light.accents : BrandColors.dark.accents,
+      );
+    }
+    expect(BrandColors.light.accents, [
+      GoogleFontsColors.blue,
+      GoogleFontsColors.green,
+      GoogleFontsColors.amber,
+      GoogleFontsColors.deepBlue,
+      GoogleFontsColors.red,
+    ]);
+    expect(BrandColors.light.lerp(BrandColors.dark, 0.5), isA<BrandColors>());
+  });
+
+  testWidgets('the selected nav indicator follows the page accent', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    addTearDown(() => appThemeMode.value = ThemeMode.system);
+    setLogicalSize(tester, const Size(390, 844));
+    appThemeMode.value = ThemeMode.light;
+
+    await tester.pumpWidget(const FontationsExampleApp());
+    await tester.pumpAndSettle();
+
+    Color indicatorFor(int index) {
+      final context = tester.element(find.byType(NavigationBar));
+      return BrandColors.of(context).tint(context, index);
+    }
+
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor,
+      indicatorFor(0),
+    );
+    await tester.tap(find.byIcon(Icons.format_shapes_outlined).first);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).indicatorColor,
+      indicatorFor(1),
+    );
   });
 
   testWidgets('every page lays out at phone and desktop sizes', (tester) async {

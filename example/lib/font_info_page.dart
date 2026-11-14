@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
@@ -295,7 +296,12 @@ class _FontInfoPageState extends State<FontInfoPage> {
       ],
       SectionCard(
         title: l.infoTablesTitle('${info.tables.length}'),
-        children: [TagChips(info.tables)],
+        children: [
+          TagChips(
+            info.tables,
+            color: BrandColors.of(context).tint(context, 0),
+          ),
+        ],
       ),
     ];
 
@@ -421,7 +427,11 @@ class _FontInfoPageState extends State<FontInfoPage> {
                 '${table.languages.length} languages',
               ),
               const SizedBox(height: 4),
-              TagChips(table.features.map((feature) => feature.tag), limit: 24),
+              TagChips(
+                table.features.map((feature) => feature.tag),
+                limit: 24,
+                color: BrandColors.of(context).tint(context, 0),
+              ),
               const SizedBox(height: 8),
             ],
           ),

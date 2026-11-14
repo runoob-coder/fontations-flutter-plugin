@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'github_button.dart';
 import 'l10n/app_localizations.dart';
@@ -856,7 +857,7 @@ class _Board extends StatelessWidget {
               strokeWidth: strokeWidth,
               ink: theme.colorScheme.onSurface,
               guideColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
-              accentColor: theme.colorScheme.primary,
+              accentColor: BrandColors.of(context).ink(context, 4),
             ),
             child: const SizedBox.expand(),
           ),

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:fontations/fontations.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'app_palette.dart';
 import 'demo_widgets.dart';
 import 'font_source.dart';
 import 'font_source_controls.dart';
@@ -648,7 +649,7 @@ class _ShapedPreviewState extends State<_ShapedPreview> {
                     fontSize: widget.fontSize,
                     showMarkers: widget.showMarkers,
                     ink: theme.colorScheme.onSurface,
-                    accent: theme.colorScheme.primary,
+                    accent: BrandColors.of(context).ink(context, 1),
                   ),
                   child: const SizedBox.expand(),
                 ),

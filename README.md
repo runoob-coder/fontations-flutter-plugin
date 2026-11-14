@@ -45,13 +45,12 @@ final outline = await font.outline(
 final path = outline.toPath(); // draw it with a CustomPainter
 ```
 
-Notes:
-
-- Pass `index` to `Font.fromBytes` to pick a face out of a `.ttc` file. `Font.countFonts` tells you how many there are.
-- `size: null` gives font units instead of pixels. Axis values are in **user space** (`wght: 700`), just like CSS `font-variation-settings`.
-- `outline` and `outlines` are async; other `Font` reads are synchronous. Every font-writing function is async.
-- A `Font` keeps the whole file in Rust. Reuse the handle instead of parsing the same bytes again.
-- `woff` / `woff2` are compressed containers; decompress them first.
+> [!NOTE]
+> - Pass `index` to `Font.fromBytes` to pick a face out of a `.ttc` file. `Font.countFonts` tells you how many there are.
+> - `size: null` gives font units instead of pixels. Axis values are in **user space** (`wght: 700`), just like CSS `font-variation-settings`.
+> - `outline` and `outlines` are async; other `Font` reads are synchronous. Every font-writing function is async.
+> - A `Font` keeps the whole file in Rust. Reuse the handle instead of parsing the same bytes again.
+> - `woff` / `woff2` are compressed containers; decompress them first.
 
 ## 📖 Reading a font
 
@@ -130,7 +129,7 @@ await (FontLoader('MyHandwriting1')
     .load();
 ```
 
-Consecutive off-curve points follow TrueType semantics (implied midpoints). The example glyph editor page demonstrates the full draw-and-export flow.
+Consecutive off-curve points follow TrueType semantics (implied midpoints). The example glyph editor page ([live demo](https://runoob-coder.github.io/fontations-flutter-plugin/)) demonstrates the full draw-and-export flow.
 
 What else `FontBuildRequest` can carry:
 
@@ -217,7 +216,7 @@ final bold = font.withVariations(
 );
 ```
 
-## 🧭 API at a glance
+## 🧭 [API at a glance](https://pub.dev/documentation/fontations/latest/)
 
 | Dart | Description |
 | --- | --- |

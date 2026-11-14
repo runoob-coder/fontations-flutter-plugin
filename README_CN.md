@@ -45,13 +45,12 @@ final outline = await font.outline(
 final path = outline.toPath(); // 交由 CustomPainter 绘制
 ```
 
-使用须知：
-
-- 给 `Font.fromBytes` 传 `index` 可选取 `.ttc` 集合中的某一款字体，`Font.countFonts` 用于查询字体数量。
-- `size` 传 `null` 时返回字体单位而非像素。可变轴采用**用户坐标**（如 `wght = 700`），与 CSS 的 `font-variation-settings` 一致。
-- `outline` / `outlines` 为异步方法，其余 `Font` 读取方法均为同步；所有写字体函数均为异步。
-- `Font` 会在 Rust 侧保存整份字体。同一文件应复用句柄，避免重复解析。
-- `woff` / `woff2` 为压缩容器，使用前需先解压。
+> [!NOTE]
+> - 给 `Font.fromBytes` 传 `index` 可选取 `.ttc` 集合中的某一款字体，`Font.countFonts` 用于查询字体数量。
+> - `size` 传 `null` 时返回字体单位而非像素。可变轴采用**用户坐标**（如 `wght = 700`），与 CSS 的 `font-variation-settings` 一致。
+> - `outline` / `outlines` 为异步方法，其余 `Font` 读取方法均为同步；所有写字体函数均为异步。
+> - `Font` 会在 Rust 侧保存整份字体。同一文件应复用句柄，避免重复解析。
+> - `woff` / `woff2` 为压缩容器，使用前需先解压。
 
 ## 📖 读取字体
 
@@ -130,7 +129,7 @@ await (FontLoader('MyHandwriting1')
     .load();
 ```
 
-连续的离曲线点按 TrueType 语义处理，会自动补入隐含的中点。示例的字形编辑器页面完整演示了绘制与导出流程。
+连续的离曲线点按 TrueType 语义处理，会自动补入隐含的中点。示例的字形编辑器页面（[在线演示](https://runoob-coder.github.io/fontations-flutter-plugin/)）完整演示了绘制与导出流程。
 
 `FontBuildRequest` 还可写入以下内容：
 
@@ -217,7 +216,7 @@ final bold = font.withVariations(
 );
 ```
 
-## 🧭 API 一览
+## 🧭 [API 一览](https://pub.dev/documentation/fontations/latest/)
 
 | Dart | 说明 |
 | --- | --- |

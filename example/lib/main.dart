@@ -41,6 +41,7 @@ class FontationsExampleApp extends StatelessWidget {
         theme: _theme(Brightness.light),
         darkTheme: _theme(Brightness.dark),
         themeMode: appThemeMode.value,
+        debugShowCheckedModeBanner: false,
         home: const ExampleShell(),
       ),
     );

@@ -365,7 +365,10 @@ class _FontToolsPageState extends State<FontToolsPage> {
     final info = _info;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.toolsTitle),
+        title: ResponsiveAppBarTitle(
+          title: l.toolsTitle,
+          shortTitle: l.navTools,
+        ),
         actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: _error != null && info == null

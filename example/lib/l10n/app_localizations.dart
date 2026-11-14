@@ -357,6 +357,12 @@ abstract class AppLocalizations {
   /// **'skrifa 0.50 ScalerFont hinting'**
   String get infoHintingTitle;
 
+  /// No description provided for @infoLibraryVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get infoLibraryVersion;
+
   /// No description provided for @infoNamesTitle.
   ///
   /// In en, this message translates to:

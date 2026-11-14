@@ -159,6 +159,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get infoHintingTitle => 'skrifa 0.50 ScalerFont hinting';
 
   @override
+  String get infoLibraryVersion => 'Library';
+
+  @override
   String get infoNamesTitle => 'Names (name table)';
 
   @override

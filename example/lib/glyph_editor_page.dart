@@ -85,7 +85,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
 
   List<List<Offset>> _strokes = <List<Offset>>[];
   List<Offset>? _current;
-  double _strokeWidth = 26.0;
+  double _strokeWidth = 16.0;
   double _masterValue = _axisMax;
   String _selectedSet = _stylisticSets.first;
 
@@ -461,7 +461,10 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.editorTitle),
+        title: ResponsiveAppBarTitle(
+          title: l.editorTitle,
+          shortTitle: l.navEditor,
+        ),
         actions: [
           const GitHubButton(),
           const ThemeMenu(),
@@ -510,7 +513,10 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
               child: SizedBox(
                 width: math.min(box.maxWidth, maxControlWidth),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 24),
+                  // The outlined fields' floating label pokes ~5 px above the
+                  // field bounds; without this headroom the first label
+                  // ("Character to bind") is clipped by the viewport top.
+                  padding: const EdgeInsets.only(top: 12, bottom: 24),
                   child: _Controls(
                     charController: _charController,
                     familyController: _familyController,
@@ -645,7 +651,7 @@ class _GlyphEditorPageState extends State<GlyphEditorPage> {
 class _GlyphEntry {
   const _GlyphEntry({
     this.strokes = const <List<Offset>>[],
-    this.strokeWidth = 26.0,
+    this.strokeWidth = 16.0,
     this.masters = const <_Master>[],
     this.variants = const <_Variant>[],
   });
@@ -664,7 +670,7 @@ class _GlyphEntry {
 
   double get defaultWidth => strokes.isNotEmpty
       ? strokeWidth
-      : (masters.isEmpty ? 26.0 : masters.first.strokeWidth);
+      : (masters.isEmpty ? 16.0 : masters.first.strokeWidth);
 
   _GlyphEntry copyWith({
     List<List<Offset>>? strokes,

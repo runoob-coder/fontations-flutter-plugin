@@ -301,7 +301,10 @@ class _GlyphBrowserPageState extends State<GlyphBrowserPage> {
     final info = _info;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.browserTitle),
+        title: ResponsiveAppBarTitle(
+          title: l.browserTitle,
+          shortTitle: l.navGlyphs,
+        ),
         actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: info == null ? _buildNoFont(context) : _buildBody(context, info),

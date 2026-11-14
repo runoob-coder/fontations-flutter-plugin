@@ -47,6 +47,7 @@
   "sourceFormats": "支持 {extensions}。woff / woff2 是压缩格式，需要先解压。",
 
   "infoHintingTitle": "skrifa 0.50 ScalerFont 提示",
+  "infoLibraryVersion": "库",
   "infoNamesTitle": "名称（name 表）",
   "infoMetricsTitle": "度量",
   "infoTablesTitle": "表（{count}）",

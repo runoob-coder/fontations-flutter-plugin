@@ -134,6 +134,34 @@ Future<String?> saveFontBytes({
 /// Breakpoint shared by the shell and all pages.
 const double wideBreakpoint = 900.0;
 
+/// Title slot width needed to show the full label.
+const double fullAppBarTitleWidth = 420.0;
+
+/// Short label in narrow AppBars; full text is kept in a tooltip.
+class ResponsiveAppBarTitle extends StatelessWidget {
+  const ResponsiveAppBarTitle({
+    super.key,
+    required this.title,
+    required this.shortTitle,
+  });
+
+  final String title;
+  final String shortTitle;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final full = constraints.maxWidth >= fullAppBarTitleWidth;
+      final label = Text(
+        full ? title : shortTitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+      return full ? label : Tooltip(message: title, child: label);
+    },
+  );
+}
+
 /// A compact strip describing the most recent failure.
 class ErrorBanner extends StatelessWidget {
   const ErrorBanner(this.error, {super.key, this.message});

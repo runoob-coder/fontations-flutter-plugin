@@ -294,7 +294,10 @@ class _ShapingPageState extends State<ShapingPage> {
     final info = _info;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.shapingTitle),
+        title: ResponsiveAppBarTitle(
+          title: l.shapingTitle,
+          shortTitle: l.navShaping,
+        ),
         actions: const [GitHubButton(), ThemeMenu(), LanguageMenu()],
       ),
       body: info == null ? _buildNoFont(context) : _buildBody(context, info),

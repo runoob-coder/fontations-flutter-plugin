@@ -159,6 +159,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get infoHintingTitle => 'skrifa 0.50 ScalerFont 提示';
 
   @override
+  String get infoLibraryVersion => '库';
+
+  @override
   String get infoNamesTitle => '名称（name 表）';
 
   @override

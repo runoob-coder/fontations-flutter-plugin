@@ -17,6 +17,7 @@ import 'package:fontations_example/locale_switcher.dart';
 import 'package:fontations_example/main.dart';
 import 'package:fontations_example/shaping_page.dart';
 import 'package:fontations_example/theme_switcher.dart';
+import 'package:material_ui/material_ui.dart' as mui;
 import 'package:material_ui/material_ui.dart';
 
 /// Fast, device-free counterpart to `integration_test/simple_test.dart`.
@@ -121,6 +122,124 @@ void main() {
     }
   });
 
+  group('AppBar titles stay short on phones', () {
+    const phone = Size(390, 844);
+    const desktop = Size(1440, 900);
+
+    const zhTitles = <({Widget page, String full, String short})>[
+      (page: ShapingPage(), full: '塑形：应用 GSUB / GPOS', short: '塑形'),
+      (page: GlyphBrowserPage(), full: '字形浏览器：cmap / COLR / 位图', short: '字形'),
+      (page: FontToolsPage(), full: '字体工具：表 / 子集 / 修补', short: '工具'),
+      (page: GlyphEditorPage(), full: '绘制造字：buildFont', short: '绘制造字'),
+    ];
+    const enTitles = <({Widget page, String full, String short})>[
+      (
+        page: ShapingPage(),
+        full: 'Shaping: applying GSUB / GPOS',
+        short: 'Shaping',
+      ),
+      (
+        page: GlyphBrowserPage(),
+        full: 'Glyph browser: cmap / COLR / bitmaps',
+        short: 'Glyphs',
+      ),
+      (
+        page: FontToolsPage(),
+        full: 'Font tools: tables / subset / patch',
+        short: 'Tools',
+      ),
+      (
+        page: GlyphEditorPage(),
+        full: 'Draw a font: buildFont',
+        short: 'Draw a font',
+      ),
+    ];
+
+    /// Scope to the AppBar: `find.text` also matches the body's TextField.
+    Finder titleText(String text) =>
+        find.descendant(of: find.byType(AppBar), matching: find.text(text));
+
+    Finder fullTitleTooltip(String full) => find.descendant(
+      of: find.byType(AppBar),
+      matching: find.byWidgetPredicate(
+        (widget) => widget is Tooltip && widget.message == full,
+      ),
+    );
+
+    List<({Widget page, String full, String short})> casesFor(Locale locale) =>
+        locale.languageCode == 'zh' ? zhTitles : enTitles;
+
+    testWidgets(
+      'a phone shows the short label and keeps the full one in a tooltip',
+      (tester) async {
+        addTearDown(tester.view.reset);
+        setLogicalSize(tester, phone);
+        for (final locale in const [Locale('zh'), Locale('en')]) {
+          for (final (:page, :full, :short) in casesFor(locale)) {
+            await tester.pumpWidget(localizedApp(page, locale: locale));
+            await tester.pumpAndSettle();
+
+            expect(titleText(short), findsOneWidget, reason: '$locale $page');
+            expect(titleText(full), findsNothing, reason: '$locale $page');
+            expect(fullTitleTooltip(full), findsOneWidget);
+            final title = tester.widget<Text>(titleText(short));
+            expect(title.maxLines, 1);
+            expect(title.overflow, TextOverflow.ellipsis);
+            expect(tester.takeException(), isNull);
+          }
+        }
+      },
+    );
+
+    testWidgets('a wide window keeps the descriptive title', (tester) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, desktop);
+      for (final locale in const [Locale('zh'), Locale('en')]) {
+        for (final item in casesFor(locale)) {
+          await tester.pumpWidget(localizedApp(item.page, locale: locale));
+          await tester.pumpAndSettle();
+
+          expect(
+            titleText(item.full),
+            findsOneWidget,
+            reason: '$locale ${item.page}',
+          );
+          expect(fullTitleTooltip(item.full), findsNothing);
+          expect(tester.takeException(), isNull);
+        }
+      }
+    });
+
+    testWidgets('the library version lives in the page, not the AppBar', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      addTearDown(fontSource.loadBundled);
+      setLogicalSize(tester, phone);
+      await fontSource.loadBundled();
+      await tester.pumpWidget(localizedApp(const FontInfoPage()));
+      await tester.pumpAndSettle();
+
+      // The brand title stays whole; no version badge competes with it.
+      final title = tester.widget<Text>(titleText('fontations'));
+      expect(title.maxLines, 1);
+      expect(title.overflow, TextOverflow.ellipsis);
+      expect(tester.getSize(titleText('fontations')).width, greaterThan(100));
+
+      // The full version string is shown in the body instead of being clipped.
+      expect(find.text(fontationsVersion()), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Tooltip && widget.message == fontationsVersion(),
+        ),
+        findsNothing,
+        reason: 'the version should no longer be a clipped AppBar tooltip',
+      );
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('the glyph editor board on small screens', () {
     const phone = Size(390, 844);
     const landscape = Size(844, 390);
@@ -141,6 +260,30 @@ void main() {
       expect(boardSide(tester), greaterThan(300));
       expect(boardSide(tester), lessThanOrEqualTo(phone.width - 32 + 0.01));
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the first floating label is not clipped by the viewport', (
+      tester,
+    ) async {
+      addTearDown(tester.view.reset);
+      setLogicalSize(tester, phone);
+      await tester.pumpWidget(localizedApp(const GlyphEditorPage()));
+      await tester.pumpAndSettle();
+
+      // Content makes the label float; the outlined field's label pokes
+      // ~5 px above the field bounds, so the scroll view needs headroom.
+      await tester.enterText(find.byType(mui.TextField).first, '一');
+      await tester.pumpAndSettle();
+
+      final labelTop = tester.getTopLeft(find.text('绑定字符')).dy;
+      final viewportTop = tester
+          .getRect(find.byType(SingleChildScrollView).last)
+          .top;
+      expect(
+        labelTop,
+        greaterThanOrEqualTo(viewportTop),
+        reason: 'the floating label must stay inside the scroll viewport',
+      );
     });
 
     testWidgets('a short landscape window keeps a usable board', (
@@ -301,6 +444,35 @@ void main() {
     expect(find.text('字形序列'), findsOneWidget);
     // The shared font picker is reachable from every page, not just the first.
     expect(find.text('打开字体文件…'), findsOneWidget);
+  });
+
+  testWidgets('a long shaping run scrolls horizontally instead of clipping', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    setLogicalSize(tester, const Size(1440, 900));
+    await tester.pumpWidget(localizedApp(const ShapingPage()));
+    await tester.pumpAndSettle();
+
+    final preview = find.byKey(const Key('shaping-preview-scroll'));
+    ScrollPosition position() =>
+        tester.widget<SingleChildScrollView>(preview).controller!.position;
+    expect(position().maxScrollExtent, 0, reason: 'the short sample fits');
+
+    // The first TextField is the shaping text; the other two are script/lang.
+    final longText = List.filled(12, 'AWAY ffi fl ').join();
+    await tester.enterText(find.byType(TextField).first, longText);
+    await tester.pump(const Duration(milliseconds: 250)); // reshape debounce
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(position().maxScrollExtent, greaterThan(0));
+    await tester.drag(preview, const Offset(-240, 0));
+    await tester.pumpAndSettle();
+    expect(position().pixels, greaterThan(0));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('switches stay Material on Apple platforms too', (tester) async {

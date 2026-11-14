@@ -74,6 +74,7 @@
   },
 
   "infoHintingTitle": "skrifa 0.50 ScalerFont hinting",
+  "infoLibraryVersion": "Library",
   "infoNamesTitle": "Names (name table)",
   "infoMetricsTitle": "Metrics",
   "infoTablesTitle": "Tables ({count})",

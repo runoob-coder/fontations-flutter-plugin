@@ -193,36 +193,19 @@ class _FontInfoPageState extends State<FontInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final info = _info;
-    // The version string lists several crates and is far wider than a phone
-    // AppBar. Constrain it and keep the full text in a tooltip.
-    final version = _version;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('fontations'),
+        title: const Text(
+          'fontations',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           const GitHubButton(),
           const ThemeMenu(),
           const LanguageMenu(),
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Tooltip(
-                message: version,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 132),
-                  child: Text(
-                    version,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
       body: info == null
@@ -242,6 +225,12 @@ class _FontInfoPageState extends State<FontInfoPage> {
     // The preview and the axes that drive it stay together; everything else is
     // reference material.
     final interactive = <Widget>[
+      // The fontations version used to hide in the AppBar and got clipped on
+      // narrow screens; it now lives in the page so the full string is readable.
+      SectionCard(
+        title: 'fontations',
+        children: [InfoRow(l.infoLibraryVersion, _version)],
+      ),
       // The last font that read fine stays on screen, with the failure on top,
       // so a bad file is not a dead end.
       if (_error != null)

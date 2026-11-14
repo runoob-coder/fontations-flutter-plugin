@@ -1,3 +1,7 @@
+## 0.1.2
+
+- 📝 **Docs**: improved the documentation.
+
 ## 0.1.1
 
 - ✨ Example: light/dark themes derived from the Google Fonts logo palette with per-page accents; responsive glyph editor focus mode; short AppBar titles on narrow screens; horizontal shaping preview for wide runs; rebrand app as `fontations` with launcher icons.

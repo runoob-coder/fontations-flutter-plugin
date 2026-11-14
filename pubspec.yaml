@@ -1,6 +1,6 @@
 name: fontations
 description: "Dart bindings for the Rust-based fontations font stack (read-fonts, skrifa, write-fonts) — read, shape and write OpenType fonts."
-version: 0.1.1
+version: 0.1.2
 homepage: https://runoob-coder.github.io/fontations-flutter-plugin
 repository: https://github.com/runoob-coder/fontations-flutter-plugin
 topics:

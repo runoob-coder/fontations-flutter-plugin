@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/fontations-flutter-plugin/pr-2/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A73E8">
+
+  <title>fontations · Flutter font parsing & rendering demo</title>
+  <meta name="description" content="A live Web demo of the fontations Flutter plugin: read and write OpenType, TrueType and variable fonts directly from Dart, parsing glyph outlines, metrics and layout tables without any platform text stack.">
+  <meta name="keywords" content="fontations, Flutter, Rust, Dart, flutter_rust_bridge, OpenType, TrueType, OTF, TTF, woff, woff2, variable font, variable fonts, 可变字体, font parsing, 字体解析, font reader, 字体读取, glyph outline, 字形轮廓, glyph rendering, 字形渲染, font metrics, 字体度量, font layout, 字体排版, font tables, 字体表, char to glyph, 字符转字形, font writer, 字体写入, contour, 轮廓, skrifa, read font, 读取字体, web font, Web字体, WebAssembly, 字体栈, 跨平台字体">
+  <meta name="author" content="fontations">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://runoob-coder.github.io/fontations-flutter-plugin/">
+
+  <!-- Open Graph / 社交分享 -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="fontations · Flutter font parsing & rendering demo">
+  <meta property="og:description" content="Read and write OpenType, TrueType and variable fonts directly from Dart, parsing glyph outlines and layout tables without any platform text stack.">
+  <meta property="og:site_name" content="fontations">
+  <meta property="og:url" content="https://runoob-coder.github.io/fontations-flutter-plugin/">
+  <meta property="og:image" content="https://raw.githubusercontent.com/runoob-coder/fontations-flutter-plugin/main/googlefonts.png">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="fontations · Flutter font parsing & rendering demo">
+  <meta name="twitter:description" content="Read and write OpenType, TrueType and variable fonts directly from Dart, parsing glyph outlines and layout tables.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/runoob-coder/fontations-flutter-plugin/main/googlefonts.png">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="fontations">
+  <meta name="application-name" content="fontations">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="googlefonts.svg"/>
+
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!--
+    The Rust wasm module is built with shared memory and runs on a pool of Web
+    Workers, which needs `SharedArrayBuffer`, which browsers only hand out to a
+    cross origin isolated page. Neither `flutter run -d chrome` nor a plain
+    static host sends the two headers that make a page isolated, so a service
+    worker adds them instead: it rewrites the headers of this document and the
+    page reloads once to run under it. Without this the module panics at start
+    up with "SharedArrayBuffer transfer requires self.crossOriginIsolated".
+
+    See web/coi_serviceworker.js.
+  -->
+  <script>
+    (async () => {
+      if (self.crossOriginIsolated || !('serviceWorker' in navigator)) {
+        return;
+      }
+      // Reload at most once per tab, so a browser that cannot isolate the page
+      // at all (or a file:// origin, where service workers are not allowed)
+      // shows the app instead of spinning in a reload loop.
+      if (sessionStorage.getItem('coi_reloaded') === '1') {
+        return;
+      }
+      sessionStorage.setItem('coi_reloaded', '1');
+      await navigator.serviceWorker.register('coi_serviceworker.js');
+      if (!navigator.serviceWorker.controller) {
+        await new Promise((resolve) =>
+          navigator.serviceWorker.addEventListener(
+            'controllerchange',
+            resolve,
+            { once: true },
+          ),
+        );
+      }
+      if (!self.crossOriginIsolated) {
+        location.reload();
+      }
+    })();
+  </script>
+
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
